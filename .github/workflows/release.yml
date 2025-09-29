@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: [dist/**]
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to be able to publish a GitHub release
+    steps:
+      # setup github auth with bot
+      - name: github auth
+        id: bot
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_BOT_APP_PEM_FILE }}
+
+      - name: checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: setup node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: package.json
+          cache: npm
+
+      - name: install deps
+        run: npm ci --ignore-scripts
+
+      - name: release
+        env:
+          GIT_AUTHOR_NAME: socket-release-bot[bot]
+          GIT_AUTHOR_EMAIL: 234652667+socket-release-bot[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: socket-release-bot[bot]
+          GIT_COMMITTER_EMAIL: 234652667+socket-release-bot[bot]@users.noreply.github.com
+          GITHUB_TOKEN: ${{ steps.bot.outputs.token }}
+        run: npx semantic-release

@@ -1,0 +1,46 @@
+name: Socket
+
+description: Run Socket.dev security analysis in firewall or CLI mode
+
+author: Socket Inc.
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  mode:
+    description: Operation mode firewall or cli
+    required: true
+    default: firewall
+
+  github-token:
+    description: GitHub API Token used for downloading binaries
+    required: true
+    default: ${{ github.server_url == 'https://github.com' && github.token || '' }}
+
+  socket-token:
+    description: The Socket API Token
+
+  use-cache:
+    description: Cache the Socket binaries
+    default: 'true'
+
+  job-summary:
+    description: Create a job summary
+    default: 'true'
+
+  firewall-version:
+    description: Specify the firewall version number
+    default: latest
+
+outputs:
+  firewall-path-report:
+    description: Path to the generated firewall report JSON
+  firewall-path-binary:
+    description: Path to the installed binary
+
+runs:
+  using: node24
+  main: 'dist/main.js'
+  post: 'dist/post.js'

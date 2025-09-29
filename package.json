@@ -1,0 +1,45 @@
+{
+  "private": true,
+  "name": "socket-github-action",
+  "version": "0.0.0-semantically-released",
+  "description": "GitHub Action for Socket.dev",
+  "type": "module",
+  "main": "src/main.js",
+  "license": "MIT",
+  "author": {
+    "name": "Socket Inc",
+    "email": "eng@socket.dev",
+    "url": "https://socket.dev"
+  },
+  "scripts": {
+    "build": "npm run build:main && npm run build:post",
+    "build:main": "rollup --config rollup.config.js src/main.js --file dist/main.js",
+    "build:post": "rollup --config rollup.config.js src/post.js --file dist/post.js"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "socket",
+    "security"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/exec": "^1.1.1",
+    "@actions/github": "^6.0.1",
+    "@actions/io": "^1.1.3",
+    "@actions/tool-cache": "^2.0.2"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "rollup": "^4.52.2",
+    "semantic-release": "^24.2.9"
+  }
+}

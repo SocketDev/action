@@ -1,0 +1,43 @@
+name: Alias
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: read # for checkout
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write # to be able to publish a GitHub release
+
+    steps:
+      - name: github auth
+        id: bot
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GH_BOT_APP_ID }}
+          private-key: ${{ secrets.GH_BOT_APP_PEM_FILE }}
+
+      - id: semver
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.bot.outputs.token }}
+          script: |
+            const version = context.ref.replace('refs/tags/v', '')
+            const [major, minor, patch] = version.split('.')
+
+            core.debug(`${context.ref} -> major: ${major}, minor: ${minor} patch" ${patch}`)
+
+            for (const version of [major, `${major}.${minor}`]) {
+              // delete existing tag
+              await github.rest.git.deleteRef({ ...context.repo, ref: `tags/v${version}` }).catch(() => {})
+
+              // create new tag
+              await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/v${version}` , sha: context.sha })
+            }
