@@ -21,6 +21,11 @@ try {
   const json = await readFile(process.env.SFW_JSON_REPORT_PATH)
   report = JSON.parse(json)
 } catch (error) {
+  if (error.code === 'ENOENT') {
+    core.info('no report output detected, skipping creation of job summary')
+    process.exit(0)
+  }
+
   core.debug(JSON.stringify(error))
   core.setFailed('error importing report json')
   process.exit(1)
