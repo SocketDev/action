@@ -1,5 +1,6 @@
 import core from '@actions/core'
 import { readFile } from 'node:fs/promises'
+import { PackageURL } from 'packageurl-js'
 
 // should show job summary?
 const jobSummary = core.getBooleanInput('job-summary', { required: false })
@@ -31,7 +32,7 @@ try {
   process.exit(1)
 }
 
-await core.summary.addHeading('Socket Firewall Report')
+await core.summary.addRaw('<h2>Socket Firewall Report</h2>')
 
 if (!report.blocked && !report.parseFail) {
   core.summary.addRaw('Nothing to report :tada:', true)
@@ -50,7 +51,13 @@ if (report.blocked) {
   const rows = []
 
   for (const p of report.blocked) {
-    rows.push([p.name, `<code>${p.version}</code>`, `<code>${p.registryFqdn}</code`])
+    const { type, namespace, name, version } = PackageURL.fromString(p.purlString)
+
+    const fullName = namespace ? `${namespace}/${name}` : name
+
+    const link = `https://socket.dev/${type}/package/${fullName}/overview/${version}`
+
+    rows.push([`<a href="${link}">${fullName}</a>`, `<code>${version}</code>`, `<code>${p.registryFqdn}</code`])
   }
 
   await core.summary.addTable([headers, ...rows])
