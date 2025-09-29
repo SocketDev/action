@@ -49,7 +49,7 @@ export default async function download ({ edition = 'free', ...inputs }) {
       repo
     })
   } catch (error) {
-    core.debug(`[${error?.status}] ${error?.response.url} ${error.message}`)
+    core.debug(`[${error?.status}] ${error?.response?.url} ${error.message}`)
     throw new Error(`failed to check version ${inputs.versionFirewall}`)
   }
 
