@@ -39,7 +39,7 @@ jobs:
 | `mode`             | Specify run mode (currently only supporting `firewall` mode) | Yes      | `-`                  |
 | `firewall-version` | Specify the firewall version number                          | No       | `latest`             |
 | `job-summary`      | Create a [job summary][job-summary]                          | No       | `true`               |
-| `use-cache`        | Cache the Socket binaries (force download if `false`)        | No       | `false`              |
+| `use-cache`        | Cache the Socket binaries (force download if `false`)        | No       | `true`               |
 | `github-token`     | GitHub API Token used for downloading binaries               | No       | `${{ github.token}}` |
 
 #### Outputs
