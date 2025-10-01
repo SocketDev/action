@@ -41,6 +41,7 @@ jobs:
 | `job-summary`      | Create a [job summary][job-summary]                          | No       | `true`               |
 | `use-cache`        | Cache the Socket binaries (force download if `false`)        | No       | `true`               |
 | `github-token`     | GitHub API Token used for downloading binaries               | No       | `${{ github.token}}` |
+| `socket-token`     | Socket API Token used for enabling enterprise edition        | No       | `-`                  |
 
 #### Outputs
 
