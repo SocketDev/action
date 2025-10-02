@@ -1,6 +1,6 @@
 name: Socket Security (Action)
 
-description: Run Socket.dev security analysis in firewall or CLI mode
+description: GitHub Action to run Socket in CLI or Firewall mode
 
 author: Socket Inc.
 

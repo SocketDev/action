@@ -1,6 +1,9 @@
-# Socket Security GitHub Action
+# Socket Security (GitHub Action)
 
 A GitHub Action for running [Socket.dev](https://socket.dev)
+
+> [!TIP]
+> A [GitHub App](https://github.com/marketplace/socket-security) is also available for a fully automated SCA workflow.
 
 ## Usage
 
