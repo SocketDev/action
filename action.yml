@@ -6,7 +6,7 @@ author: Socket Inc.
 
 branding:
   icon: shield
-  color: blue
+  color: purple
 
 inputs:
   mode:
