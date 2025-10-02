@@ -4,9 +4,9 @@ A GitHub Action for running [Socket.dev](https://socket.dev)
 
 ## Usage
 
-### Socket Firewall
+### Socket Firewall: Free
 
-Downloads and installs the Socket Firewall in your GitHub Action job, making it available to use in subsequent steps.
+Downloads and installs [Socket Firewall: Free](https://github.com/SocketDev/sfw-free) in your GitHub Action job, making it available to use in subsequent steps.
 
 ```yaml
 on: push

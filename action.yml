@@ -1,4 +1,4 @@
-name: Socket
+name: Socket Security (Action)
 
 description: Run Socket.dev security analysis in firewall or CLI mode
 
@@ -12,7 +12,6 @@ inputs:
   mode:
     description: Operation mode firewall or cli
     required: true
-    default: firewall
 
   github-token:
     description: GitHub API Token used for downloading binaries
