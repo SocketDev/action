@@ -24,8 +24,7 @@ jobs:
           app-id: ${{ secrets.GH_BOT_APP_ID }}
           private-key: ${{ secrets.GH_BOT_APP_PEM_FILE }}
 
-      - id: semver
-        uses: actions/github-script@v8
+      - uses: actions/github-script@v8
         with:
           github-token: ${{ steps.bot.outputs.token }}
           script: |
@@ -41,3 +40,6 @@ jobs:
               // create new tag
               await github.rest.git.createRef({ ...context.repo, ref: `refs/tags/v${version}` , sha: context.sha })
             }
+
+            // create a release from major version and set as latest
+            await github.rest.repos.createRelease({ ...context.repo, tag_name: `v${major}`, make_latest: 'true' })

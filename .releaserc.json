@@ -5,6 +5,7 @@
       "releaseRules": [
         { "breaking": true,   "release": "major" },
         { "revert": true,     "release": "patch" },
+        { "type": "chore",    "release": "patch" },
         { "type": "build",    "release": "patch" },
         { "type": "docs",     "release": "patch" },
         { "type": "feat",     "release": "minor" },
@@ -17,7 +18,7 @@
       "preset": "conventionalcommits",
       "presetConfig": {
         "types": [
-          { "type": "chore",    "section": "Chores",      "hidden": true },
+          { "type": "chore",    "section": "Chores",      "hidden": false },
           { "type": "build",    "section": "Build",       "hidden": false },
           { "type": "ci",       "section": "CI/CD",       "hidden": false },
           { "type": "docs",     "section": "Docs",        "hidden": false },
