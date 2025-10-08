@@ -25,22 +25,28 @@ const inputs = {
   jobSummary: core.getBooleanInput('job-summary')
 }
 
-let edition = 'free'
-
 if (inputs.tokenSocket) {
   // setup socket token as a secret env
   core.exportVariable('SOCKET_API_KEY', inputs.tokenSocket)
   core.setSecret(inputs.tokenSocket)
-
-  // use Enterprise Firewall
-  edition = 'enterprise'
 }
 
 core.debug(`Installing Socket Action in ${inputs.mode} mode`)
 
 switch (inputs.mode) {
   case 'firewall': {
+    const edition = inputs.tokenSocket ? 'enterprise' : 'free'
     await firewall({ edition, ...inputs })
+    break
+  }
+
+  case 'firewall-free': {
+    await firewall({ edition: 'free', ...inputs })
+    break
+  }
+
+  case 'firewall-enterprise': {
+    await firewall({ edition: 'enterprise', ...inputs })
     break
   }
 
