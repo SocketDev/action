@@ -22,7 +22,7 @@ const inputs = {
   tokenSocket: core.getInput('socket-token'),
   versionFirewall: core.getInput('firewall-version'),
   useCache: core.getBooleanInput('use-cache'),
-  jobSummary: core.getBooleanInput('job-summary')
+  jobSummary: core.getInput('job-summary', { required: false })
 }
 
 if (inputs.tokenSocket) {

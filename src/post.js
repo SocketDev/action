@@ -3,11 +3,23 @@ import { readFile } from 'node:fs/promises'
 import { PackageURL } from 'packageurl-js'
 
 // should show job summary?
-const jobSummary = core.getBooleanInput('job-summary', { required: false })
+const jobSummary = core.getInput('job-summary', { required: false }).toLowerCase()
 
-if (!jobSummary) {
-  core.info('skipping firewall job summary')
-  process.exit(0)
+switch (jobSummary) {
+  case 'all':
+  case 'errors':
+    break
+  case 'none':
+    core.info('skipping job summary')
+    process.exit(0)
+  default:
+    // Fall back to boolean input for backward compatibility
+    if (core.getBooleanInput('job-summary', { required: false })) {
+      break
+    } else {
+      core.info('skipping job summary')
+      process.exit(0)
+    }
 }
 
 if (!process.env.SFW_JSON_REPORT_PATH) {
@@ -35,6 +47,10 @@ try {
 await core.summary.addRaw('<h2>Socket Firewall Report</h2>')
 
 if (!report.blocked && !report.parseFail) {
+  if (jobSummary === 'errors') {
+    core.info('no errors detected, skipping job summary')
+    process.exit(0)
+  }
   core.summary.addRaw('Nothing to report :tada:', true)
 }
 
