@@ -43,12 +43,12 @@ jobs:
 
 #### Inputs
 
-| Input              | Description                                           | Required | Default              |
-| ------------------ | ----------------------------------------------------- | -------- | -------------------- |
-| `firewall-version` | Specify the firewall version number                   | No       | `latest`             |
-| `job-summary`      | Create a [job summary][job-summary]                   | No       | `true`               |
-| `use-cache`        | Cache the Socket binaries (force download if `false`) | No       | `true`               |
-| `github-token`     | GitHub API Token used for downloading binaries        | No       | `${{ github.token}}` |
+| Input              | Description                                                      | Required | Default              |
+| ------------------ | ---------------------------------------------------------------- | -------- | -------------------- |
+| `firewall-version` | Specify the firewall version number                              | No       | `latest`             |
+| `job-summary`      | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
+| `use-cache`        | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
+| `github-token`     | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
 
 #### Outputs
 
@@ -88,13 +88,13 @@ jobs:
 
 #### Inputs
 
-| Input              | Description                                           | Required | Default              |
-| ------------------ | ----------------------------------------------------- | -------- | -------------------- |
-| `firewall-version` | Specify the firewall version number                   | No       | `latest`             |
-| `job-summary`      | Create a [job summary][job-summary]                   | No       | `true`               |
-| `use-cache`        | Cache the Socket binaries (force download if `false`) | No       | `true`               |
-| `github-token`     | GitHub API Token used for downloading binaries        | No       | `${{ github.token}}` |
-| `socket-token`     | Socket API Token                                      | **YES**  | `-`                  |
+| Input              | Description                                                      | Required | Default              |
+| ------------------ | ---------------------------------------------------------------- | -------- | -------------------- |
+| `firewall-version` | Specify the firewall version number                              | No       | `latest`             |
+| `job-summary`      | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
+| `use-cache`        | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
+| `github-token`     | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
+| `socket-token`     | Socket API Token                                                 | **YES**  | `-`                  |
 
 #### Outputs
 
@@ -103,5 +103,4 @@ jobs:
 | `firewall-path-report` | Path to the generated firewall report JSON |
 | `firewall-path-binary` | Path to the installed binary               |
 
-[job-summary]: https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries
 [job-summary]: https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries

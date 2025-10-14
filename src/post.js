@@ -3,13 +3,21 @@ import { readFile } from 'node:fs/promises'
 import { PackageURL } from 'packageurl-js'
 
 // should show job summary?
-const jobSummary = core.getBooleanInput('job-summary', { required: false })
+const inputs = {
+  jobSummary: core.getInput('job-summary', { required: false }).toLowerCase()
+}
 
-if (!jobSummary) {
+// backward compatibility
+if (inputs.jobSummary === 'true') inputs.jobSummary = 'all'
+if (inputs.jobSummary === 'false') inputs.jobSummary = 'none'
+
+// exit early
+if (inputs.jobSummary === 'none') {
   core.info('skipping firewall job summary')
   process.exit(0)
 }
 
+// failed in setup
 if (!process.env.SFW_JSON_REPORT_PATH) {
   core.info('firewall report path not set')
   process.exit(0)
@@ -35,6 +43,11 @@ try {
 await core.summary.addRaw('<h2>Socket Firewall Report</h2>')
 
 if (!report.blocked && !report.parseFail) {
+  if (inputs.jobSummary === 'errors') {
+    core.info('no errors detected, skipping job summary')
+    process.exit(0)
+  }
+
   core.summary.addRaw('Nothing to report :tada:', true)
 }
 

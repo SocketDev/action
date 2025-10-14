@@ -22,8 +22,12 @@ const inputs = {
   tokenSocket: core.getInput('socket-token'),
   versionFirewall: core.getInput('firewall-version'),
   useCache: core.getBooleanInput('use-cache'),
-  jobSummary: core.getBooleanInput('job-summary')
+  jobSummary: core.getInput('job-summary', { required: false }).toLowerCase()
 }
+
+// backward compatibility
+if (inputs.jobSummary === 'true') inputs.jobSummary = 'all'
+if (inputs.jobSummary === 'false') inputs.jobSummary = 'none'
 
 if (inputs.tokenSocket) {
   // setup socket token as a secret env

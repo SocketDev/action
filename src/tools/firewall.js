@@ -111,7 +111,7 @@ export default async function download ({ edition = 'free', ...inputs }) {
   core.debug(`binary location: ${pathCache}`)
 
   // set report path env
-  if (inputs.jobSummary) {
+  if (inputs.jobSummary !== 'none') {
     const pathReport = `${path.join(process.env.RUNNER_TEMP, randomUUID())}.json`
     // set the env info to be used in "post.js" step
     core.exportVariable('SFW_JSON_REPORT_PATH', pathReport)

@@ -27,7 +27,7 @@ inputs:
 
   job-summary:
     description: Create a job summary
-    default: 'true'
+    default: all
 
   firewall-version:
     description: Specify the firewall version number
