@@ -10,7 +10,7 @@ branding:
 
 inputs:
   mode:
-    description: Operation mode firewall or cli
+    description: Operation mode firewall, patch, or cli
     required: true
 
   github-token:
@@ -33,11 +33,29 @@ inputs:
     description: Specify the firewall version number
     default: latest
 
+  patch-version:
+    description: Specify the socket-patch version number
+    default: latest
+
+  patch-ecosystems:
+    description: Comma-separated list of ecosystems to patch (npm, pypi, cargo)
+    default: ''
+
+  patch-dry-run:
+    description: Verify patches without modifying files
+    default: 'false'
+
+  patch-cwd:
+    description: Working directory for socket-patch apply
+    default: ''
+
 outputs:
   firewall-path-report:
     description: Path to the generated firewall report JSON
   firewall-path-binary:
     description: Path to the installed binary
+  patch-path-binary:
+    description: Path to the installed socket-patch binary
 
 runs:
   using: node24

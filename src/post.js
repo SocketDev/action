@@ -2,6 +2,12 @@ import core from '@actions/core'
 import { readFile } from 'node:fs/promises'
 import { PackageURL } from 'packageurl-js'
 
+const mode = core.getInput('mode', { required: true }).toLowerCase()
+if (mode === 'patch') {
+  core.info('patch mode: no post-run actions required')
+  process.exit(0)
+}
+
 // should show job summary?
 const inputs = {
   jobSummary: core.getInput('job-summary', { required: false }).toLowerCase()
