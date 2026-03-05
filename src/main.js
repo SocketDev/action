@@ -1,6 +1,7 @@
 import { inspect } from 'node:util'
 import core from '@actions/core'
 import firewall from './tools/firewall.js'
+import patch from './tools/patch.js'
 
 /**
  * error handler
@@ -21,6 +22,10 @@ const inputs = {
   tokenGithub: core.getInput('github-token', { required: true }),
   tokenSocket: core.getInput('socket-token'),
   versionFirewall: core.getInput('firewall-version'),
+  versionPatch: core.getInput('patch-version'),
+  patchEcosystems: core.getInput('patch-ecosystems'),
+  patchDryRun: core.getBooleanInput('patch-dry-run'),
+  patchCwd: core.getInput('patch-cwd'),
   useCache: core.getBooleanInput('use-cache'),
   jobSummary: core.getInput('job-summary', { required: false }).toLowerCase()
 }
@@ -32,6 +37,7 @@ if (inputs.jobSummary === 'false') inputs.jobSummary = 'none'
 if (inputs.tokenSocket) {
   // setup socket token as a secret env
   core.exportVariable('SOCKET_API_KEY', inputs.tokenSocket)
+  core.exportVariable('SOCKET_API_TOKEN', inputs.tokenSocket)
   core.setSecret(inputs.tokenSocket)
 }
 
@@ -54,6 +60,11 @@ switch (inputs.mode) {
     break
   }
 
+  case 'patch': {
+    await patch(inputs)
+    break
+  }
+
   // TODO
   // case 'cli': {
   //   await cli()
@@ -61,6 +72,6 @@ switch (inputs.mode) {
   // }
 
   default: {
-    throw new Error(`Unsupported mode: ${inputs.mode}. Supported modes: firewall, cli`)
+    throw new Error(`Unsupported mode: ${inputs.mode}. Supported modes: firewall, patch, cli`)
   }
 }
