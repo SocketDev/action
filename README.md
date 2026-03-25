@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: SocketDev/action@v1
+      - uses: SocketDev/action@2d3f25590c6ed6ba11a9a14c064d962a3a04698f # v1.3.1
         with:
           mode: firewall-free
 
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: SocketDev/action@v1
+      - uses: SocketDev/action@2d3f25590c6ed6ba11a9a14c064d962a3a04698f # v1.3.1
         with:
           mode: firewall-enterprise
           socket-token: ${{ secrets.SOCKET_API_KEY }}
