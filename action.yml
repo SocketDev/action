@@ -9,45 +9,52 @@ branding:
   color: purple
 
 inputs:
-  mode:
-    description: Operation mode firewall, patch, or cli
-    required: true
+  firewall-version:
+    description: Specify the firewall version number
+    default: latest
 
   github-token:
     description: GitHub API Token used for downloading binaries
     required: true
     default: ${{ github.server_url == 'https://github.com' && github.token || '' }}
 
-  socket-token:
-    description: The Socket API Token
-
-  use-cache:
-    description: Cache the Socket binaries
-    default: 'true'
-
   job-summary:
     description: Create a job summary
     default: all
 
-  firewall-version:
-    description: Specify the firewall version number
-    default: latest
+  mode:
+    description: Operation mode firewall, patch, or cli
+    required: true
 
-  patch-version:
-    description: Specify the socket-patch version number
-    default: latest
-
-  patch-ecosystems:
-    description: Comma-separated list of ecosystems to patch (npm, pypi, cargo)
+  patch-cwd:
+    description: Working directory for socket-patch apply
     default: ''
 
   patch-dry-run:
     description: Verify patches without modifying files
     default: 'false'
 
-  patch-cwd:
-    description: Working directory for socket-patch apply
+  patch-ecosystems:
+    description: Comma-separated list of ecosystems to patch (npm, pypi, cargo)
     default: ''
+
+  patch-version:
+    description: Specify the socket-patch version number
+    default: latest
+
+  shims:
+    description: Create shims so package manager commands are automatically routed through sfw
+    default: 'true'
+
+  socket-token:
+    description: The Socket API Token
+
+  socket_api_key:
+    description: Socket API key mapped to the SOCKET_API_KEY environment variable
+
+  use-cache:
+    description: Cache the Socket binaries
+    default: 'true'
 
 outputs:
   firewall-path-report:

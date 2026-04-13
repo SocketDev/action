@@ -18,16 +18,17 @@ process.on('unhandledRejection', errorHandler)
 process.on('uncaughtException', errorHandler)
 
 const inputs = {
+  jobSummary: core.getInput('job-summary', { required: false }).toLowerCase(),
   mode: core.getInput('mode', { required: true }).toLowerCase(),
+  patchCwd: core.getInput('patch-cwd'),
+  patchDryRun: core.getBooleanInput('patch-dry-run'),
+  patchEcosystems: core.getInput('patch-ecosystems'),
+  shims: core.getBooleanInput('shims'),
   tokenGithub: core.getInput('github-token', { required: true }),
   tokenSocket: core.getInput('socket-token'),
-  versionFirewall: core.getInput('firewall-version'),
-  versionPatch: core.getInput('patch-version'),
-  patchEcosystems: core.getInput('patch-ecosystems'),
-  patchDryRun: core.getBooleanInput('patch-dry-run'),
-  patchCwd: core.getInput('patch-cwd'),
   useCache: core.getBooleanInput('use-cache'),
-  jobSummary: core.getInput('job-summary', { required: false }).toLowerCase()
+  versionFirewall: core.getInput('firewall-version'),
+  versionPatch: core.getInput('patch-version')
 }
 
 // backward compatibility
@@ -35,7 +36,7 @@ if (inputs.jobSummary === 'true') inputs.jobSummary = 'all'
 if (inputs.jobSummary === 'false') inputs.jobSummary = 'none'
 
 if (inputs.tokenSocket) {
-  // setup socket token as a secret env
+  // setup socket token as a secret env so sfw can use it
   core.exportVariable('SOCKET_API_KEY', inputs.tokenSocket)
   core.exportVariable('SOCKET_API_TOKEN', inputs.tokenSocket)
   core.setSecret(inputs.tokenSocket)
