@@ -14,6 +14,7 @@ import * as util from "util";
 import crypto from "node:crypto";
 import * as child from "child_process";
 import { setTimeout as setTimeout$1 } from "timers";
+import { promises as promises$1 } from "node:fs";
 import path from "node:path";
 import * as stream from "stream";
 
@@ -12128,7 +12129,7 @@ var require_progressevent = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 
 //#endregion
 //#region node_modules/.pnpm/undici@6.28.0/node_modules/undici/lib/web/fileapi/encoding.js
-var require_encoding = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+var require_encoding$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	/**
 	* @see https://encoding.spec.whatwg.org/#concept-encoding-get
 	* @param {string|undefined} label
@@ -12374,7 +12375,7 @@ var require_encoding = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 var require_util$4 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const { kState, kError, kResult, kAborted, kLastProgressEventFired } = require_symbols$2();
 	const { ProgressEvent } = require_progressevent();
-	const { getEncoding } = require_encoding();
+	const { getEncoding } = require_encoding$1();
 	const { serializeAMimeType, parseMIMEType } = require_data_url();
 	const { types: types$1 } = __require("node:util");
 	const { StringDecoder } = __require("string_decoder");
@@ -17883,11 +17884,4141 @@ function error(message, properties = {}) {
 	issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
+* Adds a warning issue
+* @param message warning issue message. Errors will be converted to string via toString()
+* @param properties optional properties to add to the annotation.
+*/
+function warning(message, properties = {}) {
+	issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+/**
 * Writes info to log with console.log.
 * @param message info message
 */
 function info(message) {
 	process.stdout.write(message + os$1.EOL);
+}
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js
+var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SEMVER_SPEC_VERSION = "2.0.0";
+	const MAX_LENGTH = 256;
+	const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+	const MAX_SAFE_COMPONENT_LENGTH = 16;
+	const MAX_SAFE_BUILD_LENGTH = MAX_LENGTH - 6;
+	const RELEASE_TYPES = [
+		"major",
+		"premajor",
+		"minor",
+		"preminor",
+		"patch",
+		"prepatch",
+		"prerelease"
+	];
+	module.exports = {
+		MAX_LENGTH,
+		MAX_SAFE_COMPONENT_LENGTH,
+		MAX_SAFE_BUILD_LENGTH,
+		MAX_SAFE_INTEGER,
+		RELEASE_TYPES,
+		SEMVER_SPEC_VERSION,
+		FLAG_INCLUDE_PRERELEASE: 1,
+		FLAG_LOOSE: 2
+	};
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js
+var require_debug = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
+	module.exports = debug;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js
+var require_re = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const { MAX_SAFE_COMPONENT_LENGTH, MAX_SAFE_BUILD_LENGTH, MAX_LENGTH } = require_constants();
+	const debug = require_debug();
+	exports = module.exports = {};
+	const re = exports.re = [];
+	const safeRe = exports.safeRe = [];
+	const src = exports.src = [];
+	const safeSrc = exports.safeSrc = [];
+	const t = exports.t = {};
+	let R = 0;
+	const LETTERDASHNUMBER = "[a-zA-Z0-9-]";
+	const safeRegexReplacements = [
+		["\\s", 1],
+		["\\d", MAX_LENGTH],
+		[LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]
+	];
+	const makeSafeRegex = (value) => {
+		for (const [token, max] of safeRegexReplacements) value = value.split(`${token}*`).join(`${token}{0,${max}}`).split(`${token}+`).join(`${token}{1,${max}}`);
+		return value;
+	};
+	const createToken = (name, value, isGlobal) => {
+		const safe = makeSafeRegex(value);
+		const index = R++;
+		debug(name, index, value);
+		t[name] = index;
+		src[index] = value;
+		safeSrc[index] = safe;
+		re[index] = new RegExp(value, isGlobal ? "g" : void 0);
+		safeRe[index] = new RegExp(safe, isGlobal ? "g" : void 0);
+	};
+	createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
+	createToken("NUMERICIDENTIFIERLOOSE", "\\d+");
+	createToken("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`);
+	createToken("MAINVERSION", `(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})`);
+	createToken("MAINVERSIONLOOSE", `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})`);
+	createToken("PRERELEASEIDENTIFIER", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIER]})`);
+	createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIERLOOSE]})`);
+	createToken("PRERELEASE", `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
+	createToken("PRERELEASELOOSE", `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
+	createToken("BUILDIDENTIFIER", `${LETTERDASHNUMBER}+`);
+	createToken("BUILD", `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
+	createToken("FULLPLAIN", `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
+	createToken("FULL", `^${src[t.FULLPLAIN]}$`);
+	createToken("LOOSEPLAIN", `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
+	createToken("LOOSE", `^${src[t.LOOSEPLAIN]}$`);
+	createToken("GTLT", "((?:<|>)?=?)");
+	createToken("XRANGEIDENTIFIERLOOSE", `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
+	createToken("XRANGEIDENTIFIER", `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
+	createToken("XRANGEPLAIN", `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?)?)?`);
+	createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?)?)?`);
+	createToken("XRANGE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
+	createToken("XRANGELOOSE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
+	createToken("COERCEPLAIN", `(^|[^\\d])(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`);
+	createToken("COERCE", `${src[t.COERCEPLAIN]}(?:$|[^\\d])`);
+	createToken("COERCEFULL", src[t.COERCEPLAIN] + `(?:${src[t.PRERELEASE]})?(?:${src[t.BUILD]})?(?:$|[^\\d])`);
+	createToken("COERCERTL", src[t.COERCE], true);
+	createToken("COERCERTLFULL", src[t.COERCEFULL], true);
+	createToken("LONETILDE", "(?:~>?)");
+	createToken("TILDETRIM", `(\\s*)${src[t.LONETILDE]}\\s+`, true);
+	exports.tildeTrimReplace = "$1~";
+	createToken("TILDE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
+	createToken("TILDELOOSE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
+	createToken("LONECARET", "(?:\\^)");
+	createToken("CARETTRIM", `(\\s*)${src[t.LONECARET]}\\s+`, true);
+	exports.caretTrimReplace = "$1^";
+	createToken("CARET", `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
+	createToken("CARETLOOSE", `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
+	createToken("COMPARATORLOOSE", `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
+	createToken("COMPARATOR", `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
+	createToken("COMPARATORTRIM", `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
+	exports.comparatorTrimReplace = "$1$2$3";
+	createToken("HYPHENRANGE", `^\\s*(${src[t.XRANGEPLAIN]})\\s+-\\s+(${src[t.XRANGEPLAIN]})\\s*$`);
+	createToken("HYPHENRANGELOOSE", `^\\s*(${src[t.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t.XRANGEPLAINLOOSE]})\\s*$`);
+	createToken("STAR", "(<|>)?=?\\s*\\*");
+	createToken("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$");
+	createToken("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js
+var require_parse_options = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const looseOption = Object.freeze({ loose: true });
+	const emptyOpts = Object.freeze({});
+	const parseOptions = (options) => {
+		if (!options) return emptyOpts;
+		if (typeof options !== "object") return looseOption;
+		return options;
+	};
+	module.exports = parseOptions;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js
+var require_identifiers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const numeric = /^[0-9]+$/;
+	const compareIdentifiers = (a, b) => {
+		if (typeof a === "number" && typeof b === "number") return a === b ? 0 : a < b ? -1 : 1;
+		const anum = numeric.test(a);
+		const bnum = numeric.test(b);
+		if (anum && bnum) {
+			a = +a;
+			b = +b;
+		}
+		return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
+	};
+	const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
+	module.exports = {
+		compareIdentifiers,
+		rcompareIdentifiers
+	};
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js
+var require_semver$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const debug = require_debug();
+	const { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
+	const { safeRe: re, t } = require_re();
+	const parseOptions = require_parse_options();
+	const { compareIdentifiers } = require_identifiers();
+	const isPrereleaseIdentifier = (prerelease, identifier) => {
+		const identifiers = identifier.split(".");
+		if (identifiers.length > prerelease.length) return false;
+		for (let i = 0; i < identifiers.length; i++) if (compareIdentifiers(prerelease[i], identifiers[i]) !== 0) return false;
+		return true;
+	};
+	var SemVer = class SemVer {
+		constructor(version, options) {
+			options = parseOptions(options);
+			if (version instanceof SemVer) if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
+			else version = version.version;
+			else if (typeof version !== "string") throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
+			if (version.length > MAX_LENGTH) throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
+			debug("SemVer", version, options);
+			this.options = options;
+			this.loose = !!options.loose;
+			this.includePrerelease = !!options.includePrerelease;
+			const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
+			if (!m) throw new TypeError(`Invalid Version: ${version}`);
+			this.raw = version;
+			this.major = +m[1];
+			this.minor = +m[2];
+			this.patch = +m[3];
+			if (this.major > MAX_SAFE_INTEGER || this.major < 0) throw new TypeError("Invalid major version");
+			if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) throw new TypeError("Invalid minor version");
+			if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) throw new TypeError("Invalid patch version");
+			if (!m[4]) this.prerelease = [];
+			else this.prerelease = m[4].split(".").map((id) => {
+				if (/^[0-9]+$/.test(id)) {
+					const num = +id;
+					if (num >= 0 && num < MAX_SAFE_INTEGER) return num;
+				}
+				return id;
+			});
+			this.build = m[5] ? m[5].split(".") : [];
+			this.format();
+		}
+		format() {
+			this.version = `${this.major}.${this.minor}.${this.patch}`;
+			if (this.prerelease.length) this.version += `-${this.prerelease.join(".")}`;
+			return this.version;
+		}
+		toString() {
+			return this.version;
+		}
+		compare(other) {
+			debug("SemVer.compare", this.version, this.options, other);
+			if (!(other instanceof SemVer)) {
+				if (typeof other === "string" && other === this.version) return 0;
+				other = new SemVer(other, this.options);
+			}
+			if (other.version === this.version) return 0;
+			return this.compareMain(other) || this.comparePre(other);
+		}
+		compareMain(other) {
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
+			if (this.major < other.major) return -1;
+			if (this.major > other.major) return 1;
+			if (this.minor < other.minor) return -1;
+			if (this.minor > other.minor) return 1;
+			if (this.patch < other.patch) return -1;
+			if (this.patch > other.patch) return 1;
+			return 0;
+		}
+		comparePre(other) {
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
+			if (this.prerelease.length && !other.prerelease.length) return -1;
+			else if (!this.prerelease.length && other.prerelease.length) return 1;
+			else if (!this.prerelease.length && !other.prerelease.length) return 0;
+			let i = 0;
+			do {
+				const a = this.prerelease[i];
+				const b = other.prerelease[i];
+				debug("prerelease compare", i, a, b);
+				if (a === void 0 && b === void 0) return 0;
+				else if (b === void 0) return 1;
+				else if (a === void 0) return -1;
+				else if (a === b) continue;
+				else return compareIdentifiers(a, b);
+			} while (++i);
+		}
+		compareBuild(other) {
+			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
+			let i = 0;
+			do {
+				const a = this.build[i];
+				const b = other.build[i];
+				debug("build compare", i, a, b);
+				if (a === void 0 && b === void 0) return 0;
+				else if (b === void 0) return 1;
+				else if (a === void 0) return -1;
+				else if (a === b) continue;
+				else return compareIdentifiers(a, b);
+			} while (++i);
+		}
+		inc(release, identifier, identifierBase) {
+			if (release.startsWith("pre")) {
+				if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
+				if (identifier) {
+					const match = `-${identifier}`.match(this.options.loose ? re[t.PRERELEASELOOSE] : re[t.PRERELEASE]);
+					if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
+				}
+			}
+			switch (release) {
+				case "premajor":
+					this.prerelease.length = 0;
+					this.patch = 0;
+					this.minor = 0;
+					this.major++;
+					this.inc("pre", identifier, identifierBase);
+					break;
+				case "preminor":
+					this.prerelease.length = 0;
+					this.patch = 0;
+					this.minor++;
+					this.inc("pre", identifier, identifierBase);
+					break;
+				case "prepatch":
+					this.prerelease.length = 0;
+					this.inc("patch", identifier, identifierBase);
+					this.inc("pre", identifier, identifierBase);
+					break;
+				case "prerelease":
+					if (this.prerelease.length === 0) this.inc("patch", identifier, identifierBase);
+					this.inc("pre", identifier, identifierBase);
+					break;
+				case "release":
+					if (this.prerelease.length === 0) throw new Error(`version ${this.raw} is not a prerelease`);
+					this.prerelease.length = 0;
+					break;
+				case "major":
+					if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) this.major++;
+					this.minor = 0;
+					this.patch = 0;
+					this.prerelease = [];
+					break;
+				case "minor":
+					if (this.patch !== 0 || this.prerelease.length === 0) this.minor++;
+					this.patch = 0;
+					this.prerelease = [];
+					break;
+				case "patch":
+					if (this.prerelease.length === 0) this.patch++;
+					this.prerelease = [];
+					break;
+				case "pre": {
+					const base = Number(identifierBase) ? 1 : 0;
+					if (this.prerelease.length === 0) this.prerelease = [base];
+					else {
+						let i = this.prerelease.length;
+						while (--i >= 0) if (typeof this.prerelease[i] === "number") {
+							this.prerelease[i]++;
+							i = -2;
+						}
+						if (i === -1) {
+							if (identifier === this.prerelease.join(".") && identifierBase === false) throw new Error("invalid increment argument: identifier already exists");
+							this.prerelease.push(base);
+						}
+					}
+					if (identifier) {
+						let prerelease = [identifier, base];
+						if (identifierBase === false) prerelease = [identifier];
+						if (isPrereleaseIdentifier(this.prerelease, identifier)) {
+							const prereleaseBase = this.prerelease[identifier.split(".").length];
+							if (isNaN(prereleaseBase)) this.prerelease = prerelease;
+						} else this.prerelease = prerelease;
+					}
+					break;
+				}
+				default: throw new Error(`invalid increment argument: ${release}`);
+			}
+			this.raw = this.format();
+			if (this.build.length) this.raw += `+${this.build.join(".")}`;
+			return this;
+		}
+	};
+	module.exports = SemVer;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js
+var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const parse = (version, options, throwErrors = false) => {
+		if (version instanceof SemVer) return version;
+		try {
+			return new SemVer(version, options);
+		} catch (er) {
+			if (!throwErrors) return null;
+			throw er;
+		}
+	};
+	module.exports = parse;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js
+var require_valid$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const parse = require_parse();
+	const valid = (version, options) => {
+		const v = parse(version, options);
+		return v ? v.version : null;
+	};
+	module.exports = valid;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js
+var require_clean = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const parse = require_parse();
+	const clean = (version, options) => {
+		const s = parse(version.trim().replace(/^[=v]+/, ""), options);
+		return s ? s.version : null;
+	};
+	module.exports = clean;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js
+var require_inc = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const inc = (version, release, options, identifier, identifierBase) => {
+		if (typeof options === "string") {
+			identifierBase = identifier;
+			identifier = options;
+			options = void 0;
+		}
+		try {
+			return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier, identifierBase).version;
+		} catch (er) {
+			return null;
+		}
+	};
+	module.exports = inc;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js
+var require_diff = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const parse = require_parse();
+	const diff = (version1, version2) => {
+		const v1 = parse(version1, null, true);
+		const v2 = parse(version2, null, true);
+		const comparison = v1.compare(v2);
+		if (comparison === 0) return null;
+		const v1Higher = comparison > 0;
+		const highVersion = v1Higher ? v1 : v2;
+		const lowVersion = v1Higher ? v2 : v1;
+		const highHasPre = !!highVersion.prerelease.length;
+		if (!!lowVersion.prerelease.length && !highHasPre) {
+			if (!lowVersion.patch && !lowVersion.minor) return "major";
+			if (lowVersion.compareMain(highVersion) === 0) {
+				if (lowVersion.minor && !lowVersion.patch) return "minor";
+				return "patch";
+			}
+		}
+		const prefix = highHasPre ? "pre" : "";
+		if (v1.major !== v2.major) return prefix + "major";
+		if (v1.minor !== v2.minor) return prefix + "minor";
+		if (v1.patch !== v2.patch) return prefix + "patch";
+		return "prerelease";
+	};
+	module.exports = diff;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js
+var require_major = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const major = (a, loose) => new SemVer(a, loose).major;
+	module.exports = major;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js
+var require_minor = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const minor = (a, loose) => new SemVer(a, loose).minor;
+	module.exports = minor;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js
+var require_patch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const patch = (a, loose) => new SemVer(a, loose).patch;
+	module.exports = patch;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js
+var require_prerelease = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const parse = require_parse();
+	const prerelease = (version, options) => {
+		const parsed = parse(version, options);
+		return parsed && parsed.prerelease.length ? parsed.prerelease : null;
+	};
+	module.exports = prerelease;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js
+var require_compare = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
+	module.exports = compare;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js
+var require_rcompare = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const rcompare = (a, b, loose) => compare(b, a, loose);
+	module.exports = rcompare;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js
+var require_compare_loose = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const compareLoose = (a, b) => compare(a, b, true);
+	module.exports = compareLoose;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js
+var require_compare_build = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const compareBuild = (a, b, loose) => {
+		const versionA = new SemVer(a, loose);
+		const versionB = new SemVer(b, loose);
+		return versionA.compare(versionB) || versionA.compareBuild(versionB);
+	};
+	module.exports = compareBuild;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js
+var require_sort = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compareBuild = require_compare_build();
+	const sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
+	module.exports = sort;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js
+var require_rsort = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compareBuild = require_compare_build();
+	const rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
+	module.exports = rsort;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js
+var require_gt = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const gt = (a, b, loose) => compare(a, b, loose) > 0;
+	module.exports = gt;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js
+var require_lt = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const lt = (a, b, loose) => compare(a, b, loose) < 0;
+	module.exports = lt;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js
+var require_eq = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const eq = (a, b, loose) => compare(a, b, loose) === 0;
+	module.exports = eq;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js
+var require_neq = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const neq = (a, b, loose) => compare(a, b, loose) !== 0;
+	module.exports = neq;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js
+var require_gte = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const gte = (a, b, loose) => compare(a, b, loose) >= 0;
+	module.exports = gte;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js
+var require_lte = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const compare = require_compare();
+	const lte = (a, b, loose) => compare(a, b, loose) <= 0;
+	module.exports = lte;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js
+var require_cmp = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const eq = require_eq();
+	const neq = require_neq();
+	const gt = require_gt();
+	const gte = require_gte();
+	const lt = require_lt();
+	const lte = require_lte();
+	const cmp = (a, op, b, loose) => {
+		switch (op) {
+			case "===":
+				if (typeof a === "object") a = a.version;
+				if (typeof b === "object") b = b.version;
+				return a === b;
+			case "!==":
+				if (typeof a === "object") a = a.version;
+				if (typeof b === "object") b = b.version;
+				return a !== b;
+			case "":
+			case "=":
+			case "==": return eq(a, b, loose);
+			case "!=": return neq(a, b, loose);
+			case ">": return gt(a, b, loose);
+			case ">=": return gte(a, b, loose);
+			case "<": return lt(a, b, loose);
+			case "<=": return lte(a, b, loose);
+			default: throw new TypeError(`Invalid operator: ${op}`);
+		}
+	};
+	module.exports = cmp;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js
+var require_coerce = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const parse = require_parse();
+	const { safeRe: re, t } = require_re();
+	const coerce = (version, options) => {
+		if (version instanceof SemVer) return version;
+		if (typeof version === "number") version = String(version);
+		if (typeof version !== "string") return null;
+		options = options || {};
+		let match = null;
+		if (!options.rtl) match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE]);
+		else {
+			const coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL];
+			let next;
+			while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
+				if (!match || next.index + next[0].length !== match.index + match[0].length) match = next;
+				coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
+			}
+			coerceRtlRegex.lastIndex = -1;
+		}
+		if (match === null) return null;
+		const major = match[2];
+		const minor = match[3] || "0";
+		const patch = match[4] || "0";
+		const prerelease = options.includePrerelease && match[5] ? `-${match[5]}` : "";
+		const build = options.includePrerelease && match[6] ? `+${match[6]}` : "";
+		return parse(`${major}.${minor}.${patch}${prerelease}${build}`, options);
+	};
+	module.exports = coerce;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js
+var require_truncate = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const parse = require_parse();
+	const constants = require_constants();
+	const SemVer = require_semver$1();
+	const truncate = (version, truncation, options) => {
+		if (!constants.RELEASE_TYPES.includes(truncation)) return null;
+		const clonedVersion = cloneInputVersion(version, options);
+		return clonedVersion && doTruncation(clonedVersion, truncation);
+	};
+	const cloneInputVersion = (version, options) => {
+		const versionStringToParse = version instanceof SemVer ? version.version : version;
+		return parse(versionStringToParse, options);
+	};
+	const doTruncation = (version, truncation) => {
+		if (isPrerelease(truncation)) return version.version;
+		version.prerelease = [];
+		switch (truncation) {
+			case "major":
+				version.minor = 0;
+				version.patch = 0;
+				break;
+			case "minor":
+				version.patch = 0;
+				break;
+		}
+		return version.format();
+	};
+	const isPrerelease = (type) => {
+		return type.startsWith("pre");
+	};
+	module.exports = truncate;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js
+var require_lrucache = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	var LRUCache = class {
+		constructor() {
+			this.max = 1e3;
+			this.map = /* @__PURE__ */ new Map();
+		}
+		get(key) {
+			const value = this.map.get(key);
+			if (value === void 0) return;
+			else {
+				this.map.delete(key);
+				this.map.set(key, value);
+				return value;
+			}
+		}
+		delete(key) {
+			return this.map.delete(key);
+		}
+		set(key, value) {
+			if (!this.delete(key) && value !== void 0) {
+				if (this.map.size >= this.max) {
+					const firstKey = this.map.keys().next().value;
+					this.delete(firstKey);
+				}
+				this.map.set(key, value);
+			}
+			return this;
+		}
+	};
+	module.exports = LRUCache;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js
+var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SPACE_CHARACTERS = /\s+/g;
+	var Range = class Range {
+		constructor(range, options) {
+			options = parseOptions(options);
+			if (range instanceof Range) if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) return range;
+			else return new Range(range.raw, options);
+			if (range instanceof Comparator) {
+				this.raw = range.value;
+				this.set = [[range]];
+				this.formatted = void 0;
+				return this;
+			}
+			this.options = options;
+			this.loose = !!options.loose;
+			this.includePrerelease = !!options.includePrerelease;
+			this.raw = range.trim().replace(SPACE_CHARACTERS, " ");
+			this.set = this.raw.split("||").map((r) => this.parseRange(r.trim())).filter((c) => c.length);
+			if (!this.set.length) throw new TypeError(`Invalid SemVer Range: ${this.raw}`);
+			if (this.set.length > 1) {
+				const first = this.set[0];
+				this.set = this.set.filter((c) => !isNullSet(c[0]));
+				if (this.set.length === 0) this.set = [first];
+				else if (this.set.length > 1) {
+					for (const c of this.set) if (c.length === 1 && isAny(c[0])) {
+						this.set = [c];
+						break;
+					}
+				}
+			}
+			this.formatted = void 0;
+		}
+		get range() {
+			if (this.formatted === void 0) {
+				this.formatted = "";
+				for (let i = 0; i < this.set.length; i++) {
+					if (i > 0) this.formatted += "||";
+					const comps = this.set[i];
+					for (let k = 0; k < comps.length; k++) {
+						if (k > 0) this.formatted += " ";
+						this.formatted += comps[k].toString().trim();
+					}
+				}
+			}
+			return this.formatted;
+		}
+		format() {
+			return this.range;
+		}
+		toString() {
+			return this.range;
+		}
+		parseRange(range) {
+			range = range.replace(BUILDSTRIPRE, "");
+			const memoKey = ((this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE)) + ":" + range;
+			const cached = cache.get(memoKey);
+			if (cached) return cached;
+			const loose = this.options.loose;
+			const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
+			range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
+			debug("hyphen replace", range);
+			range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
+			debug("comparator trim", range);
+			range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
+			debug("tilde trim", range);
+			range = range.replace(re[t.CARETTRIM], caretTrimReplace);
+			debug("caret trim", range);
+			let rangeList = range.split(" ").map((comp) => parseComparator(comp, this.options)).join(" ").split(/\s+/).map((comp) => replaceGTE0(comp, this.options));
+			if (loose) rangeList = rangeList.filter((comp) => {
+				debug("loose invalid filter", comp, this.options);
+				return !!comp.match(re[t.COMPARATORLOOSE]);
+			});
+			debug("range list", rangeList);
+			const rangeMap = /* @__PURE__ */ new Map();
+			const comparators = rangeList.map((comp) => new Comparator(comp, this.options));
+			for (const comp of comparators) {
+				if (isNullSet(comp)) return [comp];
+				rangeMap.set(comp.value, comp);
+			}
+			if (rangeMap.size > 1 && rangeMap.has("")) rangeMap.delete("");
+			const result = [...rangeMap.values()];
+			cache.set(memoKey, result);
+			return result;
+		}
+		intersects(range, options) {
+			if (!(range instanceof Range)) throw new TypeError("a Range is required");
+			return this.set.some((thisComparators) => {
+				return isSatisfiable(thisComparators, options) && range.set.some((rangeComparators) => {
+					return isSatisfiable(rangeComparators, options) && thisComparators.every((thisComparator) => {
+						return rangeComparators.every((rangeComparator) => {
+							return thisComparator.intersects(rangeComparator, options);
+						});
+					});
+				});
+			});
+		}
+		test(version) {
+			if (!version) return false;
+			if (typeof version === "string") try {
+				version = new SemVer(version, this.options);
+			} catch (er) {
+				return false;
+			}
+			for (let i = 0; i < this.set.length; i++) if (testSet(this.set[i], version, this.options)) return true;
+			return false;
+		}
+	};
+	module.exports = Range;
+	const cache = new (require_lrucache())();
+	const parseOptions = require_parse_options();
+	const Comparator = require_comparator();
+	const debug = require_debug();
+	const SemVer = require_semver$1();
+	const { safeRe: re, src, t, comparatorTrimReplace, tildeTrimReplace, caretTrimReplace } = require_re();
+	const { FLAG_INCLUDE_PRERELEASE, FLAG_LOOSE } = require_constants();
+	const BUILDSTRIPRE = new RegExp(src[t.BUILD], "g");
+	const isNullSet = (c) => c.value === "<0.0.0-0";
+	const isAny = (c) => c.value === "";
+	const isSatisfiable = (comparators, options) => {
+		let result = true;
+		const remainingComparators = comparators.slice();
+		let testComparator = remainingComparators.pop();
+		while (result && remainingComparators.length) {
+			result = remainingComparators.every((otherComparator) => {
+				return testComparator.intersects(otherComparator, options);
+			});
+			testComparator = remainingComparators.pop();
+		}
+		return result;
+	};
+	const parseComparator = (comp, options) => {
+		comp = comp.replace(re[t.BUILD], "");
+		debug("comp", comp, options);
+		comp = replaceCarets(comp, options);
+		debug("caret", comp);
+		comp = replaceTildes(comp, options);
+		debug("tildes", comp);
+		comp = replaceXRanges(comp, options);
+		debug("xrange", comp);
+		comp = replaceStars(comp, options);
+		debug("stars", comp);
+		return comp;
+	};
+	const isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
+	const invalidXRangeOrder = (M, m, p) => isX(M) && !isX(m) || isX(m) && p && !isX(p);
+	const replaceTildes = (comp, options) => {
+		return comp.trim().split(/\s+/).map((c) => replaceTilde(c, options)).join(" ");
+	};
+	const replaceTilde = (comp, options) => {
+		const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+		const z = options.includePrerelease ? "-0" : "";
+		return comp.replace(r, (_, M, m, p, pr) => {
+			debug("tilde", comp, _, M, m, p, pr);
+			let ret;
+			if (isX(M)) ret = "";
+			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
+			else if (isX(p)) ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
+			else if (pr) {
+				debug("replaceTilde pr", pr);
+				ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+			} else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
+			debug("tilde return", ret);
+			return ret;
+		});
+	};
+	const replaceCarets = (comp, options) => {
+		return comp.trim().split(/\s+/).map((c) => replaceCaret(c, options)).join(" ");
+	};
+	const replaceCaret = (comp, options) => {
+		debug("caret", comp, options);
+		const r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
+		const z = options.includePrerelease ? "-0" : "";
+		return comp.replace(r, (_, M, m, p, pr) => {
+			debug("caret", comp, _, M, m, p, pr);
+			let ret;
+			if (isX(M)) ret = "";
+			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
+			else if (isX(p)) if (M === "0") ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
+			else ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
+			else if (pr) {
+				debug("replaceCaret pr", pr);
+				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
+				else ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+				else ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
+			} else {
+				debug("no pr");
+				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p} <${M}.${m}.${+p + 1}-0`;
+				else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
+				else ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
+			}
+			debug("caret return", ret);
+			return ret;
+		});
+	};
+	const replaceXRanges = (comp, options) => {
+		debug("replaceXRanges", comp, options);
+		return comp.split(/\s+/).map((c) => replaceXRange(c, options)).join(" ");
+	};
+	const replaceXRange = (comp, options) => {
+		comp = comp.trim();
+		const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
+		return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
+			debug("xRange", comp, ret, gtlt, M, m, p, pr);
+			if (invalidXRangeOrder(M, m, p)) return comp;
+			const xM = isX(M);
+			const xm = xM || isX(m);
+			const xp = xm || isX(p);
+			const anyX = xp;
+			if (gtlt === "=" && anyX) gtlt = "";
+			pr = options.includePrerelease ? "-0" : "";
+			if (xM) if (gtlt === ">" || gtlt === "<") ret = "<0.0.0-0";
+			else ret = "*";
+			else if (gtlt && anyX) {
+				if (xm) m = 0;
+				p = 0;
+				if (gtlt === ">") {
+					gtlt = ">=";
+					if (xm) {
+						M = +M + 1;
+						m = 0;
+						p = 0;
+					} else {
+						m = +m + 1;
+						p = 0;
+					}
+				} else if (gtlt === "<=") {
+					gtlt = "<";
+					if (xm) M = +M + 1;
+					else m = +m + 1;
+				}
+				if (gtlt === "<") pr = "-0";
+				ret = `${gtlt + M}.${m}.${p}${pr}`;
+			} else if (xm) ret = `>=${M}.0.0${pr} <${+M + 1}.0.0-0`;
+			else if (xp) ret = `>=${M}.${m}.0${pr} <${M}.${+m + 1}.0-0`;
+			debug("xRange return", ret);
+			return ret;
+		});
+	};
+	const replaceStars = (comp, options) => {
+		debug("replaceStars", comp, options);
+		return comp.trim().replace(re[t.STAR], "");
+	};
+	const replaceGTE0 = (comp, options) => {
+		debug("replaceGTE0", comp, options);
+		return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], "");
+	};
+	const hyphenReplace = (incPr) => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr) => {
+		if (isX(fM)) from = "";
+		else if (isX(fm)) from = `>=${fM}.0.0${incPr ? "-0" : ""}`;
+		else if (isX(fp)) from = `>=${fM}.${fm}.0${incPr ? "-0" : ""}`;
+		else if (fpr) from = `>=${from}`;
+		else from = `>=${from}${incPr ? "-0" : ""}`;
+		if (isX(tM)) to = "";
+		else if (isX(tm)) to = `<${+tM + 1}.0.0-0`;
+		else if (isX(tp)) to = `<${tM}.${+tm + 1}.0-0`;
+		else if (tpr) to = `<=${tM}.${tm}.${tp}-${tpr}`;
+		else if (incPr) to = `<${tM}.${tm}.${+tp + 1}-0`;
+		else to = `<=${to}`;
+		return `${from} ${to}`.trim();
+	};
+	const testSet = (set, version, options) => {
+		for (let i = 0; i < set.length; i++) if (!set[i].test(version)) return false;
+		if (version.prerelease.length && !options.includePrerelease) {
+			for (let i = 0; i < set.length; i++) {
+				debug(set[i].semver);
+				if (set[i].semver === Comparator.ANY) continue;
+				if (set[i].semver.prerelease.length > 0) {
+					const allowed = set[i].semver;
+					if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) return true;
+				}
+			}
+			return false;
+		}
+		return true;
+	};
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js
+var require_comparator = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const ANY = Symbol("SemVer ANY");
+	var Comparator = class Comparator {
+		static get ANY() {
+			return ANY;
+		}
+		constructor(comp, options) {
+			options = parseOptions(options);
+			if (comp instanceof Comparator) if (comp.loose === !!options.loose) return comp;
+			else comp = comp.value;
+			comp = comp.trim().split(/\s+/).join(" ");
+			debug("comparator", comp, options);
+			this.options = options;
+			this.loose = !!options.loose;
+			this.parse(comp);
+			if (this.semver === ANY) this.value = "";
+			else this.value = this.operator + this.semver.version;
+			debug("comp", this);
+		}
+		parse(comp) {
+			const r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
+			const m = comp.match(r);
+			if (!m) throw new TypeError(`Invalid comparator: ${comp}`);
+			this.operator = m[1] !== void 0 ? m[1] : "";
+			if (this.operator === "=") this.operator = "";
+			if (!m[2]) this.semver = ANY;
+			else this.semver = new SemVer(m[2], this.options.loose);
+		}
+		toString() {
+			return this.value;
+		}
+		test(version) {
+			debug("Comparator.test", version, this.options.loose);
+			if (this.semver === ANY || version === ANY) return true;
+			if (typeof version === "string") try {
+				version = new SemVer(version, this.options);
+			} catch (er) {
+				return false;
+			}
+			return cmp(version, this.operator, this.semver, this.options);
+		}
+		intersects(comp, options) {
+			if (!(comp instanceof Comparator)) throw new TypeError("a Comparator is required");
+			if (this.operator === "") {
+				if (this.value === "") return true;
+				return new Range(comp.value, options).test(this.value);
+			} else if (comp.operator === "") {
+				if (comp.value === "") return true;
+				return new Range(this.value, options).test(comp.semver);
+			}
+			options = parseOptions(options);
+			if (options.includePrerelease && (this.value === "<0.0.0-0" || comp.value === "<0.0.0-0")) return false;
+			if (!options.includePrerelease && (this.value.startsWith("<0.0.0") || comp.value.startsWith("<0.0.0"))) return false;
+			if (this.operator.startsWith(">") && comp.operator.startsWith(">")) return true;
+			if (this.operator.startsWith("<") && comp.operator.startsWith("<")) return true;
+			if (this.semver.version === comp.semver.version && this.operator.includes("=") && comp.operator.includes("=")) return true;
+			if (cmp(this.semver, "<", comp.semver, options) && this.operator.startsWith(">") && comp.operator.startsWith("<")) return true;
+			if (cmp(this.semver, ">", comp.semver, options) && this.operator.startsWith("<") && comp.operator.startsWith(">")) return true;
+			return false;
+		}
+	};
+	module.exports = Comparator;
+	const parseOptions = require_parse_options();
+	const { safeRe: re, t } = require_re();
+	const cmp = require_cmp();
+	const debug = require_debug();
+	const SemVer = require_semver$1();
+	const Range = require_range();
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js
+var require_satisfies = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const Range = require_range();
+	const satisfies = (version, range, options) => {
+		try {
+			range = new Range(range, options);
+		} catch (er) {
+			return false;
+		}
+		return range.test(version);
+	};
+	module.exports = satisfies;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
+var require_to_comparators = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const Range = require_range();
+	const toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
+	module.exports = toComparators;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
+var require_max_satisfying = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const Range = require_range();
+	const maxSatisfying = (versions, range, options) => {
+		let max = null;
+		let maxSV = null;
+		let rangeObj = null;
+		try {
+			rangeObj = new Range(range, options);
+		} catch (er) {
+			return null;
+		}
+		versions.forEach((v) => {
+			if (rangeObj.test(v)) {
+				if (!max || maxSV.compare(v) === -1) {
+					max = v;
+					maxSV = new SemVer(max, options);
+				}
+			}
+		});
+		return max;
+	};
+	module.exports = maxSatisfying;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
+var require_min_satisfying = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const Range = require_range();
+	const minSatisfying = (versions, range, options) => {
+		let min = null;
+		let minSV = null;
+		let rangeObj = null;
+		try {
+			rangeObj = new Range(range, options);
+		} catch (er) {
+			return null;
+		}
+		versions.forEach((v) => {
+			if (rangeObj.test(v)) {
+				if (!min || minSV.compare(v) === 1) {
+					min = v;
+					minSV = new SemVer(min, options);
+				}
+			}
+		});
+		return min;
+	};
+	module.exports = minSatisfying;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js
+var require_min_version = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const Range = require_range();
+	const gt = require_gt();
+	const minVersion = (range, loose) => {
+		range = new Range(range, loose);
+		let minver = new SemVer("0.0.0");
+		if (range.test(minver)) return minver;
+		minver = new SemVer("0.0.0-0");
+		if (range.test(minver)) return minver;
+		minver = null;
+		for (let i = 0; i < range.set.length; ++i) {
+			const comparators = range.set[i];
+			let setMin = null;
+			comparators.forEach((comparator) => {
+				const compver = new SemVer(comparator.semver.version);
+				switch (comparator.operator) {
+					case ">":
+						if (compver.prerelease.length === 0) compver.patch++;
+						else compver.prerelease.push(0);
+						compver.raw = compver.format();
+					case "":
+					case ">=":
+						if (!setMin || gt(compver, setMin)) setMin = compver;
+						break;
+					case "<":
+					case "<=": break;
+					/* istanbul ignore next */
+					default: throw new Error(`Unexpected operation: ${comparator.operator}`);
+				}
+			});
+			if (setMin && (!minver || gt(minver, setMin))) minver = setMin;
+		}
+		if (minver && range.test(minver)) return minver;
+		return null;
+	};
+	module.exports = minVersion;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js
+var require_valid = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const Range = require_range();
+	const validRange = (range, options) => {
+		try {
+			return new Range(range, options).range || "*";
+		} catch (er) {
+			return null;
+		}
+	};
+	module.exports = validRange;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js
+var require_outside = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const SemVer = require_semver$1();
+	const Comparator = require_comparator();
+	const { ANY } = Comparator;
+	const Range = require_range();
+	const satisfies = require_satisfies();
+	const gt = require_gt();
+	const lt = require_lt();
+	const lte = require_lte();
+	const gte = require_gte();
+	const outside = (version, range, hilo, options) => {
+		version = new SemVer(version, options);
+		range = new Range(range, options);
+		let gtfn, ltefn, ltfn, comp, ecomp;
+		switch (hilo) {
+			case ">":
+				gtfn = gt;
+				ltefn = lte;
+				ltfn = lt;
+				comp = ">";
+				ecomp = ">=";
+				break;
+			case "<":
+				gtfn = lt;
+				ltefn = gte;
+				ltfn = gt;
+				comp = "<";
+				ecomp = "<=";
+				break;
+			default: throw new TypeError("Must provide a hilo val of \"<\" or \">\"");
+		}
+		if (satisfies(version, range, options)) return false;
+		for (let i = 0; i < range.set.length; ++i) {
+			const comparators = range.set[i];
+			let high = null;
+			let low = null;
+			comparators.forEach((comparator) => {
+				if (comparator.semver === ANY) comparator = new Comparator(">=0.0.0");
+				high = high || comparator;
+				low = low || comparator;
+				if (gtfn(comparator.semver, high.semver, options)) high = comparator;
+				else if (ltfn(comparator.semver, low.semver, options)) low = comparator;
+			});
+			if (high.operator === comp || high.operator === ecomp) return false;
+			if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) return false;
+			else if (low.operator === ecomp && ltfn(version, low.semver)) return false;
+		}
+		return true;
+	};
+	module.exports = outside;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js
+var require_gtr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const outside = require_outside();
+	const gtr = (version, range, options) => outside(version, range, ">", options);
+	module.exports = gtr;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js
+var require_ltr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const outside = require_outside();
+	const ltr = (version, range, options) => outside(version, range, "<", options);
+	module.exports = ltr;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js
+var require_intersects = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const Range = require_range();
+	const intersects = (r1, r2, options) => {
+		r1 = new Range(r1, options);
+		r2 = new Range(r2, options);
+		return r1.intersects(r2, options);
+	};
+	module.exports = intersects;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js
+var require_simplify = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const satisfies = require_satisfies();
+	const compare = require_compare();
+	module.exports = (versions, range, options) => {
+		const set = [];
+		let first = null;
+		let prev = null;
+		const v = versions.sort((a, b) => compare(a, b, options));
+		for (const version of v) if (satisfies(version, range, options)) {
+			prev = version;
+			if (!first) first = version;
+		} else {
+			if (prev) set.push([first, prev]);
+			prev = null;
+			first = null;
+		}
+		if (first) set.push([first, null]);
+		const ranges = [];
+		for (const [min, max] of set) if (min === max) ranges.push(min);
+		else if (!max && min === v[0]) ranges.push("*");
+		else if (!max) ranges.push(`>=${min}`);
+		else if (min === v[0]) ranges.push(`<=${max}`);
+		else ranges.push(`${min} - ${max}`);
+		const simplified = ranges.join(" || ");
+		const original = typeof range.raw === "string" ? range.raw : String(range);
+		return simplified.length < original.length ? simplified : range;
+	};
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js
+var require_subset = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const Range = require_range();
+	const Comparator = require_comparator();
+	const { ANY } = Comparator;
+	const satisfies = require_satisfies();
+	const compare = require_compare();
+	const subset = (sub, dom, options = {}) => {
+		if (sub === dom) return true;
+		sub = new Range(sub, options);
+		dom = new Range(dom, options);
+		let sawNonNull = false;
+		OUTER: for (const simpleSub of sub.set) {
+			for (const simpleDom of dom.set) {
+				const isSub = simpleSubset(simpleSub, simpleDom, options);
+				sawNonNull = sawNonNull || isSub !== null;
+				if (isSub) continue OUTER;
+			}
+			if (sawNonNull) return false;
+		}
+		return true;
+	};
+	const minimumVersionWithPreRelease = [new Comparator(">=0.0.0-0")];
+	const minimumVersion = [new Comparator(">=0.0.0")];
+	const simpleSubset = (sub, dom, options) => {
+		if (sub === dom) return true;
+		if (sub.length === 1 && sub[0].semver === ANY) if (dom.length === 1 && dom[0].semver === ANY) return true;
+		else if (options.includePrerelease) sub = minimumVersionWithPreRelease;
+		else sub = minimumVersion;
+		if (dom.length === 1 && dom[0].semver === ANY) if (options.includePrerelease) return true;
+		else dom = minimumVersion;
+		const eqSet = /* @__PURE__ */ new Set();
+		let gt, lt;
+		for (const c of sub) if (c.operator === ">" || c.operator === ">=") gt = higherGT(gt, c, options);
+		else if (c.operator === "<" || c.operator === "<=") lt = lowerLT(lt, c, options);
+		else eqSet.add(c.semver);
+		if (eqSet.size > 1) return null;
+		let gtltComp;
+		if (gt && lt) {
+			gtltComp = compare(gt.semver, lt.semver, options);
+			if (gtltComp > 0) return null;
+			else if (gtltComp === 0 && (gt.operator !== ">=" || lt.operator !== "<=")) return null;
+		}
+		for (const eq of eqSet) {
+			if (gt && !satisfies(eq, String(gt), options)) return null;
+			if (lt && !satisfies(eq, String(lt), options)) return null;
+			for (const c of dom) if (!satisfies(eq, String(c), options)) return false;
+			return true;
+		}
+		let higher, lower;
+		let hasDomLT, hasDomGT;
+		let needDomLTPre = lt && !options.includePrerelease && lt.semver.prerelease.length ? lt.semver : false;
+		let needDomGTPre = gt && !options.includePrerelease && gt.semver.prerelease.length ? gt.semver : false;
+		if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt.operator === "<" && needDomLTPre.prerelease[0] === 0) needDomLTPre = false;
+		for (const c of dom) {
+			hasDomGT = hasDomGT || c.operator === ">" || c.operator === ">=";
+			hasDomLT = hasDomLT || c.operator === "<" || c.operator === "<=";
+			if (gt) {
+				if (needDomGTPre) {
+					if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomGTPre.major && c.semver.minor === needDomGTPre.minor && c.semver.patch === needDomGTPre.patch) needDomGTPre = false;
+				}
+				if (c.operator === ">" || c.operator === ">=") {
+					higher = higherGT(gt, c, options);
+					if (higher === c && higher !== gt) return false;
+				} else if (gt.operator === ">=" && !c.test(gt.semver)) return false;
+			}
+			if (lt) {
+				if (needDomLTPre) {
+					if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomLTPre.major && c.semver.minor === needDomLTPre.minor && c.semver.patch === needDomLTPre.patch) needDomLTPre = false;
+				}
+				if (c.operator === "<" || c.operator === "<=") {
+					lower = lowerLT(lt, c, options);
+					if (lower === c && lower !== lt) return false;
+				} else if (lt.operator === "<=" && !c.test(lt.semver)) return false;
+			}
+			if (!c.operator && (lt || gt) && gtltComp !== 0) return false;
+		}
+		if (gt && hasDomLT && !lt && gtltComp !== 0) return false;
+		if (lt && hasDomGT && !gt && gtltComp !== 0) return false;
+		if (needDomGTPre || needDomLTPre) return false;
+		return true;
+	};
+	const higherGT = (a, b, options) => {
+		if (!a) return b;
+		const comp = compare(a.semver, b.semver, options);
+		return comp > 0 ? a : comp < 0 ? b : b.operator === ">" && a.operator === ">=" ? b : a;
+	};
+	const lowerLT = (a, b, options) => {
+		if (!a) return b;
+		const comp = compare(a.semver, b.semver, options);
+		return comp < 0 ? a : comp > 0 ? b : b.operator === "<" && a.operator === "<=" ? b : a;
+	};
+	module.exports = subset;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js
+var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const internalRe = require_re();
+	const constants = require_constants();
+	const SemVer = require_semver$1();
+	const identifiers = require_identifiers();
+	const parse = require_parse();
+	const valid = require_valid$1();
+	const clean = require_clean();
+	const inc = require_inc();
+	const diff = require_diff();
+	const major = require_major();
+	const minor = require_minor();
+	const patch = require_patch();
+	const prerelease = require_prerelease();
+	const compare = require_compare();
+	const rcompare = require_rcompare();
+	const compareLoose = require_compare_loose();
+	const compareBuild = require_compare_build();
+	const sort = require_sort();
+	const rsort = require_rsort();
+	const gt = require_gt();
+	const lt = require_lt();
+	const eq = require_eq();
+	const neq = require_neq();
+	const gte = require_gte();
+	const lte = require_lte();
+	const cmp = require_cmp();
+	const coerce = require_coerce();
+	const truncate = require_truncate();
+	const Comparator = require_comparator();
+	const Range = require_range();
+	const satisfies = require_satisfies();
+	const toComparators = require_to_comparators();
+	const maxSatisfying = require_max_satisfying();
+	const minSatisfying = require_min_satisfying();
+	const minVersion = require_min_version();
+	const validRange = require_valid();
+	const outside = require_outside();
+	const gtr = require_gtr();
+	const ltr = require_ltr();
+	const intersects = require_intersects();
+	const simplifyRange = require_simplify();
+	const subset = require_subset();
+	module.exports = {
+		parse,
+		valid,
+		clean,
+		inc,
+		diff,
+		major,
+		minor,
+		patch,
+		prerelease,
+		compare,
+		rcompare,
+		compareLoose,
+		compareBuild,
+		sort,
+		rsort,
+		gt,
+		lt,
+		eq,
+		neq,
+		gte,
+		lte,
+		cmp,
+		coerce,
+		truncate,
+		Comparator,
+		Range,
+		satisfies,
+		toComparators,
+		maxSatisfying,
+		minSatisfying,
+		minVersion,
+		validRange,
+		outside,
+		gtr,
+		ltr,
+		intersects,
+		simplifyRange,
+		subset,
+		SemVer,
+		re: internalRe.re,
+		src: internalRe.src,
+		tokens: internalRe.t,
+		SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
+		RELEASE_TYPES: constants.RELEASE_TYPES,
+		compareIdentifiers: identifiers.compareIdentifiers,
+		rcompareIdentifiers: identifiers.rcompareIdentifiers
+	};
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/manifest.js
+var import_semver = /* @__PURE__ */ __toESM(require_semver(), 1);
+var __awaiter$3 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+
+//#endregion
+//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/retry-helper.js
+var __awaiter$2 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+/**
+* Internal class for retries
+*/
+var RetryHelper = class {
+	constructor(maxAttempts, minSeconds, maxSeconds) {
+		if (maxAttempts < 1) throw new Error("max attempts should be greater than or equal to 1");
+		this.maxAttempts = maxAttempts;
+		this.minSeconds = Math.floor(minSeconds);
+		this.maxSeconds = Math.floor(maxSeconds);
+		if (this.minSeconds > this.maxSeconds) throw new Error("min seconds should be less than or equal to max seconds");
+	}
+	execute(action, isRetryable) {
+		return __awaiter$2(this, void 0, void 0, function* () {
+			let attempt = 1;
+			while (attempt < this.maxAttempts) {
+				try {
+					return yield action();
+				} catch (err) {
+					if (isRetryable && !isRetryable(err)) throw err;
+					info(err.message);
+				}
+				const seconds = this.getSleepAmount();
+				info(`Waiting ${seconds} seconds before trying again`);
+				yield this.sleep(seconds);
+				attempt++;
+			}
+			return yield action();
+		});
+	}
+	getSleepAmount() {
+		return Math.floor(Math.random() * (this.maxSeconds - this.minSeconds + 1)) + this.minSeconds;
+	}
+	sleep(seconds) {
+		return __awaiter$2(this, void 0, void 0, function* () {
+			return new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
+		});
+	}
+};
+
+//#endregion
+//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/tool-cache.js
+var __awaiter$1 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+var HTTPError = class extends Error {
+	constructor(httpStatusCode) {
+		super(`Unexpected HTTP response: ${httpStatusCode}`);
+		this.httpStatusCode = httpStatusCode;
+		Object.setPrototypeOf(this, new.target.prototype);
+	}
+};
+const IS_WINDOWS = process.platform === "win32";
+const IS_MAC = process.platform === "darwin";
+const userAgent = "actions/tool-cache";
+/**
+* Download a tool from an url and stream it into a file
+*
+* @param url       url of tool to download
+* @param dest      path to download tool
+* @param auth      authorization header
+* @param headers   other headers
+* @returns         path to downloaded tool
+*/
+function downloadTool(url, dest, auth, headers) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		dest = dest || path$1.join(_getTempDirectory(), crypto$1.randomUUID());
+		yield mkdirP(path$1.dirname(dest));
+		debug(`Downloading ${url}`);
+		debug(`Destination ${dest}`);
+		return yield new RetryHelper(3, _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MIN_SECONDS", 10), _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MAX_SECONDS", 20)).execute(() => __awaiter$1(this, void 0, void 0, function* () {
+			return yield downloadToolAttempt(url, dest || "", auth, headers);
+		}), (err) => {
+			if (err instanceof HTTPError && err.httpStatusCode) {
+				if (err.httpStatusCode < 500 && err.httpStatusCode !== 408 && err.httpStatusCode !== 429) return false;
+			}
+			return true;
+		});
+	});
+}
+function downloadToolAttempt(url, dest, auth, headers) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		if (fs.existsSync(dest)) throw new Error(`Destination file path ${dest} already exists`);
+		const http = new HttpClient(userAgent, [], { allowRetries: false });
+		if (auth) {
+			debug("set auth");
+			if (headers === void 0) headers = {};
+			headers.authorization = auth;
+		}
+		const response = yield http.get(url, headers);
+		if (response.message.statusCode !== 200) {
+			const err = new HTTPError(response.message.statusCode);
+			debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
+			throw err;
+		}
+		const pipeline = util.promisify(stream.pipeline);
+		const readStream = _getGlobal("TEST_DOWNLOAD_TOOL_RESPONSE_MESSAGE_FACTORY", () => response.message)();
+		let succeeded = false;
+		try {
+			yield pipeline(readStream, fs.createWriteStream(dest));
+			debug("download complete");
+			succeeded = true;
+			return dest;
+		} finally {
+			if (!succeeded) {
+				debug("download failed");
+				try {
+					yield rmRF(dest);
+				} catch (err) {
+					debug(`Failed to delete '${dest}'. ${err.message}`);
+				}
+			}
+		}
+	});
+}
+/**
+* Extract a compressed tar archive
+*
+* @param file     path to the tar
+* @param dest     destination directory. Optional.
+* @param flags    flags for the tar command to use for extraction. Defaults to 'xz' (extracting gzipped tars). Optional.
+* @returns        path to the destination directory
+*/
+function extractTar(file_1, dest_1) {
+	return __awaiter$1(this, arguments, void 0, function* (file, dest, flags = "xz") {
+		if (!file) throw new Error("parameter 'file' is required");
+		dest = yield _createExtractFolder(dest);
+		debug("Checking tar --version");
+		let versionOutput = "";
+		yield exec("tar --version", [], {
+			ignoreReturnCode: true,
+			silent: true,
+			listeners: {
+				stdout: (data) => versionOutput += data.toString(),
+				stderr: (data) => versionOutput += data.toString()
+			}
+		});
+		debug(versionOutput.trim());
+		const isGnuTar = versionOutput.toUpperCase().includes("GNU TAR");
+		let args;
+		if (flags instanceof Array) args = flags;
+		else args = [flags];
+		if (isDebug() && !flags.includes("v")) args.push("-v");
+		let destArg = dest;
+		let fileArg = file;
+		if (IS_WINDOWS && isGnuTar) {
+			args.push("--force-local");
+			destArg = dest.replace(/\\/g, "/");
+			fileArg = file.replace(/\\/g, "/");
+		}
+		if (isGnuTar) {
+			args.push("--warning=no-unknown-keyword");
+			args.push("--overwrite");
+		}
+		args.push("-C", destArg, "-f", fileArg);
+		yield exec(`tar`, args);
+		return dest;
+	});
+}
+/**
+* Extract a zip
+*
+* @param file     path to the zip
+* @param dest     destination directory. Optional.
+* @returns        path to the destination directory
+*/
+function extractZip(file, dest) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		if (!file) throw new Error("parameter 'file' is required");
+		dest = yield _createExtractFolder(dest);
+		if (IS_WINDOWS) yield extractZipWin(file, dest);
+		else yield extractZipNix(file, dest);
+		return dest;
+	});
+}
+function extractZipWin(file, dest) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, "");
+		const escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, "");
+		const pwshPath = yield which("pwsh", false);
+		if (pwshPath) {
+			const args = [
+				"-NoLogo",
+				"-NoProfile",
+				"-NonInteractive",
+				"-ExecutionPolicy",
+				"Unrestricted",
+				"-Command",
+				[
+					`$ErrorActionPreference = 'Stop' ;`,
+					`try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ;`,
+					`try { [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}', $true) }`,
+					`catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath '${escapedFile}' -DestinationPath '${escapedDest}' -Force } else { throw $_ } } ;`
+				].join(" ")
+			];
+			debug(`Using pwsh at path: ${pwshPath}`);
+			yield exec(`"${pwshPath}"`, args);
+		} else {
+			const args = [
+				"-NoLogo",
+				"-Sta",
+				"-NoProfile",
+				"-NonInteractive",
+				"-ExecutionPolicy",
+				"Unrestricted",
+				"-Command",
+				[
+					`$ErrorActionPreference = 'Stop' ;`,
+					`try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ;`,
+					`if ((Get-Command -Name Expand-Archive -Module Microsoft.PowerShell.Archive -ErrorAction Ignore)) { Expand-Archive -LiteralPath '${escapedFile}' -DestinationPath '${escapedDest}' -Force }`,
+					`else {[System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}', $true) }`
+				].join(" ")
+			];
+			const powershellPath = yield which("powershell", true);
+			debug(`Using powershell at path: ${powershellPath}`);
+			yield exec(`"${powershellPath}"`, args);
+		}
+	});
+}
+function extractZipNix(file, dest) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		const unzipPath = yield which("unzip", true);
+		const args = [file];
+		if (!isDebug()) args.unshift("-q");
+		args.unshift("-o");
+		yield exec(`"${unzipPath}"`, args, { cwd: dest });
+	});
+}
+/**
+* Caches a directory and installs it into the tool cacheDir
+*
+* @param sourceDir    the directory to cache into tools
+* @param tool          tool name
+* @param version       version of the tool.  semver format
+* @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
+*/
+function cacheDir(sourceDir, tool, version, arch) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		version = import_semver.clean(version) || version;
+		arch = arch || os$1.arch();
+		debug(`Caching tool ${tool} ${version} ${arch}`);
+		debug(`source dir: ${sourceDir}`);
+		if (!fs.statSync(sourceDir).isDirectory()) throw new Error("sourceDir is not a directory");
+		const destPath = yield _createToolPath(tool, version, arch);
+		for (const itemName of fs.readdirSync(sourceDir)) {
+			const s = path$1.join(sourceDir, itemName);
+			yield cp(s, destPath, { recursive: true });
+		}
+		_completeToolPath(tool, version, arch);
+		return destPath;
+	});
+}
+/**
+* Caches a downloaded file (GUID) and installs it
+* into the tool cache with a given targetName
+*
+* @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid.
+* @param targetFile    the name of the file name in the tools directory
+* @param tool          tool name
+* @param version       version of the tool.  semver format
+* @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
+*/
+function cacheFile(sourceFile, targetFile, tool, version, arch) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		version = import_semver.clean(version) || version;
+		arch = arch || os$1.arch();
+		debug(`Caching tool ${tool} ${version} ${arch}`);
+		debug(`source file: ${sourceFile}`);
+		if (!fs.statSync(sourceFile).isFile()) throw new Error("sourceFile is not a file");
+		const destFolder = yield _createToolPath(tool, version, arch);
+		const destPath = path$1.join(destFolder, targetFile);
+		debug(`destination file ${destPath}`);
+		yield cp(sourceFile, destPath);
+		_completeToolPath(tool, version, arch);
+		return destFolder;
+	});
+}
+/**
+* Finds the path to a tool version in the local installed tool cache
+*
+* @param toolName      name of the tool
+* @param versionSpec   version of the tool
+* @param arch          optional arch.  defaults to arch of computer
+*/
+function find(toolName, versionSpec, arch) {
+	if (!toolName) throw new Error("toolName parameter is required");
+	if (!versionSpec) throw new Error("versionSpec parameter is required");
+	arch = arch || os$1.arch();
+	if (!isExplicitVersion(versionSpec)) versionSpec = evaluateVersions(findAllVersions(toolName, arch), versionSpec);
+	let toolPath = "";
+	if (versionSpec) {
+		versionSpec = import_semver.clean(versionSpec) || "";
+		const cachePath = path$1.join(_getCacheDirectory(), toolName, versionSpec, arch);
+		debug(`checking cache: ${cachePath}`);
+		if (fs.existsSync(cachePath) && fs.existsSync(`${cachePath}.complete`)) {
+			debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
+			toolPath = cachePath;
+		} else debug("not found");
+	}
+	return toolPath;
+}
+/**
+* Finds the paths to all versions of a tool that are installed in the local tool cache
+*
+* @param toolName  name of the tool
+* @param arch      optional arch.  defaults to arch of computer
+*/
+function findAllVersions(toolName, arch) {
+	const versions = [];
+	arch = arch || os$1.arch();
+	const toolPath = path$1.join(_getCacheDirectory(), toolName);
+	if (fs.existsSync(toolPath)) {
+		const children = fs.readdirSync(toolPath);
+		for (const child of children) if (isExplicitVersion(child)) {
+			const fullPath = path$1.join(toolPath, child, arch || "");
+			if (fs.existsSync(fullPath) && fs.existsSync(`${fullPath}.complete`)) versions.push(child);
+		}
+	}
+	return versions;
+}
+function _createExtractFolder(dest) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		if (!dest) dest = path$1.join(_getTempDirectory(), crypto$1.randomUUID());
+		yield mkdirP(dest);
+		return dest;
+	});
+}
+function _createToolPath(tool, version, arch) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		const folderPath = path$1.join(_getCacheDirectory(), tool, import_semver.clean(version) || version, arch || "");
+		debug(`destination ${folderPath}`);
+		const markerPath = `${folderPath}.complete`;
+		yield rmRF(folderPath);
+		yield rmRF(markerPath);
+		yield mkdirP(folderPath);
+		return folderPath;
+	});
+}
+function _completeToolPath(tool, version, arch) {
+	const markerPath = `${path$1.join(_getCacheDirectory(), tool, import_semver.clean(version) || version, arch || "")}.complete`;
+	fs.writeFileSync(markerPath, "");
+	debug("finished caching tool");
+}
+/**
+* Check if version string is explicit
+*
+* @param versionSpec      version string to check
+*/
+function isExplicitVersion(versionSpec) {
+	const c = import_semver.clean(versionSpec) || "";
+	debug(`isExplicit: ${c}`);
+	const valid = import_semver.valid(c) != null;
+	debug(`explicit? ${valid}`);
+	return valid;
+}
+/**
+* Get the highest satisfiying semantic version in `versions` which satisfies `versionSpec`
+*
+* @param versions        array of versions to evaluate
+* @param versionSpec     semantic version spec to satisfy
+*/
+function evaluateVersions(versions, versionSpec) {
+	let version = "";
+	debug(`evaluating ${versions.length} versions`);
+	versions = versions.sort((a, b) => {
+		if (import_semver.gt(a, b)) return 1;
+		return -1;
+	});
+	for (let i = versions.length - 1; i >= 0; i--) {
+		const potential = versions[i];
+		if (import_semver.satisfies(potential, versionSpec)) {
+			version = potential;
+			break;
+		}
+	}
+	if (version) debug(`matched: ${version}`);
+	else debug("match not found");
+	return version;
+}
+/**
+* Gets RUNNER_TOOL_CACHE
+*/
+function _getCacheDirectory() {
+	const cacheDirectory = process.env["RUNNER_TOOL_CACHE"] || "";
+	ok(cacheDirectory, "Expected RUNNER_TOOL_CACHE to be defined");
+	return cacheDirectory;
+}
+/**
+* Gets RUNNER_TEMP
+*/
+function _getTempDirectory() {
+	const tempDirectory = process.env["RUNNER_TEMP"] || "";
+	ok(tempDirectory, "Expected RUNNER_TEMP to be defined");
+	return tempDirectory;
+}
+/**
+* Gets a global variable
+*/
+function _getGlobal(key, defaultValue) {
+	const value = global[key];
+	return value !== void 0 ? value : defaultValue;
+}
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/sentinels.js
+var require_sentinels = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Core primitives and fundamental constants. Holds sentinels,
+	*   unknown/empty tokens, the internals symbol, and a few shared env-var name
+	*   strings. Intentionally kept small - prefer moving constants to a more
+	*   specific `src/constants/*` module when possible.
+	*/
+	const kInternalsSymbol = Symbol("@socketregistry.constants.internals");
+	const LOOP_SENTINEL = 1e6;
+	const UNKNOWN_ERROR = "Unknown error";
+	const UNKNOWN_VALUE = "<unknown>";
+	const EMPTY_FILE = "/* empty */\n";
+	const EMPTY_VALUE = "<value>";
+	const UNDEFINED_TOKEN = void 0;
+	const COLUMN_LIMIT = 80;
+	const V = "v";
+	const NODE_AUTH_TOKEN = "NODE_AUTH_TOKEN";
+	const NODE_ENV = "NODE_ENV";
+	exports.COLUMN_LIMIT = COLUMN_LIMIT;
+	exports.EMPTY_FILE = EMPTY_FILE;
+	exports.EMPTY_VALUE = EMPTY_VALUE;
+	exports.LOOP_SENTINEL = LOOP_SENTINEL;
+	exports.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN;
+	exports.NODE_ENV = NODE_ENV;
+	exports.UNDEFINED_TOKEN = UNDEFINED_TOKEN;
+	exports.UNKNOWN_ERROR = UNKNOWN_ERROR;
+	exports.UNKNOWN_VALUE = UNKNOWN_VALUE;
+	exports.V = V;
+	exports.kInternalsSymbol = kInternalsSymbol;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/error.js
+var require_error = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Safe references to `Error` and its subclass constructors, plus V8's
+	*   stack-trace API. `Error.isError` is ES2025; `captureStackTrace` /
+	*   `prepareStackTrace` / `stackTraceLimit` are V8 extensions absent on
+	*   JavaScriptCore and SpiderMonkey. Each is typed `Function | undefined` so
+	*   non-V8 importers stay safe.
+	*/
+	const ErrorCtor = Error;
+	const AggregateErrorCtor = AggregateError;
+	const EvalErrorCtor = EvalError;
+	const RangeErrorCtor = RangeError;
+	const ReferenceErrorCtor = ReferenceError;
+	const SyntaxErrorCtor = SyntaxError;
+	const TypeErrorCtor = TypeError;
+	const URIErrorCtor = URIError;
+	const ErrorIsError = Error.isError;
+	const ErrorCaptureStackTrace = Error.captureStackTrace;
+	const ErrorPrepareStackTrace = Error.prepareStackTrace;
+	const stackTraceLimitGetter = (() => {
+		const getter = Error.__lookupGetter__?.("stackTraceLimit");
+		/* c8 ignore start */
+		if (typeof getter === "function") return () => getter.call(Error);
+		/* c8 ignore stop */
+	})();
+	function ErrorStackTraceLimit() {
+		/* c8 ignore start - non-V8 fallback path unreachable under test */
+		if (stackTraceLimitGetter) return stackTraceLimitGetter();
+		return Error.stackTraceLimit;
+		/* c8 ignore stop */
+	}
+	exports.AggregateErrorCtor = AggregateErrorCtor;
+	exports.ErrorCaptureStackTrace = ErrorCaptureStackTrace;
+	exports.ErrorCtor = ErrorCtor;
+	exports.ErrorIsError = ErrorIsError;
+	exports.ErrorPrepareStackTrace = ErrorPrepareStackTrace;
+	exports.ErrorStackTraceLimit = ErrorStackTraceLimit;
+	exports.EvalErrorCtor = EvalErrorCtor;
+	exports.RangeErrorCtor = RangeErrorCtor;
+	exports.ReferenceErrorCtor = ReferenceErrorCtor;
+	exports.SyntaxErrorCtor = SyntaxErrorCtor;
+	exports.TypeErrorCtor = TypeErrorCtor;
+	exports.URIErrorCtor = URIErrorCtor;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/runtime.js
+var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Runtime environment detection constants. All checks use only
+	*   `typeof`-safe global probes so this module is safe to import in browser,
+	*   Node.js, Deno, Bun, and bundled contexts alike.
+	*/
+	/**
+	* True when running inside a Node.js process. Detected via
+	* `process.versions.node` — present in Node, absent in browsers and Deno/Bun
+	* which expose a different `process.versions` shape (or no `process` at all).
+	*/
+	const IS_NODE = typeof process !== "undefined" && typeof process.versions !== "undefined" && typeof process.versions.node === "string";
+	/**
+	* True when running in a browser context (window + document both defined).
+	* Note: Chrome extensions have `window` in popup contexts but not in service
+	* workers — check `IS_SERVICE_WORKER` for that case.
+	*/
+	const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
+	/**
+	* True when running inside a Web Worker / Chrome MV3 service worker. `self` is
+	* defined without `window` in worker contexts.
+	*/
+	const IS_WORKER = typeof self !== "undefined" && typeof window === "undefined" && typeof document === "undefined";
+	exports.IS_BROWSER = IS_BROWSER;
+	exports.IS_NODE = IS_NODE;
+	exports.IS_WORKER = IS_WORKER;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/node/module.js
+var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_runtime = require_runtime();
+	let module$1 = __require("module");
+	/**
+	* @file Accessors for `node:module` that work across runtimes. Ambient
+	*   `require` is bound in CommonJS but unbound in ESM and inside
+	*   ahead-of-time-compiled package modules (e.g. Perry), where reading it
+	*   throws. And Perry's `require('module')` value omits `isBuiltin`. So instead
+	*   of the ambient `require('module')` lazy-loader, `isBuiltin`/`createRequire`
+	*   are imported as named values from the bare `module` specifier — which
+	*   resolves on Node and Perry, and which browser bundlers can stub via
+	*   resolve.fallback (a `node:` prefix would throw UnhandledSchemeError
+	*   there).
+	*   `require` is DIRECTORY-SPECIFIC: `createRequire(base)` resolves relative
+	*   specifiers (`./x`, `../y`) from `base`'s directory. For builtins and bare
+	*   packages that's irrelevant since they resolve the same anywhere, so the
+	*   cached `getRequire` / `requireBuiltin` bind to THIS file. A RELATIVE
+	*   specifier must resolve from the CALLER's directory, so use `requireFrom`
+	*   with the caller's `import.meta.url` — binding such a load to this file
+	*   would resolve it against `src/node/` instead. Bundled, every module
+	*   collapses to one base and either works; unbundled (e.g. AOT-compiled from
+	*   source), each module sits at its own nested path and the base matters.
+	*/
+	let cachedModule;
+	let cachedRequire;
+	/**
+	* Bind a working `require`. Ambient `require` exists in CommonJS; in ESM and
+	* ahead-of-time-compiled package modules it is unbound (reading it throws or
+	* yields undefined), so fall back to `createRequire`. Returns undefined off
+	* Node and in browsers, where neither is available.
+	*
+	* `fromUrl` sets the resolution base — pass a caller's `import.meta.url` to
+	* resolve that caller's RELATIVE specifiers. When omitted, the base is this
+	* file, which is correct only for builtins / bare packages (dir-independent).
+	* With `fromUrl` the ambient `require` is skipped: it is bound to THIS file, so
+	* it would resolve a relative specifier from the wrong directory.
+	*/
+	function bindRequire(fromUrl) {
+		if (!require_constants_runtime.IS_NODE) return;
+		if (!fromUrl && typeof __require === "function") return __require;
+		if (typeof module$1.createRequire === "function") try {
+			return (0, module$1.createRequire)(fromUrl ?? __require("url").pathToFileURL(__filename).href);
+		} catch {
+			return;
+		}
+	}
+	/**
+	* Returns `node:module` loaded through the bound `require`, or undefined off
+	* Node. Cached across calls.
+	*/
+	function getNodeModule() {
+		return cachedModule ??= requireBuiltin("module");
+	}
+	/**
+	* Returns a working `require` bound to THIS file, binding one on first call
+	* (see bindRequire). Cached across calls; undefined off Node / in browsers.
+	*
+	* For builtins and bare packages only — the resolution base is this file, so a
+	* relative specifier would resolve from `src/node/`. Use `requireFrom` for
+	* relative loads.
+	*/
+	function getRequire() {
+		if (cachedRequire === void 0) cachedRequire = bindRequire();
+		return cachedRequire;
+	}
+	/**
+	* Is `name` a Node built-in module? Resolved from the statically-imported
+	* `isBuiltin`, so it works on Node and on ahead-of-time-compiled binaries
+	* (Perry), where ambient `require('module')` would lack `isBuiltin`. Returns
+	* false in browsers, where the bare `module` import is stubbed away.
+	*
+	* Single source of truth for "is this a Node builtin?" probes across socket-lib
+	* (used by the smol-binding loaders to gate their `node:smol-*` loads).
+	*/
+	function isNodeBuiltin(name) {
+		if (!require_constants_runtime.IS_NODE || typeof module$1.isBuiltin !== "function") return false;
+		return (0, module$1.isBuiltin)(name);
+	}
+	/**
+	* Load a built-in module by *computed* specifier through the bound `require`
+	* (see getRequire). The specifier is a parameter — never a literal at the call
+	* site — so browser bundlers neither walk nor bundle it. Returns undefined
+	* where no `require` can be bound.
+	*
+	* Builtins / bare packages only (dir-independent); for a relative specifier use
+	* `requireFrom`. Used by `getNodeModule` for `node:module`, and by the
+	* smol-binding loaders for the optional `node:smol-*` native bindings (gated
+	* behind `isNodeBuiltin`, true only on socket-btm's smol Node binary).
+	*/
+	function requireBuiltin(specifier) {
+		const req = getRequire();
+		if (req) return req(specifier);
+	}
+	/**
+	* Load a module by specifier from a CALLER-supplied base (its
+	* `import.meta.url`). Use this for RELATIVE specifiers (`./x`, `../y`), whose
+	* resolution depends on the caller's directory — `requireBuiltin` binds to this
+	* file and would resolve them from `src/node/`. Not cached: the binding is
+	* per-caller. Returns undefined where no `require` can be bound.
+	*/
+	function requireFrom(fromUrl, specifier) {
+		const req = bindRequire(fromUrl);
+		if (req) return req(specifier);
+	}
+	exports.bindRequire = bindRequire;
+	exports.getNodeModule = getNodeModule;
+	exports.getRequire = getRequire;
+	exports.isNodeBuiltin = isNodeBuiltin;
+	exports.requireBuiltin = requireBuiltin;
+	exports.requireFrom = requireFrom;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/smol/detect.js
+var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_module = require_module();
+	/**
+	* @file Smol detection + lazy-loader for `node:smol-util`. Two
+	*   responsibilities:
+	*
+	*   1. `isSmol()` — memoized boolean detector for socket-btm's smol Node binary.
+	*      Mirrors `isSeaBinary()` from `src/sea.ts`. Probes via
+	*      `node:module.isBuiltin('node:smol-util')` since only the smol binary
+	*      registers any `node:smol-*` builtins.
+	*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
+	*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
+	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
+	*      + `Function.prototype.call` trampoline that the JS form
+	*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
+	*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
+	*      + non-Node runtimes. Result is cached across calls; the lazy-loader
+	*      follows the same shape as `src/node/fs.ts` etc.
+	*
+	* @see https://github.com/SocketDev/socket-btm — socket-btm builds
+	*   the smol binary that exposes the `node:smol-util` binding.
+	*/
+	/**
+	* Cached smol-binary detection result.
+	*/
+	let isSmolCache;
+	/**
+	* Cached `node:smol-util` binding. `null` = probed and unavailable; `undefined`
+	* = not yet probed. JS truthiness collapses both to "no binding" at the call
+	* site.
+	*/
+	let smolUtilCache;
+	let smolUtilProbed = false;
+	/**
+	* Returns `node:smol-util` when running on the smol Node binary, otherwise
+	* `undefined`. Result is cached across calls.
+	*/
+	function getSmolUtil() {
+		if (!smolUtilProbed) {
+			smolUtilProbed = true;
+			/* c8 ignore start - smol Node binary only. */
+			if (require_node_module.isNodeBuiltin("node:smol-util")) smolUtilCache = require_node_module.requireBuiltin("node:smol-util");
+		}
+		return smolUtilCache;
+	}
+	/**
+	* Detect if the current process is running on socket-btm's smol Node binary.
+	* Memoized on first call.
+	*
+	* Defensive across runtimes: returns `false` on stock Node, browsers (no
+	* `node:module`), Deno and Bun, whose module resolution differs, and worker
+	* threads, each of which has its own builtin table.
+	*
+	* @example
+	*   ;```ts
+	*   import { isSmol } from '@socketsecurity/lib/smol/detect'
+	*
+	*   if (isSmol()) {
+	*     // running on the smol binary; native fast paths available
+	*   }
+	*   ```
+	*/
+	function isSmol() {
+		if (isSmolCache === void 0) isSmolCache = require_node_module.isNodeBuiltin("node:smol-util");
+		return isSmolCache;
+	}
+	exports.getSmolUtil = getSmolUtil;
+	exports.isSmol = isSmol;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/uncurry.js
+var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
+	*   Node.js's internal/per_context/primordials.js. Every other primordials leaf
+	*   depends on `uncurryThis` to expose prototype-method primordials, so this
+	*   file must be import-safe before any of them. Smol fast paths
+	*   (`node:smol-util`) replace the JS forms when running on socket-btm's smol
+	*   Node binary; stock Node and other runtimes fall back to the standard
+	*   `bind.bind(call)` shape. **IMPORTANT**: do not destructure on `globalThis`
+	*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
+	*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
+	*/
+	const smolUtil = require_detect().getSmolUtil();
+	const { apply, bind, call } = Function.prototype;
+	const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
+	const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
+	const applyBoundForSafe = applyBind;
+	const applySafe = smolUtil?.applySafe ?? ((fn) => {
+		const apply2 = applyBoundForSafe(fn);
+		return (self, args) => {
+			try {
+				return apply2(self, args);
+			} catch {
+				return;
+			}
+		};
+	});
+	const bindCallFallback = ((fn, thisArg, ...presetArgs) => Function.prototype.bind.apply(fn, [thisArg, ...presetArgs]));
+	const bindCall = smolUtil?.bindCall ?? bindCallFallback;
+	const weakRefSafe = smolUtil?.weakRefSafe ?? ((target) => {
+		try {
+			return new WeakRef(target);
+		} catch {
+			return;
+		}
+	});
+	exports.applyBind = applyBind;
+	exports.applySafe = applySafe;
+	exports.bindCall = bindCall;
+	exports.uncurryThis = uncurryThis;
+	exports.weakRefSafe = weakRefSafe;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/object.js
+var require_object = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to `Object` static methods and prototype methods. Annex
+	*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
+	*   are exposed alongside the canonical static methods — implementations exist
+	*   in V8, SpiderMonkey, and JavaScriptCore even though the spec calls them
+	*   "normative optional".
+	*/
+	const ObjectCtor = Object;
+	const ObjectAssign = Object.assign;
+	const ObjectCreate = Object.create;
+	const ObjectDefineProperties = Object.defineProperties;
+	const ObjectDefineProperty = Object.defineProperty;
+	const ObjectEntries = Object.entries;
+	const ObjectFreeze = Object.freeze;
+	const ObjectFromEntries = Object.fromEntries;
+	const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+	const ObjectGetOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
+	const ObjectGetOwnPropertyNames = Object.getOwnPropertyNames;
+	const ObjectGetOwnPropertySymbols = Object.getOwnPropertySymbols;
+	const ObjectGetPrototypeOf = Object.getPrototypeOf;
+	const ObjectHasOwn = Object.hasOwn;
+	const ObjectIs = Object.is;
+	const ObjectIsExtensible = Object.isExtensible;
+	const ObjectIsFrozen = Object.isFrozen;
+	const ObjectIsSealed = Object.isSealed;
+	const ObjectKeys = Object.keys;
+	const ObjectPreventExtensions = Object.preventExtensions;
+	const ObjectSeal = Object.seal;
+	const ObjectSetPrototypeOf = Object.setPrototypeOf;
+	const ObjectValues = Object.values;
+	const ObjectPrototype = Object.prototype;
+	const ObjectPrototypeHasOwnProperty = require_primordials_uncurry.uncurryThis(Object.prototype.hasOwnProperty);
+	const ObjectPrototypeIsPrototypeOf = require_primordials_uncurry.uncurryThis(Object.prototype.isPrototypeOf);
+	const ObjectPrototypePropertyIsEnumerable = require_primordials_uncurry.uncurryThis(Object.prototype.propertyIsEnumerable);
+	const ObjectPrototypeToString = require_primordials_uncurry.uncurryThis(Object.prototype.toString);
+	const ObjectPrototypeValueOf = require_primordials_uncurry.uncurryThis(Object.prototype.valueOf);
+	const objectProto = Object.prototype;
+	const ObjectPrototypeDefineGetter = require_primordials_uncurry.uncurryThis(objectProto.__defineGetter__);
+	const ObjectPrototypeDefineSetter = require_primordials_uncurry.uncurryThis(objectProto.__defineSetter__);
+	const ObjectPrototypeLookupGetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupGetter__);
+	const ObjectPrototypeLookupSetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupSetter__);
+	exports.ObjectAssign = ObjectAssign;
+	exports.ObjectCreate = ObjectCreate;
+	exports.ObjectCtor = ObjectCtor;
+	exports.ObjectDefineProperties = ObjectDefineProperties;
+	exports.ObjectDefineProperty = ObjectDefineProperty;
+	exports.ObjectEntries = ObjectEntries;
+	exports.ObjectFreeze = ObjectFreeze;
+	exports.ObjectFromEntries = ObjectFromEntries;
+	exports.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
+	exports.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
+	exports.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
+	exports.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
+	exports.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
+	exports.ObjectHasOwn = ObjectHasOwn;
+	exports.ObjectIs = ObjectIs;
+	exports.ObjectIsExtensible = ObjectIsExtensible;
+	exports.ObjectIsFrozen = ObjectIsFrozen;
+	exports.ObjectIsSealed = ObjectIsSealed;
+	exports.ObjectKeys = ObjectKeys;
+	exports.ObjectPreventExtensions = ObjectPreventExtensions;
+	exports.ObjectPrototype = ObjectPrototype;
+	exports.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
+	exports.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
+	exports.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
+	exports.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
+	exports.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
+	exports.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
+	exports.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
+	exports.ObjectPrototypeToString = ObjectPrototypeToString;
+	exports.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
+	exports.ObjectSeal = ObjectSeal;
+	exports.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
+	exports.ObjectValues = ObjectValues;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/smol/primordial.js
+var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_module = require_module();
+	/**
+	* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
+	*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
+	*   and Number.is* primordials, registered with `CFunction::Make()` so TurboFan
+	*   inlines them directly into JIT- compiled JS callers. Bypasses the
+	*   FunctionCallbackInfo trampoline entirely — ~30-50% gain on hot loops where
+	*   V8 doesn't already auto-inline. Returns `undefined` on stock Node +
+	*   non-Node runtimes. Result is cached across calls.
+	*
+	* @internal — used by `src/primordials.ts` to resolve smol-aware
+	*   Math.* / Number.is* fast paths. Most callers should use the
+	*   standard `primordials` exports, which already route through this
+	*   when smol is present.
+	*
+	* @see https://v8.dev/blog/v8-release-99 — V8 Fast API Calls overview
+	*/
+	let smolPrimordial;
+	let smolPrimordialProbed = false;
+	/**
+	* Returns `node:smol-primordial` when running on the smol Node binary,
+	* otherwise `undefined`. Result is cached across calls.
+	*/
+	function getSmolPrimordial() {
+		if (!smolPrimordialProbed) {
+			smolPrimordialProbed = true;
+			/* c8 ignore start - smol Node binary only. */
+			if (require_node_module.isNodeBuiltin("node:smol-primordial")) smolPrimordial = require_node_module.requireBuiltin("node:smol-primordial");
+		}
+		return smolPrimordial;
+	}
+	exports.getSmolPrimordial = getSmolPrimordial;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/string.js
+var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to `String` static methods and prototype methods.
+	*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
+	*   inputs, which reduces to a single byte load, and translates the `-1` Fast
+	*   API sentinel back to `NaN` to preserve spec parity. Two-byte strings fall
+	*   back to the uncurried `String.prototype.charCodeAt`.
+	*
+	*   ## Fast API surface — and why it's small
+	*
+	*   Mirrors the design rationale from socket-btm's `primordial_binding.cc`
+	*   (lines 41-72). The smol Fast API exposes exactly one string op
+	*   (`stringCharCodeAt`) because that's the one shape where the C++ trampoline
+	*   genuinely beats V8's existing hot path: a single ASCII byte load, no
+	*   encoding dispatch, no HandleScope, returns a primitive. String **searches**
+	*   (`startsWith` / `endsWith` / `includes` / `indexOf` / `lastIndexOf`) are
+	*   intentionally NOT exposed. V8's existing hot path dispatches on encoding
+	*   and runs native SIMD memcmp — a Fast API binding would add overhead without
+	*   winning. Same for `Map.has` / `Set.has` / `Array.includes`. Fast API also
+	*   has a hard constraint: a fast-path function cannot return a new V8 object —
+	*   only primitives, Local<Value/Object/Array>, or FastOneByteString. That
+	*   rules out anything that produces a new string (`slice`, `substring`,
+	*   `toUpperCase`, `concat`, `repeat`, `padStart`/`padEnd`, formatted-number)
+	*   from ever being a Fast API win on the return path. Net: the current surface
+	*   is approximately the ceiling. Adding more Fast API string ops without a
+	*   flamegraph showing the cost is a regression risk, not a perf win. See
+	*   `socket-btm/packages/node-smol-builder/additions/source-patched/`
+	*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
+	*   canonical design statement.
+	*/
+	const smolPrimordial = require_primordial().getSmolPrimordial();
+	const StringCtor = String;
+	const StringFromCharCode = String.fromCharCode;
+	const StringFromCodePoint = String.fromCodePoint;
+	const StringRaw = String.raw;
+	const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
+	const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
+	const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
+	/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
+	const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
+		const code = smolCharCodeAt(s, i);
+		return code === -1 ? NaN : code;
+	} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
+	/* c8 ignore stop */
+	const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
+	const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
+	const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
+	const StringPrototypeIncludes = require_primordials_uncurry.uncurryThis(String.prototype.includes);
+	const StringPrototypeIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.indexOf);
+	const StringPrototypeIsWellFormed = smolPrimordial?.stringIsWellFormed ?? require_primordials_uncurry.uncurryThis(String.prototype.isWellFormed);
+	const StringPrototypeLastIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.lastIndexOf);
+	const StringPrototypeLocaleCompare = require_primordials_uncurry.uncurryThis(String.prototype.localeCompare);
+	const StringPrototypeMatch = require_primordials_uncurry.uncurryThis(String.prototype.match);
+	const StringPrototypeMatchAll = require_primordials_uncurry.uncurryThis(String.prototype.matchAll);
+	const StringPrototypeNormalize = require_primordials_uncurry.uncurryThis(String.prototype.normalize);
+	const StringPrototypePadEnd = require_primordials_uncurry.uncurryThis(String.prototype.padEnd);
+	const StringPrototypePadStart = require_primordials_uncurry.uncurryThis(String.prototype.padStart);
+	const StringPrototypeRepeat = require_primordials_uncurry.uncurryThis(String.prototype.repeat);
+	const StringPrototypeReplace = require_primordials_uncurry.uncurryThis(String.prototype.replace);
+	const StringPrototypeReplaceAll = require_primordials_uncurry.uncurryThis(String.prototype.replaceAll);
+	const StringPrototypeSearch = require_primordials_uncurry.uncurryThis(String.prototype.search);
+	const StringPrototypeSlice = require_primordials_uncurry.uncurryThis(String.prototype.slice);
+	const StringPrototypeSplit = require_primordials_uncurry.uncurryThis(String.prototype.split);
+	const StringPrototypeStartsWith = require_primordials_uncurry.uncurryThis(String.prototype.startsWith);
+	const StringPrototypeSubstring = require_primordials_uncurry.uncurryThis(String.prototype.substring);
+	const StringPrototypeToLocaleLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleLowerCase);
+	const StringPrototypeToLocaleUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleUpperCase);
+	const StringPrototypeToLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLowerCase);
+	const StringPrototypeToString = require_primordials_uncurry.uncurryThis(String.prototype.toString);
+	const StringPrototypeToUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toUpperCase);
+	const StringPrototypeToWellFormed = require_primordials_uncurry.uncurryThis(String.prototype.toWellFormed);
+	const StringPrototypeTrim = require_primordials_uncurry.uncurryThis(String.prototype.trim);
+	const StringPrototypeTrimEnd = require_primordials_uncurry.uncurryThis(String.prototype.trimEnd);
+	const StringPrototypeTrimStart = require_primordials_uncurry.uncurryThis(String.prototype.trimStart);
+	const StringPrototypeValueOf = require_primordials_uncurry.uncurryThis(String.prototype.valueOf);
+	exports.StringCtor = StringCtor;
+	exports.StringFromCharCode = StringFromCharCode;
+	exports.StringFromCodePoint = StringFromCodePoint;
+	exports.StringPrototypeAt = StringPrototypeAt;
+	exports.StringPrototypeCharAt = StringPrototypeCharAt;
+	exports.StringPrototypeCharCodeAt = StringPrototypeCharCodeAt;
+	exports.StringPrototypeCodePointAt = StringPrototypeCodePointAt;
+	exports.StringPrototypeConcat = StringPrototypeConcat;
+	exports.StringPrototypeEndsWith = StringPrototypeEndsWith;
+	exports.StringPrototypeIncludes = StringPrototypeIncludes;
+	exports.StringPrototypeIndexOf = StringPrototypeIndexOf;
+	exports.StringPrototypeIsWellFormed = StringPrototypeIsWellFormed;
+	exports.StringPrototypeLastIndexOf = StringPrototypeLastIndexOf;
+	exports.StringPrototypeLocaleCompare = StringPrototypeLocaleCompare;
+	exports.StringPrototypeMatch = StringPrototypeMatch;
+	exports.StringPrototypeMatchAll = StringPrototypeMatchAll;
+	exports.StringPrototypeNormalize = StringPrototypeNormalize;
+	exports.StringPrototypePadEnd = StringPrototypePadEnd;
+	exports.StringPrototypePadStart = StringPrototypePadStart;
+	exports.StringPrototypeRepeat = StringPrototypeRepeat;
+	exports.StringPrototypeReplace = StringPrototypeReplace;
+	exports.StringPrototypeReplaceAll = StringPrototypeReplaceAll;
+	exports.StringPrototypeSearch = StringPrototypeSearch;
+	exports.StringPrototypeSlice = StringPrototypeSlice;
+	exports.StringPrototypeSplit = StringPrototypeSplit;
+	exports.StringPrototypeStartsWith = StringPrototypeStartsWith;
+	exports.StringPrototypeSubstring = StringPrototypeSubstring;
+	exports.StringPrototypeToLocaleLowerCase = StringPrototypeToLocaleLowerCase;
+	exports.StringPrototypeToLocaleUpperCase = StringPrototypeToLocaleUpperCase;
+	exports.StringPrototypeToLowerCase = StringPrototypeToLowerCase;
+	exports.StringPrototypeToString = StringPrototypeToString;
+	exports.StringPrototypeToUpperCase = StringPrototypeToUpperCase;
+	exports.StringPrototypeToWellFormed = StringPrototypeToWellFormed;
+	exports.StringPrototypeTrim = StringPrototypeTrim;
+	exports.StringPrototypeTrimEnd = StringPrototypeTrimEnd;
+	exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
+	exports.StringPrototypeValueOf = StringPrototypeValueOf;
+	exports.StringRaw = StringRaw;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/errors/predicates.js
+var require_predicates$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_error = require_error();
+	const require_primordials_object = require_object();
+	const require_primordials_string = require_string();
+	/**
+	* @file Error type-guard predicates — `isError` (with the `isErrorBuiltin` /
+	*   `isErrorShim` building blocks) and the libuv errno-code narrower
+	*   `isErrnoException`. Both are cross-realm-safe (they use `[[ErrorData]]`
+	*   slot semantics rather than `instanceof Error`).
+	*/
+	/**
+	* Reference to the native ES2025 `Error.isError` when the running engine ships
+	* it, otherwise `undefined`. Consumes the single primordial snapshot
+	* ({@link ErrorIsError}) rather than re-probing the global — one capture point.
+	* Exposed separately so tests and callers can detect the fast-path.
+	*/
+	const isErrorBuiltin = require_primordials_error.ErrorIsError;
+	/**
+	* Narrow a caught value to a Node.js `ErrnoException` — an Error with a `.code`
+	* string set by libuv/syscall failures (e.g. `'ENOENT'`, `'EACCES'`, `'EBUSY'`,
+	* `'EPERM'`). Cross-realm safe (builds on {@link isError}), and checks that
+	* `code` is a string so a merely branded Error without a real errno code
+	* returns `false`.
+	*
+	* @example
+	*   try {
+	*     await fsPromises.readFile(path)
+	*   } catch (e) {
+	*     if (isErrnoException(e) && e.code === 'ENOENT') {
+	*       // … retry, or return default …
+	*     } else {
+	*       throw e
+	*     }
+	*   }
+	*/
+	function isErrnoException(value) {
+		if (!isError(value)) return false;
+		const code = value.code;
+		if (typeof code !== "string" || code.length === 0) return false;
+		const first = require_primordials_string.StringPrototypeCharCodeAt(code, 0);
+		return first >= 65 && first <= 90;
+	}
+	/**
+	* `Error.isError` fallback shim — the in-language approximation used when the
+	* native ES2025 method isn't available.
+	*
+	* Exported separately so test suites on engines that ship the native method can
+	* still exercise the shim branch directly. Consumers should prefer
+	* {@link isError}, which picks the native method when present.
+	*/
+	function isErrorShim(value) {
+		if (value === null || typeof value !== "object") return false;
+		return require_primordials_object.ObjectPrototypeToString(value) === "[object Error]";
+	}
+	/**
+	* Prefer the native ES2025 `Error.isError` when available (exact
+	* `[[ErrorData]]` slot check, cross-realm-safe); fall back to
+	* {@link isErrorShim} otherwise.
+	*/
+	const isError = isErrorBuiltin ?? isErrorShim;
+	exports.isErrnoException = isErrnoException;
+	exports.isError = isError;
+	exports.isErrorBuiltin = isErrorBuiltin;
+	exports.isErrorShim = isErrorShim;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/map-set.js
+var require_map_set = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	const require_primordials_error = require_error();
+	/**
+	* @file Safe references to `Map`, `Set`, `WeakMap`, `WeakSet`, and `WeakRef`.
+	*   Constructors plus uncurried prototype methods. `WeakRef` exposes only its
+	*   constructor — there's a separate `weakRefSafe` wrapper in `./uncurry` for
+	*   the throws-on-non-Object case.
+	*/
+	const MapCtor = Map;
+	const SetCtor = Set;
+	const WeakMapCtor = WeakMap;
+	const WeakRefCtor = WeakRef;
+	const WeakSetCtor = WeakSet;
+	const MapPrototypeClear = require_primordials_uncurry.uncurryThis(Map.prototype.clear);
+	const MapPrototypeDelete = require_primordials_uncurry.uncurryThis(Map.prototype.delete);
+	const MapPrototypeEntries = require_primordials_uncurry.uncurryThis(Map.prototype.entries);
+	const MapPrototypeForEach = require_primordials_uncurry.uncurryThis(Map.prototype.forEach);
+	const MapPrototypeGet = require_primordials_uncurry.uncurryThis(Map.prototype.get);
+	const MapPrototypeGetOrInsert = Map.prototype.getOrInsert === void 0 ? mapGetOrInsertFallback : require_primordials_uncurry.uncurryThis(Map.prototype.getOrInsert);
+	const MapPrototypeGetOrInsertComputed = Map.prototype.getOrInsertComputed === void 0 ? mapGetOrInsertComputedFallback : require_primordials_uncurry.uncurryThis(Map.prototype.getOrInsertComputed);
+	const MapPrototypeHas = require_primordials_uncurry.uncurryThis(Map.prototype.has);
+	const MapPrototypeKeys = require_primordials_uncurry.uncurryThis(Map.prototype.keys);
+	const MapPrototypeSet = require_primordials_uncurry.uncurryThis(Map.prototype.set);
+	const MapPrototypeValues = require_primordials_uncurry.uncurryThis(Map.prototype.values);
+	const SetPrototypeAdd = require_primordials_uncurry.uncurryThis(Set.prototype.add);
+	const SetPrototypeClear = require_primordials_uncurry.uncurryThis(Set.prototype.clear);
+	const SetPrototypeDelete = require_primordials_uncurry.uncurryThis(Set.prototype.delete);
+	const SetPrototypeDifference = require_primordials_uncurry.uncurryThis(Set.prototype.difference);
+	const SetPrototypeEntries = require_primordials_uncurry.uncurryThis(Set.prototype.entries);
+	const SetPrototypeForEach = require_primordials_uncurry.uncurryThis(Set.prototype.forEach);
+	const SetPrototypeHas = require_primordials_uncurry.uncurryThis(Set.prototype.has);
+	const SetPrototypeIntersection = require_primordials_uncurry.uncurryThis(Set.prototype.intersection);
+	const SetPrototypeIsDisjointFrom = require_primordials_uncurry.uncurryThis(Set.prototype.isDisjointFrom);
+	const SetPrototypeIsSubsetOf = require_primordials_uncurry.uncurryThis(Set.prototype.isSubsetOf);
+	const SetPrototypeIsSupersetOf = require_primordials_uncurry.uncurryThis(Set.prototype.isSupersetOf);
+	const SetPrototypeKeys = require_primordials_uncurry.uncurryThis(Set.prototype.keys);
+	const SetPrototypeSymmetricDifference = require_primordials_uncurry.uncurryThis(Set.prototype.symmetricDifference);
+	const SetPrototypeUnion = require_primordials_uncurry.uncurryThis(Set.prototype.union);
+	const SetPrototypeValues = require_primordials_uncurry.uncurryThis(Set.prototype.values);
+	const WeakMapPrototypeDelete = require_primordials_uncurry.uncurryThis(WeakMap.prototype.delete);
+	const WeakMapPrototypeGet = require_primordials_uncurry.uncurryThis(WeakMap.prototype.get);
+	const WeakMapPrototypeGetOrInsert = WeakMap.prototype.getOrInsert === void 0 ? weakMapGetOrInsertFallback : require_primordials_uncurry.uncurryThis(WeakMap.prototype.getOrInsert);
+	const WeakMapPrototypeGetOrInsertComputed = WeakMap.prototype.getOrInsertComputed === void 0 ? weakMapGetOrInsertComputedFallback : require_primordials_uncurry.uncurryThis(WeakMap.prototype.getOrInsertComputed);
+	const WeakMapPrototypeHas = require_primordials_uncurry.uncurryThis(WeakMap.prototype.has);
+	const WeakMapPrototypeSet = require_primordials_uncurry.uncurryThis(WeakMap.prototype.set);
+	const WeakSetPrototypeAdd = require_primordials_uncurry.uncurryThis(WeakSet.prototype.add);
+	const WeakSetPrototypeDelete = require_primordials_uncurry.uncurryThis(WeakSet.prototype.delete);
+	const WeakSetPrototypeHas = require_primordials_uncurry.uncurryThis(WeakSet.prototype.has);
+	function mapGetOrInsertComputedFallback(map, key, callbackfn) {
+		if (typeof callbackfn !== "function") throw new require_primordials_error.TypeErrorCtor(`getOrInsertComputed takes a callback. Saw ${typeof callbackfn}, wanted a function computing the value to insert.`);
+		if (MapPrototypeHas(map, key)) return MapPrototypeGet(map, key);
+		const value = callbackfn(key);
+		MapPrototypeSet(map, key, value);
+		return value;
+	}
+	function mapGetOrInsertFallback(map, key, value) {
+		if (MapPrototypeHas(map, key)) return MapPrototypeGet(map, key);
+		MapPrototypeSet(map, key, value);
+		return value;
+	}
+	function weakMapGetOrInsertComputedFallback(map, key, callbackfn) {
+		if (typeof callbackfn !== "function") throw new require_primordials_error.TypeErrorCtor(`getOrInsertComputed takes a callback. Saw ${typeof callbackfn}, wanted a function computing the value to insert.`);
+		if (WeakMapPrototypeHas(map, key)) return WeakMapPrototypeGet(map, key);
+		const value = callbackfn(key);
+		WeakMapPrototypeSet(map, key, value);
+		return value;
+	}
+	function weakMapGetOrInsertFallback(map, key, value) {
+		if (WeakMapPrototypeHas(map, key)) return WeakMapPrototypeGet(map, key);
+		WeakMapPrototypeSet(map, key, value);
+		return value;
+	}
+	exports.MapCtor = MapCtor;
+	exports.MapPrototypeClear = MapPrototypeClear;
+	exports.MapPrototypeDelete = MapPrototypeDelete;
+	exports.MapPrototypeEntries = MapPrototypeEntries;
+	exports.MapPrototypeForEach = MapPrototypeForEach;
+	exports.MapPrototypeGet = MapPrototypeGet;
+	exports.MapPrototypeGetOrInsert = MapPrototypeGetOrInsert;
+	exports.MapPrototypeGetOrInsertComputed = MapPrototypeGetOrInsertComputed;
+	exports.MapPrototypeHas = MapPrototypeHas;
+	exports.MapPrototypeKeys = MapPrototypeKeys;
+	exports.MapPrototypeSet = MapPrototypeSet;
+	exports.MapPrototypeValues = MapPrototypeValues;
+	exports.SetCtor = SetCtor;
+	exports.SetPrototypeAdd = SetPrototypeAdd;
+	exports.SetPrototypeClear = SetPrototypeClear;
+	exports.SetPrototypeDelete = SetPrototypeDelete;
+	exports.SetPrototypeDifference = SetPrototypeDifference;
+	exports.SetPrototypeEntries = SetPrototypeEntries;
+	exports.SetPrototypeForEach = SetPrototypeForEach;
+	exports.SetPrototypeHas = SetPrototypeHas;
+	exports.SetPrototypeIntersection = SetPrototypeIntersection;
+	exports.SetPrototypeIsDisjointFrom = SetPrototypeIsDisjointFrom;
+	exports.SetPrototypeIsSubsetOf = SetPrototypeIsSubsetOf;
+	exports.SetPrototypeIsSupersetOf = SetPrototypeIsSupersetOf;
+	exports.SetPrototypeKeys = SetPrototypeKeys;
+	exports.SetPrototypeSymmetricDifference = SetPrototypeSymmetricDifference;
+	exports.SetPrototypeUnion = SetPrototypeUnion;
+	exports.SetPrototypeValues = SetPrototypeValues;
+	exports.WeakMapCtor = WeakMapCtor;
+	exports.WeakMapPrototypeDelete = WeakMapPrototypeDelete;
+	exports.WeakMapPrototypeGet = WeakMapPrototypeGet;
+	exports.WeakMapPrototypeGetOrInsert = WeakMapPrototypeGetOrInsert;
+	exports.WeakMapPrototypeGetOrInsertComputed = WeakMapPrototypeGetOrInsertComputed;
+	exports.WeakMapPrototypeHas = WeakMapPrototypeHas;
+	exports.WeakMapPrototypeSet = WeakMapPrototypeSet;
+	exports.WeakRefCtor = WeakRefCtor;
+	exports.WeakSetCtor = WeakSetCtor;
+	exports.WeakSetPrototypeAdd = WeakSetPrototypeAdd;
+	exports.WeakSetPrototypeDelete = WeakSetPrototypeDelete;
+	exports.WeakSetPrototypeHas = WeakSetPrototypeHas;
+	exports.mapGetOrInsertComputedFallback = mapGetOrInsertComputedFallback;
+	exports.mapGetOrInsertFallback = mapGetOrInsertFallback;
+	exports.weakMapGetOrInsertComputedFallback = weakMapGetOrInsertComputedFallback;
+	exports.weakMapGetOrInsertFallback = weakMapGetOrInsertFallback;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/external/pony-cause.js
+var require_pony_cause$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	const { SetCtor: _p_SetCtor } = require_map_set();
+	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+	var require_error_with_cause = /* @__PURE__ */ __commonJSMin(((exports$1, module$2) => {
+		module$2.exports = { ErrorWithCause: class ErrorWithCause extends Error {
+			/**
+			* @param {string} message
+			* @param {{ cause?: T }} options
+			*/
+			constructor(message, { cause } = {}) {
+				super(message);
+				/** @type {string} */
+				this.name = ErrorWithCause.name;
+				if (cause)
+ /** @type {T} */
+				this.cause = cause;
+				/** @type {string} */
+				this.message = message;
+			}
+		} };
+	}));
+	var require_helpers = /* @__PURE__ */ __commonJSMin(((exports$2, module$3) => {
+		const isError = typeof Error.isError === "function" ? Error.isError : (v) => v !== null && typeof v === "object" && Object.prototype.toString.call(v) === "[object Error]";
+		/**
+		* @template {Error} T
+		* @param {unknown} err
+		* @param {new(...args: any[]) => T} reference
+		* @returns {T|undefined}
+		*/
+		const findCauseByReference = (err, reference) => {
+			if (!err || !reference) return;
+			if (!isError(err)) return;
+			if (!(reference.prototype instanceof Error) && reference !== Error) return;
+			/**
+			* Ensures we don't go circular
+			*
+			* @type {Set<Error>}
+			*/
+			const seen = /* @__PURE__ */ new _p_SetCtor();
+			/** @type {Error|undefined} */
+			let currentErr = err;
+			while (currentErr && !seen.has(currentErr)) {
+				seen.add(currentErr);
+				if (currentErr instanceof reference) return currentErr;
+				currentErr = getErrorCause(currentErr);
+			}
+		};
+		/**
+		* @param {Error|{ cause?: unknown|(()=>err)}} err
+		* @returns {Error|undefined}
+		*/
+		const getErrorCause = (err) => {
+			if (!err || typeof err !== "object" || !("cause" in err)) return;
+			if (typeof err.cause === "function") {
+				const causeResult = err.cause();
+				return isError(causeResult) ? causeResult : void 0;
+			} else return isError(err.cause) ? err.cause : void 0;
+		};
+		/**
+		* Internal method that keeps a track of which error we have already added, to avoid circular recursion
+		*
+		* @private
+		* @param {Error} err
+		* @param {Set<Error>} seen
+		* @returns {string}
+		*/
+		const _stackWithCauses = (err, seen) => {
+			if (!isError(err)) return "";
+			const stack = err.stack || "";
+			if (seen.has(err)) return stack + "\ncauses have become circular...";
+			const cause = getErrorCause(err);
+			if (cause) {
+				seen.add(err);
+				return stack + "\ncaused by: " + _stackWithCauses(cause, seen);
+			} else return stack;
+		};
+		/**
+		* @param {Error} err
+		* @returns {string}
+		*/
+		const stackWithCauses = (err) => _stackWithCauses(err, /* @__PURE__ */ new _p_SetCtor());
+		/**
+		* Internal method that keeps a track of which error we have already added, to avoid circular recursion
+		*
+		* @private
+		* @param {Error} err
+		* @param {Set<Error>} seen
+		* @param {boolean} [skip]
+		* @returns {string}
+		*/
+		const _messageWithCauses = (err, seen, skip) => {
+			if (!isError(err)) return "";
+			const message = skip ? "" : err.message || "";
+			if (seen.has(err)) return message + ": ...";
+			const cause = getErrorCause(err);
+			if (cause) {
+				seen.add(err);
+				const skipIfVErrorStyleCause = "cause" in err && typeof err.cause === "function";
+				return message + (skipIfVErrorStyleCause ? "" : ": ") + _messageWithCauses(cause, seen, skipIfVErrorStyleCause);
+			} else return message;
+		};
+		/**
+		* @param {Error} err
+		* @returns {string}
+		*/
+		const messageWithCauses = (err) => _messageWithCauses(err, /* @__PURE__ */ new _p_SetCtor());
+		module$3.exports = {
+			findCauseByReference,
+			getErrorCause,
+			stackWithCauses,
+			messageWithCauses
+		};
+	}));
+	var require_pony_cause = /* @__PURE__ */ __commonJSMin(((exports$3, module$4) => {
+		const { ErrorWithCause } = require_error_with_cause();
+		const { findCauseByReference, getErrorCause, messageWithCauses, stackWithCauses } = require_helpers();
+		module$4.exports = {
+			ErrorWithCause,
+			findCauseByReference,
+			getErrorCause,
+			stackWithCauses,
+			messageWithCauses
+		};
+	}));
+	module.exports = require_pony_cause();
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/errors/message.js
+var require_message = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_sentinels = require_sentinels();
+	const require_errors_predicates = require_predicates$1();
+	let src_external_pony_cause = require_pony_cause$1();
+	/**
+	* @file Human-readable error-message extractor. `errorMessage` walks the
+	*   `cause` chain via pony-cause's `messageWithCauses` for Errors and falls
+	*   back to the shared `UNKNOWN_ERROR` sentinel for everything else.
+	*   `messageWithCauses` and `UNKNOWN_ERROR` are re-exported for callers that
+	*   need them directly.
+	*/
+	/**
+	* Extract a human-readable message from any caught value.
+	*
+	* Walks the `cause` chain for Errors (via {@link messageWithCauses}); coerces
+	* primitives and objects to string; returns {@link UNKNOWN_ERROR} for `null`,
+	* `undefined`, empty strings, `[object Object]`, or Errors with no message.
+	*
+	* @example
+	*   try {
+	*     await readConfig(path)
+	*   } catch (e) {
+	*     throw new ErrorCtor(`Failed to read ${path}: ${errorMessage(e)}`, {
+	*       cause: e,
+	*     })
+	*   }
+	*/
+	function errorMessage(value) {
+		if (require_errors_predicates.isError(value)) return (0, src_external_pony_cause.messageWithCauses)(value) || "Unknown error";
+		if (value === null || value === void 0) return require_constants_sentinels.UNKNOWN_ERROR;
+		const s = String(value);
+		if (s === "" || s === "[object Object]") return require_constants_sentinels.UNKNOWN_ERROR;
+		return s;
+	}
+	exports.UNKNOWN_ERROR = require_constants_sentinels.UNKNOWN_ERROR;
+	exports.errorMessage = errorMessage;
+	exports.messageWithCauses = src_external_pony_cause.messageWithCauses;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/node/os.js
+var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const nodeOs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("os") : void 0;
+	function getNodeOs() {
+		return nodeOs;
+	}
+	const osArch = nodeOs?.arch;
+	const osHomedir = nodeOs?.homedir;
+	const osPlatform = nodeOs?.platform;
+	const osTmpdir = nodeOs?.tmpdir;
+	exports.getNodeOs = getNodeOs;
+	exports.osArch = osArch;
+	exports.osHomedir = osHomedir;
+	exports.osPlatform = osPlatform;
+	exports.osTmpdir = osTmpdir;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/platform.js
+var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_os = require_os();
+	let node_fs = __require("node:fs");
+	/**
+	* @file Platform detection and OS-specific constants.
+	*/
+	let memoizedArch;
+	/**
+	* Get the current CPU architecture (memoized), e.g. `x64`, `arm64`.
+	*/
+	function getArch() {
+		if (memoizedArch === void 0) memoizedArch = require_node_os.getNodeOs().arch();
+		return memoizedArch;
+	}
+	const MUSL_LINKERS = [
+		"/lib/ld-musl-x86_64.so.1",
+		"/lib/ld-musl-aarch64.so.1",
+		"/usr/lib/ld-musl-x86_64.so.1",
+		"/usr/lib/ld-musl-aarch64.so.1"
+	];
+	let memoizedLibc;
+	let memoizedLibcProbed = false;
+	/**
+	* Get the host libc variant (memoized): `'musl'` on Alpine-and-similar,
+	* `'glibc'` on other Linux, `undefined` off-Linux. Detected by probing for the
+	* musl dynamic linker. The single source of truth for libc detection —
+	* tool-specific resolvers (`getPythonArch`, `getJreArch`) call this rather than
+	* re-probing.
+	*/
+	function getLibc() {
+		if (!memoizedLibcProbed) {
+			memoizedLibcProbed = true;
+			/* c8 ignore start - Linux-only filesystem probe. */
+			if (getOs() !== "linux") memoizedLibc = void 0;
+			else {
+				memoizedLibc = "glibc";
+				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if ((0, node_fs.existsSync)(MUSL_LINKERS[i])) {
+					memoizedLibc = "musl";
+					break;
+				}
+			}
+		}
+		return memoizedLibc;
+	}
+	let memoizedOs;
+	/**
+	* Get the current OS (memoized), e.g. `darwin`, `linux`, `win32` — the raw
+	* `process.platform` value.
+	*/
+	function getOs() {
+		if (memoizedOs === void 0) memoizedOs = require_node_os.getNodeOs().platform();
+		return memoizedOs;
+	}
+	let memoizedTarget;
+	/**
+	* Get the current host **target** in the pnpm `pack-app` vocabulary (memoized):
+	* `<os>-<arch>[-<libc>]`, e.g. `darwin-arm64`, `linux-x64`, `win32-x64`,
+	* `linux-x64-musl`. Raw Node `process.platform`/`process.arch` joined with `-`,
+	* plus a `-musl` suffix on Alpine. This is the Socket-wide naming for
+	* non-python / non-JRE tools (matches pnpm's release assets,
+	* `pnpm-<os>-<arch>[-<libc>].{tar.gz,zip}`). Tool-specific resolvers that need
+	* a different vocabulary own their own helper — see `getPythonArch` for
+	* python-build-standalone and `getJreArch` for Adoptium.
+	*/
+	function getTarget() {
+		if (memoizedTarget === void 0) {
+			const libcSuffix = getLibc() === "musl" ? "-musl" : "";
+			memoizedTarget = `${getOs()}-${getArch()}${libcSuffix}`;
+		}
+		return memoizedTarget;
+	}
+	const DARWIN = getOs() === "darwin";
+	const WIN32 = getOs() === "win32";
+	/**
+	* True when this process was launched as a Chrome or Chromium native
+	* messaging host. Chrome passes the extension origin URL
+	* (`chrome-extension://<id>/`) as `process.argv[2]`; no other invocation shape
+	* produces that prefix.
+	*/
+	const NATIVE_MESSAGING_HOST = typeof process !== "undefined" && typeof process.argv[2] === "string" && process.argv[2].startsWith("chrome-extension://");
+	const S_IXUSR = 64;
+	const S_IXGRP = 8;
+	const S_IXOTH = 1;
+	exports.DARWIN = DARWIN;
+	exports.NATIVE_MESSAGING_HOST = NATIVE_MESSAGING_HOST;
+	exports.S_IXGRP = S_IXGRP;
+	exports.S_IXOTH = S_IXOTH;
+	exports.S_IXUSR = S_IXUSR;
+	exports.WIN32 = WIN32;
+	exports.getArch = getArch;
+	exports.getLibc = getLibc;
+	exports.getOs = getOs;
+	exports.getTarget = getTarget;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/buffer.js
+var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to Node's `Buffer` global. `Buffer` is a Node-only
+	*   global; in browsers and in Deno without a compatibility shim the captured
+	*   references are `undefined`. Cross- env consumers must null-check before
+	*   calling.
+	*/
+	const BufferCtor = globalThis.Buffer;
+	const BufferAlloc = BufferCtor?.alloc;
+	const BufferAllocUnsafe = BufferCtor?.allocUnsafe;
+	const BufferAllocUnsafeSlow = BufferCtor?.allocUnsafeSlow;
+	const BufferByteLength = BufferCtor?.byteLength;
+	const BufferConcat = BufferCtor?.concat;
+	const BufferFrom = BufferCtor?.from;
+	const BufferIsBuffer = BufferCtor?.isBuffer;
+	const BufferIsEncoding = BufferCtor?.isEncoding;
+	/* c8 ignore start */
+	const BufferPrototypeSlice = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.slice) : void 0;
+	const BufferPrototypeToString = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.toString) : void 0;
+	/* c8 ignore stop */
+	exports.BufferAlloc = BufferAlloc;
+	exports.BufferAllocUnsafe = BufferAllocUnsafe;
+	exports.BufferAllocUnsafeSlow = BufferAllocUnsafeSlow;
+	exports.BufferByteLength = BufferByteLength;
+	exports.BufferConcat = BufferConcat;
+	exports.BufferCtor = BufferCtor;
+	exports.BufferFrom = BufferFrom;
+	exports.BufferIsBuffer = BufferIsBuffer;
+	exports.BufferIsEncoding = BufferIsEncoding;
+	exports.BufferPrototypeSlice = BufferPrototypeSlice;
+	exports.BufferPrototypeToString = BufferPrototypeToString;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/encoding.js
+var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Character encoding and character code constants. Exports the default
+	*   UTF-8 encoding name and numeric char codes for common ASCII characters used
+	*   by path and parsing utilities.
+	*/
+	const UTF8 = "utf8";
+	const CHAR_BACKWARD_SLASH = 92;
+	const CHAR_COLON = 58;
+	const CHAR_FORWARD_SLASH = 47;
+	const CHAR_LOWERCASE_A = 97;
+	const CHAR_LOWERCASE_Z = 122;
+	const CHAR_UPPERCASE_A = 65;
+	const CHAR_UPPERCASE_Z = 90;
+	exports.CHAR_BACKWARD_SLASH = CHAR_BACKWARD_SLASH;
+	exports.CHAR_COLON = CHAR_COLON;
+	exports.CHAR_FORWARD_SLASH = CHAR_FORWARD_SLASH;
+	exports.CHAR_LOWERCASE_A = CHAR_LOWERCASE_A;
+	exports.CHAR_LOWERCASE_Z = CHAR_LOWERCASE_Z;
+	exports.CHAR_UPPERCASE_A = CHAR_UPPERCASE_A;
+	exports.CHAR_UPPERCASE_Z = CHAR_UPPERCASE_Z;
+	exports.UTF8 = UTF8;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/paths/_internal.js
+var require__internal = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_buffer = require_buffer();
+	const require_primordials_string = require_string();
+	const require_constants_platform = require_platform();
+	const require_constants_encoding = require_encoding();
+	const msysDriveRegExp = /^\/([a-zA-Z])($|\/)/;
+	const nodeModulesPathRegExp = /(?:[/\\]|^)node_modules(?:$|[/\\])/;
+	const slashRegExp = /[/\\]/;
+	let cachedUrl;
+	/**
+	* Lazily load the url module.
+	*
+	* Performs on-demand loading of Node.js url module to avoid initialization
+	* overhead and potential Webpack bundling errors.
+	*
+	* @private
+	*/
+	function getUrl() {
+		if (cachedUrl === void 0) cachedUrl = /*@__PURE__*/ __require("node:url");
+		return cachedUrl;
+	}
+	/**
+	* Find the next path separator at or after an index.
+	*
+	* Scans char codes for `/` (47) and `\` (92) — the same two characters
+	* `slashRegExp` matches — and allocates nothing. Reaching the same answer
+	* through `search` costs a substring, an options bag, and a regex match per
+	* lookup, which a segment walk pays once per segment.
+	*
+	* @example
+	*   ;```typescript
+	*   indexOfPathSeparator('a/b', 0) // 1
+	*   indexOfPathSeparator('a/b', 2) // -1
+	*   indexOfPathSeparator('a\\b', 0) // 1
+	*   ```
+	*
+	* @param {string} filepath - The path to scan.
+	* @param {number} fromIndex - The index to start scanning at.
+	*
+	* @returns {number} The index of the first separator at or after `fromIndex`,
+	*   or -1 when there is none.
+	*/
+	function indexOfPathSeparator(filepath, fromIndex) {
+		const { length } = filepath;
+		for (let i = fromIndex; i < length; i += 1) {
+			const code = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
+			if (code === 47 || code === 92) return i;
+		}
+		return -1;
+	}
+	/**
+	* Convert a path-like value to a string.
+	*
+	* Converts various path-like types (string, Buffer, URL) into a normalized
+	* string representation. Handles different input formats and provides
+	* consistent string output for path operations.
+	*
+	* @example
+	*   ;```typescript
+	*   pathLikeToString('/home/user') // '/home/user'
+	*   pathLikeToString(Buffer.from('/tmp/file')) // '/tmp/file'
+	*   pathLikeToString(new URL('file:///home/user')) // '/home/user'
+	*   pathLikeToString(null) // ''
+	*   ```
+	*
+	* @param {string | Buffer | URL | null | undefined} pathLike - The value to
+	*   convert.
+	*
+	* @returns {string} The string representation, or empty string for
+	*   null/undefined.
+	*/
+	function pathLikeToString(pathLike) {
+		if (pathLike === null || pathLike === void 0) return "";
+		if (typeof pathLike === "string") return pathLike;
+		if (require_primordials_buffer.BufferIsBuffer(pathLike)) return pathLike.toString("utf8");
+		const url = getUrl();
+		if (pathLike instanceof URL) try {
+			return url.fileURLToPath(pathLike);
+		} catch {
+			const pathname = pathLike.pathname;
+			const decodedPathname = decodeURIComponent(pathname);
+			/* c8 ignore start - Windows-only URL drive-letter handling. */
+			if (require_constants_platform.WIN32 && require_primordials_string.StringPrototypeStartsWith(decodedPathname, "/")) {
+				const letter = require_primordials_string.StringPrototypeCharCodeAt(decodedPathname, 1) | 32;
+				if (!(decodedPathname.length >= 3 && letter >= 97 && letter <= 122 && require_primordials_string.StringPrototypeCharAt(decodedPathname, 2) === ":")) return decodedPathname;
+			}
+			/* c8 ignore stop */
+			return decodedPathname;
+		}
+		return String(pathLike);
+	}
+	exports.CHAR_BACKWARD_SLASH = require_constants_encoding.CHAR_BACKWARD_SLASH;
+	exports.CHAR_COLON = require_constants_encoding.CHAR_COLON;
+	exports.CHAR_FORWARD_SLASH = require_constants_encoding.CHAR_FORWARD_SLASH;
+	exports.CHAR_LOWERCASE_A = require_constants_encoding.CHAR_LOWERCASE_A;
+	exports.CHAR_LOWERCASE_Z = require_constants_encoding.CHAR_LOWERCASE_Z;
+	exports.CHAR_UPPERCASE_A = require_constants_encoding.CHAR_UPPERCASE_A;
+	exports.CHAR_UPPERCASE_Z = require_constants_encoding.CHAR_UPPERCASE_Z;
+	exports.getUrl = getUrl;
+	exports.indexOfPathSeparator = indexOfPathSeparator;
+	exports.msysDriveRegExp = msysDriveRegExp;
+	exports.nodeModulesPathRegExp = nodeModulesPathRegExp;
+	exports.pathLikeToString = pathLikeToString;
+	exports.slashRegExp = slashRegExp;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/regexp.js
+var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to `RegExp` and its prototype methods. `RegExp.escape`
+	*   is ES2025; the primordial is typed `Function | undefined` so older runtimes
+	*   still load. The Symbol-keyed `[Symbol.match]` / `[Symbol.replace]` slots
+	*   are exposed alongside the named methods because some callers use them via
+	*   dynamic dispatch (e.g. `String.prototype.match` invokes
+	*   `RegExp.prototype[Symbol.match]` internally).
+	*/
+	const RegExpCtor = RegExp;
+	const RegExpEscape = RegExp.escape;
+	const RegExpPrototypeExec = require_primordials_uncurry.uncurryThis(RegExp.prototype.exec);
+	const RegExpPrototypeTest = require_primordials_uncurry.uncurryThis(RegExp.prototype.test);
+	const RegExpPrototypeSymbolMatch = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.match]);
+	const RegExpPrototypeSymbolReplace = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.replace]);
+	exports.RegExpCtor = RegExpCtor;
+	exports.RegExpEscape = RegExpEscape;
+	exports.RegExpPrototypeExec = RegExpPrototypeExec;
+	exports.RegExpPrototypeSymbolMatch = RegExpPrototypeSymbolMatch;
+	exports.RegExpPrototypeSymbolReplace = RegExpPrototypeSymbolReplace;
+	exports.RegExpPrototypeTest = RegExpPrototypeTest;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/paths/predicates.js
+var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_string = require_string();
+	const require_constants_platform = require_platform();
+	require_encoding();
+	const require_paths__internal = require__internal();
+	const require_primordials_regexp = require_regexp();
+	/**
+	* @file Path predicates — `is*` checks for path shape and kind. Split out of
+	*   `paths/normalize.ts` for file-size hygiene. Pure boolean predicates over
+	*   paths and character codes.
+	*
+	*   - `isAbsolute`, `isRelative` — root-anchoring shape
+	*   - `isPath` — file-path vs package-spec vs URL discriminator
+	*   - `isNodeModules`, `isUnixPath` — content-pattern checks
+	*   - `isPathSeparator`, `isWindowsDeviceRoot` — char-code primitives
+	*/
+	/**
+	* Check if a path is absolute.
+	*
+	* Handles both POSIX (`/...`) and Windows (drive-letter, UNC, device) absolute
+	* path shapes.
+	*
+	* @example
+	*   ;```typescript
+	*   isAbsolute('/home/user') // true
+	*   isAbsolute('C:\\Windows') // true on Windows
+	*   isAbsolute('../relative') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if absolute, `false` otherwise
+	*/
+	function isAbsolute(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		const { length } = filepath;
+		if (length === 0) return false;
+		const code = require_primordials_string.StringPrototypeCharCodeAt(filepath, 0);
+		if (code === 47) return true;
+		if (code === 92) return true;
+		/* c8 ignore start - Windows drive-letter detection. */
+		if (require_constants_platform.WIN32 && length > 2) {
+			if (isWindowsDeviceRoot(code) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 58 && isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(filepath, 2))) return true;
+		}
+		/* c8 ignore stop */
+		return false;
+	}
+	/**
+	* Check if a path contains a `node_modules` directory segment.
+	*
+	* Matches `node_modules` only as a complete path segment.
+	*
+	* @example
+	*   ;```typescript
+	*   isNodeModules('/project/node_modules/package') // true
+	*   isNodeModules('/src/my_node_modules_backup') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path contains `node_modules`
+	*/
+	function isNodeModules(pathLike) {
+		return require_primordials_regexp.RegExpPrototypeTest(require_paths__internal.nodeModulesPathRegExp, require_paths__internal.pathLikeToString(pathLike));
+	}
+	/**
+	* Check if a value is a valid absolute or relative file path.
+	*
+	* Distinguishes between file paths and other string formats like package names,
+	* URLs, or bare module specifiers.
+	*
+	* @example
+	*   ;```typescript
+	*   isPath('/absolute/path') // true
+	*   isPath('./relative/path') // true
+	*   isPath('@scope/name/subpath') // true
+	*   isPath('lodash') // false
+	*   isPath('http://example.com') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The value to check.
+	*
+	* @returns {boolean} `true` if the value is a valid file path
+	*/
+	function isPath(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		if (typeof filepath !== "string" || filepath.length === 0) return false;
+		if (/^[a-z][a-z0-9+.-]+:/i.test(filepath)) return false;
+		if (filepath === "." || filepath === "..") return true;
+		if (isAbsolute(filepath)) return true;
+		if (filepath.includes("/") || filepath.includes("\\")) {
+			if (require_primordials_string.StringPrototypeStartsWith(filepath, "@") && !require_primordials_string.StringPrototypeStartsWith(filepath, "@/")) {
+				const parts = filepath.split("/");
+				if (parts.length <= 2 && !parts[1]?.includes("\\")) return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	/**
+	* Check if a character code is a path separator (`/` or `\`).
+	*
+	* @example
+	*   ;```typescript
+	*   isPathSeparator(47) // true — '/'
+	*   isPathSeparator(92) // true — '\'
+	*   isPathSeparator(65) // false — 'A'
+	*   ```
+	*
+	* @param {number} code - The character code to check.
+	*
+	* @returns {boolean} `true` if separator
+	*/
+	function isPathSeparator(code) {
+		return code === 47 || code === 92;
+	}
+	/**
+	* Check if a path is relative (i.e., not absolute).
+	*
+	* Empty strings are treated as relative.
+	*
+	* @example
+	*   ;```typescript
+	*   isRelative('./src/index.js') // true
+	*   isRelative('src/file.js') // true
+	*   isRelative('/home/user') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path is relative
+	*/
+	function isRelative(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		/* c8 ignore start */
+		if (typeof filepath !== "string") return false;
+		/* c8 ignore stop */
+		if (filepath.length === 0) return true;
+		return !isAbsolute(filepath);
+	}
+	/**
+	* Check if a path uses MSYS/Git Bash Unix-style drive letter notation.
+	*
+	* Detects paths in the format `/c/...` where a single letter after the leading
+	* slash represents a Windows drive letter.
+	*
+	* @example
+	*   ;```typescript
+	*   isUnixPath('/c/tools/bin') // true
+	*   isUnixPath('/tmp/build') // false
+	*   isUnixPath('C:/Windows') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path uses MSYS drive letter notation
+	*/
+	function isUnixPath(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		return typeof filepath === "string" && require_primordials_regexp.RegExpPrototypeTest(require_paths__internal.msysDriveRegExp, filepath);
+	}
+	/**
+	* Check if a character code is a Windows device root letter (A-Z / a-z).
+	*
+	* @example
+	*   ;```typescript
+	*   isWindowsDeviceRoot(67) // true  — 'C'
+	*   isWindowsDeviceRoot(99) // true  — 'c'
+	*   isWindowsDeviceRoot(58) // false — ':'
+	*   ```
+	*
+	* @param {number} code - The character code to check.
+	*
+	* @returns {boolean} `true` if valid drive-letter code
+	*/
+	/* c8 ignore start - Only called from Windows-only branches. */
+	function isWindowsDeviceRoot(code) {
+		return code >= 65 && code <= 90 || code >= 97 && code <= 122;
+	}
+	/* c8 ignore stop */
+	exports.isAbsolute = isAbsolute;
+	exports.isNodeModules = isNodeModules;
+	exports.isPath = isPath;
+	exports.isPathSeparator = isPathSeparator;
+	exports.isRelative = isRelative;
+	exports.isUnixPath = isUnixPath;
+	exports.isWindowsDeviceRoot = isWindowsDeviceRoot;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/paths/resolve.js
+var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_string = require_string();
+	const require_constants_platform = require_platform();
+	require_encoding();
+	const require_paths_predicates = require_predicates();
+	const require_paths_normalize = require_normalize();
+	/**
+	* @file Path resolution utilities — `resolve`, `relative`, `relativeResolve`.
+	*   Split out of `paths/normalize.ts` for size hygiene.
+	*
+	*   - `resolve` — Node-style `path.resolve()` over absolute-path semantics
+	*   - `relative` — relative path from one absolute to another
+	*   - `relativeResolve` — `relative` + `normalizePath` convenience wrapper
+	*/
+	/**
+	* Calculate the relative path from one path to another.
+	*
+	* Both inputs are resolved to absolute paths first, then compared to find the
+	* longest common base, and finally a relative path is constructed using `../`
+	* for parent-directory traversal.
+	*
+	* Windows file systems are case-insensitive; the comparison reflects that.
+	*
+	* @example
+	*   ;```typescript
+	*   relative('/foo/bar', '/foo/baz') // '../baz'
+	*   relative('/foo/bar/baz', '/foo') // '../..'
+	*   relative('/foo', '/foo/bar') // 'bar'
+	*   relative('/foo/bar', '/foo/bar') // ''
+	*   ```
+	*
+	* @param {string} from - Source path.
+	* @param {string} to - Destination path.
+	*
+	* @returns {string} Relative path from `from` to `to`, or empty string if equal
+	*/
+	function relative(from, to) {
+		if (from === to) return "";
+		const actualFrom = resolve(from);
+		const actualTo = resolve(to);
+		if (actualFrom === actualTo) return "";
+		/* c8 ignore start - Windows-only case-insensitive comparison. */
+		if (require_constants_platform.WIN32) {
+			if (actualFrom.toLowerCase() === actualTo.toLowerCase()) return "";
+		}
+		/* c8 ignore stop */
+		const fromStart = 1;
+		const fromEnd = actualFrom.length;
+		const fromLen = fromEnd - fromStart;
+		const toStart = 1;
+		const toLen = actualTo.length - toStart;
+		const length = fromLen < toLen ? fromLen : toLen;
+		let lastCommonSep = -1;
+		let i = 0;
+		for (; i < length; i += 1) {
+			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i);
+			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i);
+			/* c8 ignore start - Windows-only case folding. */
+			if (require_constants_platform.WIN32) {
+				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
+				if (toCode >= 65 && toCode <= 90) toCode += 32;
+			}
+			/* c8 ignore stop */
+			if (fromCode !== toCode) break;
+			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i))) lastCommonSep = i;
+		}
+		/* c8 ignore start */
+		if (i === length) {
+			if (toLen > length) {
+				if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i))) return actualTo.slice(toStart + i + 1);
+				if (i === 0) return actualTo.slice(toStart + i);
+			} else if (fromLen > length) {
+				if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i))) lastCommonSep = i;
+				else if (i === 0) lastCommonSep = 0;
+			}
+		}
+		/* c8 ignore stop */
+		let out = "";
+		for (i = fromStart + lastCommonSep + 1; i <= fromEnd; i += 1) {
+			const code = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, i);
+			if (i === fromEnd || require_paths_predicates.isPathSeparator(code)) out += out.length === 0 ? ".." : "/..";
+		}
+		return out + actualTo.slice(toStart + lastCommonSep);
+	}
+	/**
+	* Get the normalized relative path from one path to another.
+	*
+	* Computes the relative path using `relative()` then runs the result through
+	* `normalizePath()`. An empty string, meaning the same path, is preserved
+	* verbatim rather than collapsed to `.`.
+	*
+	* @example
+	*   ;```typescript
+	*   relativeResolve('/foo/bar', '/foo/baz') // '../baz'
+	*   relativeResolve('/foo/bar', '/foo/bar') // ''
+	*   relativeResolve('/foo/./bar', '/foo/baz') // '../baz'
+	*   ```
+	*
+	* @param {string} from - Source path.
+	* @param {string} to - Destination path.
+	*
+	* @returns {string} Normalized relative path, or empty string if equal
+	*/
+	function relativeResolve(from, to) {
+		const rel = relative(from, to);
+		if (rel === "") return "";
+		return require_paths_normalize.normalizePath(rel);
+	}
+	/**
+	* Resolve an absolute path from path segments.
+	*
+	* Mimics Node.js `path.resolve()`: processes segments right-to-left, stops at
+	* the first absolute segment, and prepends the cwd if no absolute segment is
+	* found. The final path is normalized.
+	*
+	* @example
+	*   ;```typescript
+	*   resolve('foo', 'bar', 'baz') // '/cwd/foo/bar/baz'
+	*   resolve('/foo', 'bar', 'baz') // '/foo/bar/baz'
+	*   resolve('foo', '/bar', 'baz') // '/bar/baz'
+	*   resolve() // '/cwd'
+	*   ```
+	*
+	* @param {...string} segments - Path segments to resolve.
+	*
+	* @returns {string} The resolved absolute path
+	*/
+	function resolve(...segments) {
+		let resolvedPath = "";
+		let resolvedAbsolute = false;
+		for (let i = segments.length - 1; i >= 0 && !resolvedAbsolute; i -= 1) {
+			const segment = segments[i];
+			/* c8 ignore start */
+			if (typeof segment !== "string" || segment.length === 0) continue;
+			resolvedPath = segment + (resolvedPath.length === 0 ? "" : `/${resolvedPath}`);
+			resolvedAbsolute = require_paths_predicates.isAbsolute(segment);
+		}
+		if (!resolvedAbsolute) resolvedPath = /* @__PURE__ */ __require("node:process").cwd() + (resolvedPath.length === 0 ? "" : `/${resolvedPath}`);
+		/* c8 ignore stop */
+		return require_paths_normalize.normalizePath(resolvedPath);
+	}
+	exports.relative = relative;
+	exports.relativeResolve = relativeResolve;
+	exports.resolve = resolve;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/paths/normalize.js
+var require_normalize = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_string = require_string();
+	const require_constants_platform = require_platform();
+	const require_paths__internal = require__internal();
+	const require_paths_conversion = require_conversion();
+	const require_paths_predicates = require_predicates();
+	const require_paths_resolve = require_resolve();
+	/**
+	* @file Path normalization — the core `normalizePath` and its MSYS drive-letter
+	*   helper. The rest of the path module's surface (predicates, conversion,
+	*   resolution) lives in sibling leaves and is re-exported here so existing
+	*   `paths/normalize` importers keep working.
+	*
+	*   - `normalizePath` — backslash → forward-slash, segment collapse, UNC +
+	*     namespace preservation
+	*   - `msysDriveToNative` — `/c/path` → `C:/path` on Windows
+	*/
+	const DRIVE_LETTER_REGEXP = /^[A-Za-z]:$/;
+	function msysDriveToNative(normalized) {
+		/* c8 ignore start - Windows-only branch. */
+		if (require_constants_platform.WIN32) return normalized.replace(require_paths__internal.msysDriveRegExp, (_, letter, sep) => `${letter.toUpperCase()}:${sep || "/"}`);
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Normalize a path by converting backslashes to forward slashes and collapsing
+	* segments.
+	*
+	* - Converts all backslashes (`\`) to forward slashes (`/`)
+	* - Collapses repeated slashes
+	* - Resolves `.` and `..` segments
+	* - Preserves UNC path prefixes (`//server/share`)
+	* - Preserves Windows namespace prefixes (`//./`, `//?/`)
+	* - Returns `.` for empty or collapsed paths
+	* - On Windows: MSYS drive letters `/c/path` become `C:/path`
+	*
+	* @example
+	*   ;```typescript
+	*   normalizePath('foo/bar//baz') // 'foo/bar/baz'
+	*   normalizePath('foo/./bar') // 'foo/bar'
+	*   normalizePath('foo/bar/../baz') // 'foo/baz'
+	*   normalizePath('C:\\Users\\u\\file.txt') // 'C:/Users/u/file.txt'
+	*   normalizePath('\\\\server\\share\\file') // '//server/share/file'
+	*   normalizePath('') // '.'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to normalize.
+	*
+	* @returns {string} The normalized path
+	*
+	* @security
+	* **WARNING**: This function resolves `..` patterns as part of normalization, which means
+	* paths like `/../etc/passwd` become `/etc/passwd`. When processing untrusted user input
+	* (HTTP requests, file uploads, URL parameters), you MUST validate for path traversal
+	* attacks BEFORE calling this function.
+	*/
+	function normalizePath(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		const { length } = filepath;
+		if (length === 0) return ".";
+		if (length < 2) return length === 1 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
+		let code = 0;
+		let start = 0;
+		let prefix = "";
+		if (length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92) {
+			const code2 = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
+			if ((code2 === 63 || code2 === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) {
+				start = 2;
+				prefix = "//";
+			}
+		}
+		if (start === 0)
+ /* c8 ignore start - UNC path detection (\\server\share). Rare
+		input; not exercised by typical test fixtures. */
+		if (length > 2 && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 92 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 47)) {
+			let firstSegmentEnd = -1;
+			let hasSecondSegment = false;
+			let i = 2;
+			while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
+			while (i < length) {
+				const char = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
+				if (char === 47 || char === 92) {
+					firstSegmentEnd = i;
+					break;
+				}
+				i++;
+			}
+			if (firstSegmentEnd > 2) {
+				i = firstSegmentEnd;
+				while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
+				if (i < length) hasSecondSegment = true;
+			}
+			if (firstSegmentEnd > 2 && hasSecondSegment) {
+				start = 2;
+				prefix = "//";
+			} else {
+				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+				while (code === 47 || code === 92) {
+					start += 1;
+					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+				}
+				if (start) prefix = "/";
+			}
+		} else {
+			code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			while (code === 47 || code === 92) {
+				start += 1;
+				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			}
+			if (start) prefix = "/";
+		}
+		let nextIndex = require_paths__internal.indexOfPathSeparator(filepath, start);
+		/* c8 ignore start */
+		if (nextIndex === -1) {
+			const segment = filepath.slice(start);
+			if (segment === "." || segment.length === 0) return prefix || ".";
+			if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
+			return msysDriveToNative(prefix + segment);
+		}
+		/* c8 ignore stop */
+		/* c8 ignore start */
+		let collapsed = "";
+		let segmentCount = 0;
+		let leadingDotDots = 0;
+		while (nextIndex !== -1) {
+			const segment = filepath.slice(start, nextIndex);
+			if (segment.length > 0 && segment !== ".") if (segment === "..") {
+				if (segmentCount > 0) {
+					const lastSeparatorIndex = collapsed.lastIndexOf("/");
+					if (lastSeparatorIndex === -1) {
+						collapsed = "";
+						segmentCount = 0;
+						if (leadingDotDots > 0 && !prefix) {
+							collapsed = "..";
+							leadingDotDots = 1;
+						}
+					} else {
+						const lastSegmentStart = lastSeparatorIndex + 1;
+						if (collapsed.slice(lastSegmentStart) === "..") {
+							collapsed = `${collapsed}/${segment}`;
+							leadingDotDots += 1;
+						} else {
+							collapsed = collapsed.slice(0, lastSeparatorIndex);
+							segmentCount -= 1;
+						}
+					}
+				} else if (!prefix) {
+					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
+					leadingDotDots += 1;
+				}
+			} else {
+				collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
+				segmentCount += 1;
+			}
+			start = nextIndex + 1;
+			code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			while (code === 47 || code === 92) {
+				start += 1;
+				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			}
+			nextIndex = require_paths__internal.indexOfPathSeparator(filepath, start);
+		}
+		const lastSegment = filepath.slice(start);
+		if (lastSegment.length > 0 && lastSegment !== ".") if (lastSegment === "..") {
+			if (segmentCount > 0) {
+				const lastSeparatorIndex = collapsed.lastIndexOf("/");
+				if (lastSeparatorIndex === -1) {
+					collapsed = "";
+					segmentCount = 0;
+					if (leadingDotDots > 0 && !prefix) {
+						collapsed = "..";
+						leadingDotDots = 1;
+					}
+				} else {
+					const lastSegmentStart = lastSeparatorIndex + 1;
+					if (collapsed.slice(lastSegmentStart) === "..") {
+						collapsed = `${collapsed}/${lastSegment}`;
+						leadingDotDots += 1;
+					} else {
+						collapsed = collapsed.slice(0, lastSeparatorIndex);
+						segmentCount -= 1;
+					}
+				}
+			} else if (!prefix) {
+				collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
+				leadingDotDots += 1;
+			}
+		} else {
+			collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
+			segmentCount += 1;
+		}
+		/* c8 ignore stop */
+		if (collapsed.length === 0) return prefix || ".";
+		if (DRIVE_LETTER_REGEXP.test(collapsed) && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 92)) return msysDriveToNative(`${prefix}${collapsed}/`);
+		return msysDriveToNative(prefix + collapsed);
+	}
+	exports.fromUnixPath = require_paths_conversion.fromUnixPath;
+	exports.getUrl = require_paths__internal.getUrl;
+	exports.isAbsolute = require_paths_predicates.isAbsolute;
+	exports.isNodeModules = require_paths_predicates.isNodeModules;
+	exports.isPath = require_paths_predicates.isPath;
+	exports.isPathSeparator = require_paths_predicates.isPathSeparator;
+	exports.isRelative = require_paths_predicates.isRelative;
+	exports.isUnixPath = require_paths_predicates.isUnixPath;
+	exports.isWindowsDeviceRoot = require_paths_predicates.isWindowsDeviceRoot;
+	exports.msysDriveToNative = msysDriveToNative;
+	exports.normalizePath = normalizePath;
+	exports.pathLikeToString = require_paths__internal.pathLikeToString;
+	exports.relative = require_paths_resolve.relative;
+	exports.relativeResolve = require_paths_resolve.relativeResolve;
+	exports.resolve = require_paths_resolve.resolve;
+	exports.splitPath = require_paths_conversion.splitPath;
+	exports.toUnixPath = require_paths_conversion.toUnixPath;
+	exports.trimLeadingDotSlash = require_paths_conversion.trimLeadingDotSlash;
+}));
+
+//#endregion
+//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/paths/conversion.js
+var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_string = require_string();
+	const require_constants_platform = require_platform();
+	const require_paths__internal = require__internal();
+	const require_paths_normalize = require_normalize();
+	/**
+	* @file Path conversion utilities — MSYS↔native bridging and string-shape
+	*   helpers. Split out of `paths/normalize.ts` for size hygiene.
+	*
+	*   - `fromUnixPath` / `toUnixPath` — MSYS↔native conversion
+	*   - `splitPath` — segment-array view of a path
+	*   - `trimLeadingDotSlash` — strip a single `./` / `.\` prefix
+	*/
+	/**
+	* Convert Unix-style POSIX paths to native Windows paths.
+	*
+	* This is the inverse of {@link toUnixPath}. On Windows, MSYS-style paths use
+	* `/c/` notation for drive letters and forward slashes, which PowerShell and
+	* cmd.exe cannot resolve. This function converts them to native Windows format
+	* with backslashes and proper drive letters.
+	*
+	* @example
+	*   ;```typescript
+	*   fromUnixPath('/c/projects/app/file.txt') // 'C:\\projects\\app\\file.txt' on Windows
+	*   fromUnixPath('/tmp/build/output') // '/tmp/build/output'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The MSYS/Unix-style path to
+	*   convert.
+	*
+	* @returns {string} Native Windows path or normalized Unix path
+	*/
+	function fromUnixPath(pathLike) {
+		const normalized = require_paths_normalize.normalizePath(pathLike);
+		/* c8 ignore start */
+		if (require_constants_platform.WIN32) return normalized.replace(/\//g, "\\");
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Split a path into an array of segments.
+	*
+	* Divides a path into individual components by splitting on both forward-slash
+	* and backslash path separators.
+	*
+	* @example
+	*   ;```typescript
+	*   splitPath('/home/user/file.txt') // ['', 'home', 'user', 'file.txt']
+	*   splitPath('C:\\Users\\John') // ['C:', 'Users', 'John']
+	*   splitPath('') // []
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to split.
+	*
+	* @returns {string[]} Array of path segments, or empty array for empty paths
+	*/
+	function splitPath(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		if (filepath === "") return [];
+		return filepath.split(require_paths__internal.slashRegExp);
+	}
+	/**
+	* Convert Windows paths to MSYS/Unix-style POSIX paths for Git Bash tools.
+	*
+	* Git for Windows and MSYS2 tools expect POSIX-style paths with forward slashes
+	* and Unix drive letter notation (`/c/` instead of `C:\`).
+	*
+	* This is the inverse of {@link fromUnixPath}.
+	*
+	* @example
+	*   ;```typescript
+	*   toUnixPath('C:\\path\\to\\file.txt') // '/c/path/to/file.txt' on Windows
+	*   toUnixPath('/home/user/file') // '/home/user/file'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to convert.
+	*
+	* @returns {string} Unix-style POSIX path
+	*/
+	function toUnixPath(pathLike) {
+		const normalized = require_paths_normalize.normalizePath(pathLike);
+		/* c8 ignore start */
+		if (require_constants_platform.WIN32) return normalized.replace(/^([A-Z]):/i, (_, letter) => `/${letter.toLowerCase()}`);
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Remove a leading `./` or `.\` prefix from a path.
+	*
+	* Only removes a single leading `./` or `.\`. Does not touch `../` prefixes.
+	*
+	* @example
+	*   ;```typescript
+	*   trimLeadingDotSlash('./src/index.js') // 'src/index.js'
+	*   trimLeadingDotSlash('../lib/util.js') // '../lib/util.js'
+	*   trimLeadingDotSlash('/absolute/path') // '/absolute/path'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to process.
+	*
+	* @returns {string} The path without leading `./` / `.\`, or unchanged
+	*/
+	function trimLeadingDotSlash(pathLike) {
+		const filepath = require_paths__internal.pathLikeToString(pathLike);
+		if (require_primordials_string.StringPrototypeStartsWith(filepath, "./") || require_primordials_string.StringPrototypeStartsWith(filepath, ".\\")) return filepath.slice(2);
+		return filepath;
+	}
+	exports.fromUnixPath = fromUnixPath;
+	exports.splitPath = splitPath;
+	exports.toUnixPath = toUnixPath;
+	exports.trimLeadingDotSlash = trimLeadingDotSlash;
+}));
+
+//#endregion
+//#region src/tools/firewall.js
+var import_message = require_message();
+var import_conversion = require_conversion();
+/**
+* `<platform>-<arch>` (Node's own spelling) to the suffix of the release asset
+* that carries that build. A key missing here is a platform the firewall does
+* not publish a binary for, and the action fails fast rather than downloading
+* a 404.
+*/
+const FIREWALL_DISTRIBUTIONS = {
+	"darwin-arm64": "macos-arm64",
+	"darwin-x64": "macos-x86_64",
+	"linux-arm64": "linux-arm64",
+	"linux-x64": "linux-x86_64",
+	"win32-arm64": "windows-arm64.exe",
+	"win32-x64": "windows-x86_64.exe"
+};
+/**
+* Release tag every checksum below was taken from, and the version the action
+* installs when `firewall-version` is left at its default.
+*/
+const FIREWALL_VERSION = "v1.6.1";
+/**
+* SHA256 of each `FIREWALL_VERSION` asset, per edition and per
+* `<platform>-<arch>`. The hashes are pinned in source rather than read from a
+* `.sha256` file beside the download: a checksum served by whoever served the
+* binary proves nothing about it. A build with no entry here cannot be
+* verified, so the action refuses it instead of installing it unchecked.
+*/
+const FIREWALL_CHECKSUMS = {
+	enterprise: {
+		"darwin-arm64": "acad0b517601bb7408e2e611c9226f47dcccbd83333d7fc5157f1d32ed2b953d",
+		"darwin-x64": "01d64d40effda35c31f8d8ee1fed1388aac0a11aba40d47fba8a36024b77500c",
+		"linux-arm64": "671270231617142404a1564e52672f79b806f9df3f232fcc7606329c0246da55",
+		"linux-x64": "9115b4ca8021eb173eb9e9c3627deb7f1066f8debd48c5c9d9f3caabb2a26a4b",
+		"win32-x64": "9a50e1ddaf038138c3f85418dc5df0113bbe6fc884f5abe158beaa9aea18d70a"
+	},
+	free: {
+		"darwin-arm64": "bf1616fc44ac49f1cb2067fedfa127a3ae65d6ec6d634efbb3098cfa355e5555",
+		"darwin-x64": "724ccea19d847b79db8cc8e38f5f18ce2dd32336007f42b11bed7d2e5f4a2566",
+		"linux-arm64": "df2eedb2daf2572eee047adb8bfd81c9069edcb200fc7d3710fca98ec3ca81a1",
+		"linux-x64": "4a1e8b65e90fce7d5fd066cf0af6c93d512065fa4222a475c8d959a6bc14b9ff",
+		"win32-x64": "c953e62ad7928d4d8f2302f5737884ea1a757babc26bed6a42b9b6b68a5d54af"
+	}
+};
+/**
+* Name the firewall binary is cached and executed under.
+*/
+const FIREWALL_EXEC_NAME = "sfw";
+/**
+* Directory under `RUNNER_TEMP` the generated shims are written to.
+*/
+const FIREWALL_SHIM_DIR_NAME = "sfw-shim";
+/**
+* Write a shim for every package manager sfw fronts and put the shim directory
+* first on PATH, so a workflow runs `npm install` rather than `sfw npm
+* install`. Each shim drops its own directory from PATH before calling sfw, so
+* sfw resolves the real binary instead of re-entering the shim. Windows gets a
+* `.cmd` shim beside the shell one so cmd.exe and PowerShell are covered.
+*
+* @param {string} firewallBinaryPath Full path to the installed sfw binary.
+* @param {string} edition Edition installed, `free` or `enterprise`.
+*/
+async function createFirewallShims(firewallBinaryPath, edition) {
+	const shimDir = path.join(process.env.RUNNER_TEMP, FIREWALL_SHIM_DIR_NAME);
+	await promises$1.mkdir(shimDir, { recursive: true });
+	const firewallPath = (0, import_conversion.fromUnixPath)(firewallBinaryPath);
+	const shimmed = [];
+	const runnerPath = process.env.PATH;
+	process.env.PATH = (runnerPath ?? "").split(path.delimiter).filter((entry) => entry !== shimDir).join(path.delimiter);
+	try {
+		for (const command of firewallShimCommands(edition)) {
+			const found = await which(command, false);
+			if (!found) continue;
+			const realPath = (0, import_conversion.fromUnixPath)(found);
+			const shellShim = [
+				"#!/bin/sh",
+				`export PATH="$(echo "$PATH" | tr ':' '\\n' | grep -vxF '${shimDir}' | paste -sd: -)"`,
+				`exec "${firewallPath}" "${realPath}" "$@"`
+			].join("\n");
+			await promises$1.writeFile(path.join(shimDir, command), `${shellShim}\n`, { mode: 493 });
+			if (process.platform === "win32") {
+				const cmdShim = [
+					"@echo off",
+					"set \"PATH=;%PATH%;\"",
+					`set "PATH=%PATH:;${shimDir};=%"`,
+					"set \"PATH=%PATH:~1,-1%\"",
+					`"${firewallPath}" "${realPath}" %*`
+				].join("\r\n");
+				await promises$1.writeFile(path.join(shimDir, `${command}.cmd`), `${cmdShim}\r\n`);
+			}
+			shimmed.push(command);
+		}
+	} finally {
+		process.env.PATH = runnerPath;
+	}
+	addPath(shimDir);
+	exportVariable("SFW_SHIM_DIR", shimDir);
+	info(`created shims for: ${shimmed.join(", ")}`);
+}
+/**
+* Downloads firewall binary if not in cache, checks it against the hash pinned
+* for its release, and adds to exec path. Package manager shims are written
+* too unless the `shims` input turns them off.
+*
+* @param {object} inputs Action inputs, including the `edition` to install.
+*/
+async function downloadFirewall({ edition = "free", ...inputs }) {
+	const distributionKey = `${process.platform}-${process.arch}`;
+	const distribution = FIREWALL_DISTRIBUTIONS[distributionKey];
+	if (!distribution) throw new Error(`Unsupported architecture ${distributionKey}`);
+	const editionChecksums = FIREWALL_CHECKSUMS[edition];
+	if (!editionChecksums) throw new Error(`Unknown edition ${edition}`);
+	const expectedHash = editionChecksums[distributionKey];
+	if (!expectedHash) throw new Error(`No pinned checksum for the ${edition} edition on ${distributionKey} at ${FIREWALL_VERSION}`);
+	const repo = edition === "free" ? "sfw-free" : "firewall-release";
+	let versionToDownload = FIREWALL_VERSION;
+	if (inputs.versionFirewall && inputs.versionFirewall !== "latest") {
+		versionToDownload = `v${inputs.versionFirewall}`;
+		warning(`Requested firewall version ${versionToDownload}, but the checksum is pinned to ${FIREWALL_VERSION}. Validation fails if the binary differs.`);
+	}
+	let nameDownload = "sfw";
+	if (edition === "free") nameDownload += "-free";
+	nameDownload += `-${distribution}`;
+	const cacheOptions = [
+		`socket-firewall-${edition}`,
+		versionToDownload,
+		process.arch
+	];
+	const url = `https://github.com/SocketDev/${repo}/releases/download/${versionToDownload}/${nameDownload}`;
+	let pathCache;
+	if (inputs.useCache) pathCache = find(...cacheOptions);
+	if (!pathCache) {
+		debug(`downloading Socket Firewall binary from: ${url}`);
+		let pathDownload;
+		try {
+			pathDownload = await downloadTool(url);
+		} catch (error) {
+			throw new Error(`Failed to download Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
+		}
+		await validateChecksum(pathDownload, expectedHash);
+		try {
+			pathCache = await cacheFile(pathDownload, "sfw", ...cacheOptions);
+		} catch (error) {
+			throw new Error(`Failed to cache Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
+		}
+	}
+	const pathBinary = path.join(pathCache, "sfw");
+	if (process.platform !== "win32") await exec("chmod", ["+x", pathBinary]);
+	setOutput("firewall-path-binary", pathBinary);
+	addPath(pathCache);
+	info(`Socket Firewall ${edition} edition installed, requested: ${inputs.versionFirewall}, resolved: ${versionToDownload}`);
+	debug(`binary location: ${pathCache}`);
+	if (inputs.shims) await createFirewallShims(pathBinary, edition);
+	if (inputs.jobSummary !== "none") {
+		const pathReport = `${path.join(process.env.RUNNER_TEMP, crypto.randomUUID())}.json`;
+		exportVariable("SFW_JSON_REPORT_PATH", pathReport);
+		setOutput("firewall-path-report", pathReport);
+		debug(`report path set to : ${pathReport}`);
+	}
+}
+/**
+* Package manager commands the given edition can front, a fresh list each call
+* so one caller cannot mutate the next caller's set. The free edition covers
+* the npm, Python, and Rust ecosystems; enterprise adds Ruby and .NET
+* everywhere, and Go on Linux.
+*
+* @param {string} edition Edition installed, `free` or `enterprise`.
+*
+* @returns {string[]} Command names to write a shim for.
+*/
+function firewallShimCommands(edition) {
+	const commands = [
+		"cargo",
+		"npm",
+		"pip",
+		"pip3",
+		"pnpm",
+		"uv",
+		"yarn"
+	];
+	if (edition !== "enterprise") return commands;
+	commands.push("bundler", "gem", "nuget");
+	if (process.platform === "linux") commands.push("go");
+	return commands;
+}
+/**
+* SHA256 of a file on disk.
+*
+* @param {string} filePath File to hash.
+*
+* @returns {Promise<string>} Hex-encoded digest.
+*/
+async function getFileChecksum(filePath) {
+	const hash = crypto.createHash("sha256");
+	hash.update(await promises$1.readFile(filePath));
+	return hash.digest("hex");
+}
+/**
+* Compare a downloaded binary against the hash pinned for its release and
+* throw when they differ. Both hashes are printed so an operator can tell a
+* stale pin apart from a tampered download.
+*
+* @param {string} binaryPath Binary that was just downloaded.
+* @param {string} expectedHash Hex-encoded SHA256 the release is pinned to.
+*/
+async function validateChecksum(binaryPath, expectedHash) {
+	info("validating checksum of downloaded binary");
+	const actualHash = await getFileChecksum(binaryPath);
+	debug(`expected checksum: ${expectedHash}`);
+	debug(`actual checksum:   ${actualHash}`);
+	if (actualHash !== expectedHash) throw new Error(`Checksum mismatch, the binary may have been tampered with.\nExpected: ${expectedHash}\nGot:      ${actualHash}`);
+	info("checksum validation passed");
 }
 
 //#endregion
@@ -17940,7 +22071,7 @@ var Context = class {
 
 //#endregion
 //#region node_modules/.pnpm/@actions+github@9.1.1/node_modules/@actions/github/lib/internal/utils.js
-var __awaiter$3 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+var __awaiter = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
 			resolve(value);
@@ -17980,7 +22111,7 @@ function getProxyAgentDispatcher(destinationUrl) {
 }
 function getProxyFetch(destinationUrl) {
 	const httpDispatcher = getProxyAgentDispatcher(destinationUrl);
-	const proxyFetch = (url, opts) => __awaiter$3(this, void 0, void 0, function* () {
+	const proxyFetch = (url, opts) => __awaiter(this, void 0, void 0, function* () {
 		return (0, import_undici.fetch)(url, Object.assign(Object.assign({}, opts), { dispatcher: httpDispatcher }));
 	});
 	return proxyFetch;
@@ -20726,2997 +24857,6 @@ function getOctokit(token, options, ...additionalPlugins) {
 }
 
 //#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js
-var require_constants = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SEMVER_SPEC_VERSION = "2.0.0";
-	const MAX_LENGTH = 256;
-	const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
-	const MAX_SAFE_COMPONENT_LENGTH = 16;
-	const MAX_SAFE_BUILD_LENGTH = MAX_LENGTH - 6;
-	const RELEASE_TYPES = [
-		"major",
-		"premajor",
-		"minor",
-		"preminor",
-		"patch",
-		"prepatch",
-		"prerelease"
-	];
-	module.exports = {
-		MAX_LENGTH,
-		MAX_SAFE_COMPONENT_LENGTH,
-		MAX_SAFE_BUILD_LENGTH,
-		MAX_SAFE_INTEGER,
-		RELEASE_TYPES,
-		SEMVER_SPEC_VERSION,
-		FLAG_INCLUDE_PRERELEASE: 1,
-		FLAG_LOOSE: 2
-	};
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js
-var require_debug = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {};
-	module.exports = debug;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js
-var require_re = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const { MAX_SAFE_COMPONENT_LENGTH, MAX_SAFE_BUILD_LENGTH, MAX_LENGTH } = require_constants();
-	const debug = require_debug();
-	exports = module.exports = {};
-	const re = exports.re = [];
-	const safeRe = exports.safeRe = [];
-	const src = exports.src = [];
-	const safeSrc = exports.safeSrc = [];
-	const t = exports.t = {};
-	let R = 0;
-	const LETTERDASHNUMBER = "[a-zA-Z0-9-]";
-	const safeRegexReplacements = [
-		["\\s", 1],
-		["\\d", MAX_LENGTH],
-		[LETTERDASHNUMBER, MAX_SAFE_BUILD_LENGTH]
-	];
-	const makeSafeRegex = (value) => {
-		for (const [token, max] of safeRegexReplacements) value = value.split(`${token}*`).join(`${token}{0,${max}}`).split(`${token}+`).join(`${token}{1,${max}}`);
-		return value;
-	};
-	const createToken = (name, value, isGlobal) => {
-		const safe = makeSafeRegex(value);
-		const index = R++;
-		debug(name, index, value);
-		t[name] = index;
-		src[index] = value;
-		safeSrc[index] = safe;
-		re[index] = new RegExp(value, isGlobal ? "g" : void 0);
-		safeRe[index] = new RegExp(safe, isGlobal ? "g" : void 0);
-	};
-	createToken("NUMERICIDENTIFIER", "0|[1-9]\\d*");
-	createToken("NUMERICIDENTIFIERLOOSE", "\\d+");
-	createToken("NONNUMERICIDENTIFIER", `\\d*[a-zA-Z-]${LETTERDASHNUMBER}*`);
-	createToken("MAINVERSION", `(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})\\.(${src[t.NUMERICIDENTIFIER]})`);
-	createToken("MAINVERSIONLOOSE", `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})\\.(${src[t.NUMERICIDENTIFIERLOOSE]})`);
-	createToken("PRERELEASEIDENTIFIER", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIER]})`);
-	createToken("PRERELEASEIDENTIFIERLOOSE", `(?:${src[t.NONNUMERICIDENTIFIER]}|${src[t.NUMERICIDENTIFIERLOOSE]})`);
-	createToken("PRERELEASE", `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
-	createToken("PRERELEASELOOSE", `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
-	createToken("BUILDIDENTIFIER", `${LETTERDASHNUMBER}+`);
-	createToken("BUILD", `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
-	createToken("FULLPLAIN", `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
-	createToken("FULL", `^${src[t.FULLPLAIN]}$`);
-	createToken("LOOSEPLAIN", `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
-	createToken("LOOSE", `^${src[t.LOOSEPLAIN]}$`);
-	createToken("GTLT", "((?:<|>)?=?)");
-	createToken("XRANGEIDENTIFIERLOOSE", `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
-	createToken("XRANGEIDENTIFIER", `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
-	createToken("XRANGEPLAIN", `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:\\.(${src[t.XRANGEIDENTIFIER]})(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?)?)?`);
-	createToken("XRANGEPLAINLOOSE", `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?)?)?`);
-	createToken("XRANGE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
-	createToken("XRANGELOOSE", `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
-	createToken("COERCEPLAIN", `(^|[^\\d])(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}})(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?`);
-	createToken("COERCE", `${src[t.COERCEPLAIN]}(?:$|[^\\d])`);
-	createToken("COERCEFULL", src[t.COERCEPLAIN] + `(?:${src[t.PRERELEASE]})?(?:${src[t.BUILD]})?(?:$|[^\\d])`);
-	createToken("COERCERTL", src[t.COERCE], true);
-	createToken("COERCERTLFULL", src[t.COERCEFULL], true);
-	createToken("LONETILDE", "(?:~>?)");
-	createToken("TILDETRIM", `(\\s*)${src[t.LONETILDE]}\\s+`, true);
-	exports.tildeTrimReplace = "$1~";
-	createToken("TILDE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
-	createToken("TILDELOOSE", `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
-	createToken("LONECARET", "(?:\\^)");
-	createToken("CARETTRIM", `(\\s*)${src[t.LONECARET]}\\s+`, true);
-	exports.caretTrimReplace = "$1^";
-	createToken("CARET", `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
-	createToken("CARETLOOSE", `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
-	createToken("COMPARATORLOOSE", `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
-	createToken("COMPARATOR", `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
-	createToken("COMPARATORTRIM", `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
-	exports.comparatorTrimReplace = "$1$2$3";
-	createToken("HYPHENRANGE", `^\\s*(${src[t.XRANGEPLAIN]})\\s+-\\s+(${src[t.XRANGEPLAIN]})\\s*$`);
-	createToken("HYPHENRANGELOOSE", `^\\s*(${src[t.XRANGEPLAINLOOSE]})\\s+-\\s+(${src[t.XRANGEPLAINLOOSE]})\\s*$`);
-	createToken("STAR", "(<|>)?=?\\s*\\*");
-	createToken("GTE0", "^\\s*>=\\s*0\\.0\\.0\\s*$");
-	createToken("GTE0PRE", "^\\s*>=\\s*0\\.0\\.0-0\\s*$");
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js
-var require_parse_options = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const looseOption = Object.freeze({ loose: true });
-	const emptyOpts = Object.freeze({});
-	const parseOptions = (options) => {
-		if (!options) return emptyOpts;
-		if (typeof options !== "object") return looseOption;
-		return options;
-	};
-	module.exports = parseOptions;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js
-var require_identifiers = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const numeric = /^[0-9]+$/;
-	const compareIdentifiers = (a, b) => {
-		if (typeof a === "number" && typeof b === "number") return a === b ? 0 : a < b ? -1 : 1;
-		const anum = numeric.test(a);
-		const bnum = numeric.test(b);
-		if (anum && bnum) {
-			a = +a;
-			b = +b;
-		}
-		return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
-	};
-	const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
-	module.exports = {
-		compareIdentifiers,
-		rcompareIdentifiers
-	};
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js
-var require_semver$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const debug = require_debug();
-	const { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants();
-	const { safeRe: re, t } = require_re();
-	const parseOptions = require_parse_options();
-	const { compareIdentifiers } = require_identifiers();
-	const isPrereleaseIdentifier = (prerelease, identifier) => {
-		const identifiers = identifier.split(".");
-		if (identifiers.length > prerelease.length) return false;
-		for (let i = 0; i < identifiers.length; i++) if (compareIdentifiers(prerelease[i], identifiers[i]) !== 0) return false;
-		return true;
-	};
-	var SemVer = class SemVer {
-		constructor(version, options) {
-			options = parseOptions(options);
-			if (version instanceof SemVer) if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) return version;
-			else version = version.version;
-			else if (typeof version !== "string") throw new TypeError(`Invalid version. Must be a string. Got type "${typeof version}".`);
-			if (version.length > MAX_LENGTH) throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
-			debug("SemVer", version, options);
-			this.options = options;
-			this.loose = !!options.loose;
-			this.includePrerelease = !!options.includePrerelease;
-			const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
-			if (!m) throw new TypeError(`Invalid Version: ${version}`);
-			this.raw = version;
-			this.major = +m[1];
-			this.minor = +m[2];
-			this.patch = +m[3];
-			if (this.major > MAX_SAFE_INTEGER || this.major < 0) throw new TypeError("Invalid major version");
-			if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) throw new TypeError("Invalid minor version");
-			if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) throw new TypeError("Invalid patch version");
-			if (!m[4]) this.prerelease = [];
-			else this.prerelease = m[4].split(".").map((id) => {
-				if (/^[0-9]+$/.test(id)) {
-					const num = +id;
-					if (num >= 0 && num < MAX_SAFE_INTEGER) return num;
-				}
-				return id;
-			});
-			this.build = m[5] ? m[5].split(".") : [];
-			this.format();
-		}
-		format() {
-			this.version = `${this.major}.${this.minor}.${this.patch}`;
-			if (this.prerelease.length) this.version += `-${this.prerelease.join(".")}`;
-			return this.version;
-		}
-		toString() {
-			return this.version;
-		}
-		compare(other) {
-			debug("SemVer.compare", this.version, this.options, other);
-			if (!(other instanceof SemVer)) {
-				if (typeof other === "string" && other === this.version) return 0;
-				other = new SemVer(other, this.options);
-			}
-			if (other.version === this.version) return 0;
-			return this.compareMain(other) || this.comparePre(other);
-		}
-		compareMain(other) {
-			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
-			if (this.major < other.major) return -1;
-			if (this.major > other.major) return 1;
-			if (this.minor < other.minor) return -1;
-			if (this.minor > other.minor) return 1;
-			if (this.patch < other.patch) return -1;
-			if (this.patch > other.patch) return 1;
-			return 0;
-		}
-		comparePre(other) {
-			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
-			if (this.prerelease.length && !other.prerelease.length) return -1;
-			else if (!this.prerelease.length && other.prerelease.length) return 1;
-			else if (!this.prerelease.length && !other.prerelease.length) return 0;
-			let i = 0;
-			do {
-				const a = this.prerelease[i];
-				const b = other.prerelease[i];
-				debug("prerelease compare", i, a, b);
-				if (a === void 0 && b === void 0) return 0;
-				else if (b === void 0) return 1;
-				else if (a === void 0) return -1;
-				else if (a === b) continue;
-				else return compareIdentifiers(a, b);
-			} while (++i);
-		}
-		compareBuild(other) {
-			if (!(other instanceof SemVer)) other = new SemVer(other, this.options);
-			let i = 0;
-			do {
-				const a = this.build[i];
-				const b = other.build[i];
-				debug("build compare", i, a, b);
-				if (a === void 0 && b === void 0) return 0;
-				else if (b === void 0) return 1;
-				else if (a === void 0) return -1;
-				else if (a === b) continue;
-				else return compareIdentifiers(a, b);
-			} while (++i);
-		}
-		inc(release, identifier, identifierBase) {
-			if (release.startsWith("pre")) {
-				if (!identifier && identifierBase === false) throw new Error("invalid increment argument: identifier is empty");
-				if (identifier) {
-					const match = `-${identifier}`.match(this.options.loose ? re[t.PRERELEASELOOSE] : re[t.PRERELEASE]);
-					if (!match || match[1] !== identifier) throw new Error(`invalid identifier: ${identifier}`);
-				}
-			}
-			switch (release) {
-				case "premajor":
-					this.prerelease.length = 0;
-					this.patch = 0;
-					this.minor = 0;
-					this.major++;
-					this.inc("pre", identifier, identifierBase);
-					break;
-				case "preminor":
-					this.prerelease.length = 0;
-					this.patch = 0;
-					this.minor++;
-					this.inc("pre", identifier, identifierBase);
-					break;
-				case "prepatch":
-					this.prerelease.length = 0;
-					this.inc("patch", identifier, identifierBase);
-					this.inc("pre", identifier, identifierBase);
-					break;
-				case "prerelease":
-					if (this.prerelease.length === 0) this.inc("patch", identifier, identifierBase);
-					this.inc("pre", identifier, identifierBase);
-					break;
-				case "release":
-					if (this.prerelease.length === 0) throw new Error(`version ${this.raw} is not a prerelease`);
-					this.prerelease.length = 0;
-					break;
-				case "major":
-					if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) this.major++;
-					this.minor = 0;
-					this.patch = 0;
-					this.prerelease = [];
-					break;
-				case "minor":
-					if (this.patch !== 0 || this.prerelease.length === 0) this.minor++;
-					this.patch = 0;
-					this.prerelease = [];
-					break;
-				case "patch":
-					if (this.prerelease.length === 0) this.patch++;
-					this.prerelease = [];
-					break;
-				case "pre": {
-					const base = Number(identifierBase) ? 1 : 0;
-					if (this.prerelease.length === 0) this.prerelease = [base];
-					else {
-						let i = this.prerelease.length;
-						while (--i >= 0) if (typeof this.prerelease[i] === "number") {
-							this.prerelease[i]++;
-							i = -2;
-						}
-						if (i === -1) {
-							if (identifier === this.prerelease.join(".") && identifierBase === false) throw new Error("invalid increment argument: identifier already exists");
-							this.prerelease.push(base);
-						}
-					}
-					if (identifier) {
-						let prerelease = [identifier, base];
-						if (identifierBase === false) prerelease = [identifier];
-						if (isPrereleaseIdentifier(this.prerelease, identifier)) {
-							const prereleaseBase = this.prerelease[identifier.split(".").length];
-							if (isNaN(prereleaseBase)) this.prerelease = prerelease;
-						} else this.prerelease = prerelease;
-					}
-					break;
-				}
-				default: throw new Error(`invalid increment argument: ${release}`);
-			}
-			this.raw = this.format();
-			if (this.build.length) this.raw += `+${this.build.join(".")}`;
-			return this;
-		}
-	};
-	module.exports = SemVer;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js
-var require_parse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const parse = (version, options, throwErrors = false) => {
-		if (version instanceof SemVer) return version;
-		try {
-			return new SemVer(version, options);
-		} catch (er) {
-			if (!throwErrors) return null;
-			throw er;
-		}
-	};
-	module.exports = parse;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js
-var require_valid$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const parse = require_parse();
-	const valid = (version, options) => {
-		const v = parse(version, options);
-		return v ? v.version : null;
-	};
-	module.exports = valid;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js
-var require_clean = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const parse = require_parse();
-	const clean = (version, options) => {
-		const s = parse(version.trim().replace(/^[=v]+/, ""), options);
-		return s ? s.version : null;
-	};
-	module.exports = clean;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js
-var require_inc = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const inc = (version, release, options, identifier, identifierBase) => {
-		if (typeof options === "string") {
-			identifierBase = identifier;
-			identifier = options;
-			options = void 0;
-		}
-		try {
-			return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier, identifierBase).version;
-		} catch (er) {
-			return null;
-		}
-	};
-	module.exports = inc;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js
-var require_diff = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const parse = require_parse();
-	const diff = (version1, version2) => {
-		const v1 = parse(version1, null, true);
-		const v2 = parse(version2, null, true);
-		const comparison = v1.compare(v2);
-		if (comparison === 0) return null;
-		const v1Higher = comparison > 0;
-		const highVersion = v1Higher ? v1 : v2;
-		const lowVersion = v1Higher ? v2 : v1;
-		const highHasPre = !!highVersion.prerelease.length;
-		if (!!lowVersion.prerelease.length && !highHasPre) {
-			if (!lowVersion.patch && !lowVersion.minor) return "major";
-			if (lowVersion.compareMain(highVersion) === 0) {
-				if (lowVersion.minor && !lowVersion.patch) return "minor";
-				return "patch";
-			}
-		}
-		const prefix = highHasPre ? "pre" : "";
-		if (v1.major !== v2.major) return prefix + "major";
-		if (v1.minor !== v2.minor) return prefix + "minor";
-		if (v1.patch !== v2.patch) return prefix + "patch";
-		return "prerelease";
-	};
-	module.exports = diff;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js
-var require_major = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const major = (a, loose) => new SemVer(a, loose).major;
-	module.exports = major;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js
-var require_minor = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const minor = (a, loose) => new SemVer(a, loose).minor;
-	module.exports = minor;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js
-var require_patch = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const patch = (a, loose) => new SemVer(a, loose).patch;
-	module.exports = patch;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js
-var require_prerelease = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const parse = require_parse();
-	const prerelease = (version, options) => {
-		const parsed = parse(version, options);
-		return parsed && parsed.prerelease.length ? parsed.prerelease : null;
-	};
-	module.exports = prerelease;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js
-var require_compare = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
-	module.exports = compare;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js
-var require_rcompare = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const rcompare = (a, b, loose) => compare(b, a, loose);
-	module.exports = rcompare;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js
-var require_compare_loose = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const compareLoose = (a, b) => compare(a, b, true);
-	module.exports = compareLoose;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js
-var require_compare_build = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const compareBuild = (a, b, loose) => {
-		const versionA = new SemVer(a, loose);
-		const versionB = new SemVer(b, loose);
-		return versionA.compare(versionB) || versionA.compareBuild(versionB);
-	};
-	module.exports = compareBuild;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js
-var require_sort = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compareBuild = require_compare_build();
-	const sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
-	module.exports = sort;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js
-var require_rsort = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compareBuild = require_compare_build();
-	const rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
-	module.exports = rsort;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js
-var require_gt = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const gt = (a, b, loose) => compare(a, b, loose) > 0;
-	module.exports = gt;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js
-var require_lt = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const lt = (a, b, loose) => compare(a, b, loose) < 0;
-	module.exports = lt;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js
-var require_eq = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const eq = (a, b, loose) => compare(a, b, loose) === 0;
-	module.exports = eq;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js
-var require_neq = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const neq = (a, b, loose) => compare(a, b, loose) !== 0;
-	module.exports = neq;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js
-var require_gte = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const gte = (a, b, loose) => compare(a, b, loose) >= 0;
-	module.exports = gte;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js
-var require_lte = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const compare = require_compare();
-	const lte = (a, b, loose) => compare(a, b, loose) <= 0;
-	module.exports = lte;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js
-var require_cmp = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const eq = require_eq();
-	const neq = require_neq();
-	const gt = require_gt();
-	const gte = require_gte();
-	const lt = require_lt();
-	const lte = require_lte();
-	const cmp = (a, op, b, loose) => {
-		switch (op) {
-			case "===":
-				if (typeof a === "object") a = a.version;
-				if (typeof b === "object") b = b.version;
-				return a === b;
-			case "!==":
-				if (typeof a === "object") a = a.version;
-				if (typeof b === "object") b = b.version;
-				return a !== b;
-			case "":
-			case "=":
-			case "==": return eq(a, b, loose);
-			case "!=": return neq(a, b, loose);
-			case ">": return gt(a, b, loose);
-			case ">=": return gte(a, b, loose);
-			case "<": return lt(a, b, loose);
-			case "<=": return lte(a, b, loose);
-			default: throw new TypeError(`Invalid operator: ${op}`);
-		}
-	};
-	module.exports = cmp;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js
-var require_coerce = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const parse = require_parse();
-	const { safeRe: re, t } = require_re();
-	const coerce = (version, options) => {
-		if (version instanceof SemVer) return version;
-		if (typeof version === "number") version = String(version);
-		if (typeof version !== "string") return null;
-		options = options || {};
-		let match = null;
-		if (!options.rtl) match = version.match(options.includePrerelease ? re[t.COERCEFULL] : re[t.COERCE]);
-		else {
-			const coerceRtlRegex = options.includePrerelease ? re[t.COERCERTLFULL] : re[t.COERCERTL];
-			let next;
-			while ((next = coerceRtlRegex.exec(version)) && (!match || match.index + match[0].length !== version.length)) {
-				if (!match || next.index + next[0].length !== match.index + match[0].length) match = next;
-				coerceRtlRegex.lastIndex = next.index + next[1].length + next[2].length;
-			}
-			coerceRtlRegex.lastIndex = -1;
-		}
-		if (match === null) return null;
-		const major = match[2];
-		const minor = match[3] || "0";
-		const patch = match[4] || "0";
-		const prerelease = options.includePrerelease && match[5] ? `-${match[5]}` : "";
-		const build = options.includePrerelease && match[6] ? `+${match[6]}` : "";
-		return parse(`${major}.${minor}.${patch}${prerelease}${build}`, options);
-	};
-	module.exports = coerce;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js
-var require_truncate = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const parse = require_parse();
-	const constants = require_constants();
-	const SemVer = require_semver$1();
-	const truncate = (version, truncation, options) => {
-		if (!constants.RELEASE_TYPES.includes(truncation)) return null;
-		const clonedVersion = cloneInputVersion(version, options);
-		return clonedVersion && doTruncation(clonedVersion, truncation);
-	};
-	const cloneInputVersion = (version, options) => {
-		const versionStringToParse = version instanceof SemVer ? version.version : version;
-		return parse(versionStringToParse, options);
-	};
-	const doTruncation = (version, truncation) => {
-		if (isPrerelease(truncation)) return version.version;
-		version.prerelease = [];
-		switch (truncation) {
-			case "major":
-				version.minor = 0;
-				version.patch = 0;
-				break;
-			case "minor":
-				version.patch = 0;
-				break;
-		}
-		return version.format();
-	};
-	const isPrerelease = (type) => {
-		return type.startsWith("pre");
-	};
-	module.exports = truncate;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js
-var require_lrucache = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	var LRUCache = class {
-		constructor() {
-			this.max = 1e3;
-			this.map = /* @__PURE__ */ new Map();
-		}
-		get(key) {
-			const value = this.map.get(key);
-			if (value === void 0) return;
-			else {
-				this.map.delete(key);
-				this.map.set(key, value);
-				return value;
-			}
-		}
-		delete(key) {
-			return this.map.delete(key);
-		}
-		set(key, value) {
-			if (!this.delete(key) && value !== void 0) {
-				if (this.map.size >= this.max) {
-					const firstKey = this.map.keys().next().value;
-					this.delete(firstKey);
-				}
-				this.map.set(key, value);
-			}
-			return this;
-		}
-	};
-	module.exports = LRUCache;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js
-var require_range = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SPACE_CHARACTERS = /\s+/g;
-	var Range = class Range {
-		constructor(range, options) {
-			options = parseOptions(options);
-			if (range instanceof Range) if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) return range;
-			else return new Range(range.raw, options);
-			if (range instanceof Comparator) {
-				this.raw = range.value;
-				this.set = [[range]];
-				this.formatted = void 0;
-				return this;
-			}
-			this.options = options;
-			this.loose = !!options.loose;
-			this.includePrerelease = !!options.includePrerelease;
-			this.raw = range.trim().replace(SPACE_CHARACTERS, " ");
-			this.set = this.raw.split("||").map((r) => this.parseRange(r.trim())).filter((c) => c.length);
-			if (!this.set.length) throw new TypeError(`Invalid SemVer Range: ${this.raw}`);
-			if (this.set.length > 1) {
-				const first = this.set[0];
-				this.set = this.set.filter((c) => !isNullSet(c[0]));
-				if (this.set.length === 0) this.set = [first];
-				else if (this.set.length > 1) {
-					for (const c of this.set) if (c.length === 1 && isAny(c[0])) {
-						this.set = [c];
-						break;
-					}
-				}
-			}
-			this.formatted = void 0;
-		}
-		get range() {
-			if (this.formatted === void 0) {
-				this.formatted = "";
-				for (let i = 0; i < this.set.length; i++) {
-					if (i > 0) this.formatted += "||";
-					const comps = this.set[i];
-					for (let k = 0; k < comps.length; k++) {
-						if (k > 0) this.formatted += " ";
-						this.formatted += comps[k].toString().trim();
-					}
-				}
-			}
-			return this.formatted;
-		}
-		format() {
-			return this.range;
-		}
-		toString() {
-			return this.range;
-		}
-		parseRange(range) {
-			range = range.replace(BUILDSTRIPRE, "");
-			const memoKey = ((this.options.includePrerelease && FLAG_INCLUDE_PRERELEASE) | (this.options.loose && FLAG_LOOSE)) + ":" + range;
-			const cached = cache.get(memoKey);
-			if (cached) return cached;
-			const loose = this.options.loose;
-			const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
-			range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
-			debug("hyphen replace", range);
-			range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
-			debug("comparator trim", range);
-			range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
-			debug("tilde trim", range);
-			range = range.replace(re[t.CARETTRIM], caretTrimReplace);
-			debug("caret trim", range);
-			let rangeList = range.split(" ").map((comp) => parseComparator(comp, this.options)).join(" ").split(/\s+/).map((comp) => replaceGTE0(comp, this.options));
-			if (loose) rangeList = rangeList.filter((comp) => {
-				debug("loose invalid filter", comp, this.options);
-				return !!comp.match(re[t.COMPARATORLOOSE]);
-			});
-			debug("range list", rangeList);
-			const rangeMap = /* @__PURE__ */ new Map();
-			const comparators = rangeList.map((comp) => new Comparator(comp, this.options));
-			for (const comp of comparators) {
-				if (isNullSet(comp)) return [comp];
-				rangeMap.set(comp.value, comp);
-			}
-			if (rangeMap.size > 1 && rangeMap.has("")) rangeMap.delete("");
-			const result = [...rangeMap.values()];
-			cache.set(memoKey, result);
-			return result;
-		}
-		intersects(range, options) {
-			if (!(range instanceof Range)) throw new TypeError("a Range is required");
-			return this.set.some((thisComparators) => {
-				return isSatisfiable(thisComparators, options) && range.set.some((rangeComparators) => {
-					return isSatisfiable(rangeComparators, options) && thisComparators.every((thisComparator) => {
-						return rangeComparators.every((rangeComparator) => {
-							return thisComparator.intersects(rangeComparator, options);
-						});
-					});
-				});
-			});
-		}
-		test(version) {
-			if (!version) return false;
-			if (typeof version === "string") try {
-				version = new SemVer(version, this.options);
-			} catch (er) {
-				return false;
-			}
-			for (let i = 0; i < this.set.length; i++) if (testSet(this.set[i], version, this.options)) return true;
-			return false;
-		}
-	};
-	module.exports = Range;
-	const cache = new (require_lrucache())();
-	const parseOptions = require_parse_options();
-	const Comparator = require_comparator();
-	const debug = require_debug();
-	const SemVer = require_semver$1();
-	const { safeRe: re, src, t, comparatorTrimReplace, tildeTrimReplace, caretTrimReplace } = require_re();
-	const { FLAG_INCLUDE_PRERELEASE, FLAG_LOOSE } = require_constants();
-	const BUILDSTRIPRE = new RegExp(src[t.BUILD], "g");
-	const isNullSet = (c) => c.value === "<0.0.0-0";
-	const isAny = (c) => c.value === "";
-	const isSatisfiable = (comparators, options) => {
-		let result = true;
-		const remainingComparators = comparators.slice();
-		let testComparator = remainingComparators.pop();
-		while (result && remainingComparators.length) {
-			result = remainingComparators.every((otherComparator) => {
-				return testComparator.intersects(otherComparator, options);
-			});
-			testComparator = remainingComparators.pop();
-		}
-		return result;
-	};
-	const parseComparator = (comp, options) => {
-		comp = comp.replace(re[t.BUILD], "");
-		debug("comp", comp, options);
-		comp = replaceCarets(comp, options);
-		debug("caret", comp);
-		comp = replaceTildes(comp, options);
-		debug("tildes", comp);
-		comp = replaceXRanges(comp, options);
-		debug("xrange", comp);
-		comp = replaceStars(comp, options);
-		debug("stars", comp);
-		return comp;
-	};
-	const isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
-	const invalidXRangeOrder = (M, m, p) => isX(M) && !isX(m) || isX(m) && p && !isX(p);
-	const replaceTildes = (comp, options) => {
-		return comp.trim().split(/\s+/).map((c) => replaceTilde(c, options)).join(" ");
-	};
-	const replaceTilde = (comp, options) => {
-		const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
-		const z = options.includePrerelease ? "-0" : "";
-		return comp.replace(r, (_, M, m, p, pr) => {
-			debug("tilde", comp, _, M, m, p, pr);
-			let ret;
-			if (isX(M)) ret = "";
-			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
-			else if (isX(p)) ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
-			else if (pr) {
-				debug("replaceTilde pr", pr);
-				ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
-			} else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
-			debug("tilde return", ret);
-			return ret;
-		});
-	};
-	const replaceCarets = (comp, options) => {
-		return comp.trim().split(/\s+/).map((c) => replaceCaret(c, options)).join(" ");
-	};
-	const replaceCaret = (comp, options) => {
-		debug("caret", comp, options);
-		const r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
-		const z = options.includePrerelease ? "-0" : "";
-		return comp.replace(r, (_, M, m, p, pr) => {
-			debug("caret", comp, _, M, m, p, pr);
-			let ret;
-			if (isX(M)) ret = "";
-			else if (isX(m)) ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
-			else if (isX(p)) if (M === "0") ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
-			else ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
-			else if (pr) {
-				debug("replaceCaret pr", pr);
-				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
-				else ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
-				else ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
-			} else {
-				debug("no pr");
-				if (M === "0") if (m === "0") ret = `>=${M}.${m}.${p} <${M}.${m}.${+p + 1}-0`;
-				else ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
-				else ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
-			}
-			debug("caret return", ret);
-			return ret;
-		});
-	};
-	const replaceXRanges = (comp, options) => {
-		debug("replaceXRanges", comp, options);
-		return comp.split(/\s+/).map((c) => replaceXRange(c, options)).join(" ");
-	};
-	const replaceXRange = (comp, options) => {
-		comp = comp.trim();
-		const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
-		return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
-			debug("xRange", comp, ret, gtlt, M, m, p, pr);
-			if (invalidXRangeOrder(M, m, p)) return comp;
-			const xM = isX(M);
-			const xm = xM || isX(m);
-			const xp = xm || isX(p);
-			const anyX = xp;
-			if (gtlt === "=" && anyX) gtlt = "";
-			pr = options.includePrerelease ? "-0" : "";
-			if (xM) if (gtlt === ">" || gtlt === "<") ret = "<0.0.0-0";
-			else ret = "*";
-			else if (gtlt && anyX) {
-				if (xm) m = 0;
-				p = 0;
-				if (gtlt === ">") {
-					gtlt = ">=";
-					if (xm) {
-						M = +M + 1;
-						m = 0;
-						p = 0;
-					} else {
-						m = +m + 1;
-						p = 0;
-					}
-				} else if (gtlt === "<=") {
-					gtlt = "<";
-					if (xm) M = +M + 1;
-					else m = +m + 1;
-				}
-				if (gtlt === "<") pr = "-0";
-				ret = `${gtlt + M}.${m}.${p}${pr}`;
-			} else if (xm) ret = `>=${M}.0.0${pr} <${+M + 1}.0.0-0`;
-			else if (xp) ret = `>=${M}.${m}.0${pr} <${M}.${+m + 1}.0-0`;
-			debug("xRange return", ret);
-			return ret;
-		});
-	};
-	const replaceStars = (comp, options) => {
-		debug("replaceStars", comp, options);
-		return comp.trim().replace(re[t.STAR], "");
-	};
-	const replaceGTE0 = (comp, options) => {
-		debug("replaceGTE0", comp, options);
-		return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], "");
-	};
-	const hyphenReplace = (incPr) => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr) => {
-		if (isX(fM)) from = "";
-		else if (isX(fm)) from = `>=${fM}.0.0${incPr ? "-0" : ""}`;
-		else if (isX(fp)) from = `>=${fM}.${fm}.0${incPr ? "-0" : ""}`;
-		else if (fpr) from = `>=${from}`;
-		else from = `>=${from}${incPr ? "-0" : ""}`;
-		if (isX(tM)) to = "";
-		else if (isX(tm)) to = `<${+tM + 1}.0.0-0`;
-		else if (isX(tp)) to = `<${tM}.${+tm + 1}.0-0`;
-		else if (tpr) to = `<=${tM}.${tm}.${tp}-${tpr}`;
-		else if (incPr) to = `<${tM}.${tm}.${+tp + 1}-0`;
-		else to = `<=${to}`;
-		return `${from} ${to}`.trim();
-	};
-	const testSet = (set, version, options) => {
-		for (let i = 0; i < set.length; i++) if (!set[i].test(version)) return false;
-		if (version.prerelease.length && !options.includePrerelease) {
-			for (let i = 0; i < set.length; i++) {
-				debug(set[i].semver);
-				if (set[i].semver === Comparator.ANY) continue;
-				if (set[i].semver.prerelease.length > 0) {
-					const allowed = set[i].semver;
-					if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) return true;
-				}
-			}
-			return false;
-		}
-		return true;
-	};
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js
-var require_comparator = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const ANY = Symbol("SemVer ANY");
-	var Comparator = class Comparator {
-		static get ANY() {
-			return ANY;
-		}
-		constructor(comp, options) {
-			options = parseOptions(options);
-			if (comp instanceof Comparator) if (comp.loose === !!options.loose) return comp;
-			else comp = comp.value;
-			comp = comp.trim().split(/\s+/).join(" ");
-			debug("comparator", comp, options);
-			this.options = options;
-			this.loose = !!options.loose;
-			this.parse(comp);
-			if (this.semver === ANY) this.value = "";
-			else this.value = this.operator + this.semver.version;
-			debug("comp", this);
-		}
-		parse(comp) {
-			const r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
-			const m = comp.match(r);
-			if (!m) throw new TypeError(`Invalid comparator: ${comp}`);
-			this.operator = m[1] !== void 0 ? m[1] : "";
-			if (this.operator === "=") this.operator = "";
-			if (!m[2]) this.semver = ANY;
-			else this.semver = new SemVer(m[2], this.options.loose);
-		}
-		toString() {
-			return this.value;
-		}
-		test(version) {
-			debug("Comparator.test", version, this.options.loose);
-			if (this.semver === ANY || version === ANY) return true;
-			if (typeof version === "string") try {
-				version = new SemVer(version, this.options);
-			} catch (er) {
-				return false;
-			}
-			return cmp(version, this.operator, this.semver, this.options);
-		}
-		intersects(comp, options) {
-			if (!(comp instanceof Comparator)) throw new TypeError("a Comparator is required");
-			if (this.operator === "") {
-				if (this.value === "") return true;
-				return new Range(comp.value, options).test(this.value);
-			} else if (comp.operator === "") {
-				if (comp.value === "") return true;
-				return new Range(this.value, options).test(comp.semver);
-			}
-			options = parseOptions(options);
-			if (options.includePrerelease && (this.value === "<0.0.0-0" || comp.value === "<0.0.0-0")) return false;
-			if (!options.includePrerelease && (this.value.startsWith("<0.0.0") || comp.value.startsWith("<0.0.0"))) return false;
-			if (this.operator.startsWith(">") && comp.operator.startsWith(">")) return true;
-			if (this.operator.startsWith("<") && comp.operator.startsWith("<")) return true;
-			if (this.semver.version === comp.semver.version && this.operator.includes("=") && comp.operator.includes("=")) return true;
-			if (cmp(this.semver, "<", comp.semver, options) && this.operator.startsWith(">") && comp.operator.startsWith("<")) return true;
-			if (cmp(this.semver, ">", comp.semver, options) && this.operator.startsWith("<") && comp.operator.startsWith(">")) return true;
-			return false;
-		}
-	};
-	module.exports = Comparator;
-	const parseOptions = require_parse_options();
-	const { safeRe: re, t } = require_re();
-	const cmp = require_cmp();
-	const debug = require_debug();
-	const SemVer = require_semver$1();
-	const Range = require_range();
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js
-var require_satisfies = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const Range = require_range();
-	const satisfies = (version, range, options) => {
-		try {
-			range = new Range(range, options);
-		} catch (er) {
-			return false;
-		}
-		return range.test(version);
-	};
-	module.exports = satisfies;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
-var require_to_comparators = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const Range = require_range();
-	const toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
-	module.exports = toComparators;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
-var require_max_satisfying = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const Range = require_range();
-	const maxSatisfying = (versions, range, options) => {
-		let max = null;
-		let maxSV = null;
-		let rangeObj = null;
-		try {
-			rangeObj = new Range(range, options);
-		} catch (er) {
-			return null;
-		}
-		versions.forEach((v) => {
-			if (rangeObj.test(v)) {
-				if (!max || maxSV.compare(v) === -1) {
-					max = v;
-					maxSV = new SemVer(max, options);
-				}
-			}
-		});
-		return max;
-	};
-	module.exports = maxSatisfying;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
-var require_min_satisfying = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const Range = require_range();
-	const minSatisfying = (versions, range, options) => {
-		let min = null;
-		let minSV = null;
-		let rangeObj = null;
-		try {
-			rangeObj = new Range(range, options);
-		} catch (er) {
-			return null;
-		}
-		versions.forEach((v) => {
-			if (rangeObj.test(v)) {
-				if (!min || minSV.compare(v) === 1) {
-					min = v;
-					minSV = new SemVer(min, options);
-				}
-			}
-		});
-		return min;
-	};
-	module.exports = minSatisfying;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js
-var require_min_version = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const Range = require_range();
-	const gt = require_gt();
-	const minVersion = (range, loose) => {
-		range = new Range(range, loose);
-		let minver = new SemVer("0.0.0");
-		if (range.test(minver)) return minver;
-		minver = new SemVer("0.0.0-0");
-		if (range.test(minver)) return minver;
-		minver = null;
-		for (let i = 0; i < range.set.length; ++i) {
-			const comparators = range.set[i];
-			let setMin = null;
-			comparators.forEach((comparator) => {
-				const compver = new SemVer(comparator.semver.version);
-				switch (comparator.operator) {
-					case ">":
-						if (compver.prerelease.length === 0) compver.patch++;
-						else compver.prerelease.push(0);
-						compver.raw = compver.format();
-					case "":
-					case ">=":
-						if (!setMin || gt(compver, setMin)) setMin = compver;
-						break;
-					case "<":
-					case "<=": break;
-					/* istanbul ignore next */
-					default: throw new Error(`Unexpected operation: ${comparator.operator}`);
-				}
-			});
-			if (setMin && (!minver || gt(minver, setMin))) minver = setMin;
-		}
-		if (minver && range.test(minver)) return minver;
-		return null;
-	};
-	module.exports = minVersion;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js
-var require_valid = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const Range = require_range();
-	const validRange = (range, options) => {
-		try {
-			return new Range(range, options).range || "*";
-		} catch (er) {
-			return null;
-		}
-	};
-	module.exports = validRange;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js
-var require_outside = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const SemVer = require_semver$1();
-	const Comparator = require_comparator();
-	const { ANY } = Comparator;
-	const Range = require_range();
-	const satisfies = require_satisfies();
-	const gt = require_gt();
-	const lt = require_lt();
-	const lte = require_lte();
-	const gte = require_gte();
-	const outside = (version, range, hilo, options) => {
-		version = new SemVer(version, options);
-		range = new Range(range, options);
-		let gtfn, ltefn, ltfn, comp, ecomp;
-		switch (hilo) {
-			case ">":
-				gtfn = gt;
-				ltefn = lte;
-				ltfn = lt;
-				comp = ">";
-				ecomp = ">=";
-				break;
-			case "<":
-				gtfn = lt;
-				ltefn = gte;
-				ltfn = gt;
-				comp = "<";
-				ecomp = "<=";
-				break;
-			default: throw new TypeError("Must provide a hilo val of \"<\" or \">\"");
-		}
-		if (satisfies(version, range, options)) return false;
-		for (let i = 0; i < range.set.length; ++i) {
-			const comparators = range.set[i];
-			let high = null;
-			let low = null;
-			comparators.forEach((comparator) => {
-				if (comparator.semver === ANY) comparator = new Comparator(">=0.0.0");
-				high = high || comparator;
-				low = low || comparator;
-				if (gtfn(comparator.semver, high.semver, options)) high = comparator;
-				else if (ltfn(comparator.semver, low.semver, options)) low = comparator;
-			});
-			if (high.operator === comp || high.operator === ecomp) return false;
-			if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) return false;
-			else if (low.operator === ecomp && ltfn(version, low.semver)) return false;
-		}
-		return true;
-	};
-	module.exports = outside;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js
-var require_gtr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const outside = require_outside();
-	const gtr = (version, range, options) => outside(version, range, ">", options);
-	module.exports = gtr;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js
-var require_ltr = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const outside = require_outside();
-	const ltr = (version, range, options) => outside(version, range, "<", options);
-	module.exports = ltr;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js
-var require_intersects = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const Range = require_range();
-	const intersects = (r1, r2, options) => {
-		r1 = new Range(r1, options);
-		r2 = new Range(r2, options);
-		return r1.intersects(r2, options);
-	};
-	module.exports = intersects;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js
-var require_simplify = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const satisfies = require_satisfies();
-	const compare = require_compare();
-	module.exports = (versions, range, options) => {
-		const set = [];
-		let first = null;
-		let prev = null;
-		const v = versions.sort((a, b) => compare(a, b, options));
-		for (const version of v) if (satisfies(version, range, options)) {
-			prev = version;
-			if (!first) first = version;
-		} else {
-			if (prev) set.push([first, prev]);
-			prev = null;
-			first = null;
-		}
-		if (first) set.push([first, null]);
-		const ranges = [];
-		for (const [min, max] of set) if (min === max) ranges.push(min);
-		else if (!max && min === v[0]) ranges.push("*");
-		else if (!max) ranges.push(`>=${min}`);
-		else if (min === v[0]) ranges.push(`<=${max}`);
-		else ranges.push(`${min} - ${max}`);
-		const simplified = ranges.join(" || ");
-		const original = typeof range.raw === "string" ? range.raw : String(range);
-		return simplified.length < original.length ? simplified : range;
-	};
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js
-var require_subset = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const Range = require_range();
-	const Comparator = require_comparator();
-	const { ANY } = Comparator;
-	const satisfies = require_satisfies();
-	const compare = require_compare();
-	const subset = (sub, dom, options = {}) => {
-		if (sub === dom) return true;
-		sub = new Range(sub, options);
-		dom = new Range(dom, options);
-		let sawNonNull = false;
-		OUTER: for (const simpleSub of sub.set) {
-			for (const simpleDom of dom.set) {
-				const isSub = simpleSubset(simpleSub, simpleDom, options);
-				sawNonNull = sawNonNull || isSub !== null;
-				if (isSub) continue OUTER;
-			}
-			if (sawNonNull) return false;
-		}
-		return true;
-	};
-	const minimumVersionWithPreRelease = [new Comparator(">=0.0.0-0")];
-	const minimumVersion = [new Comparator(">=0.0.0")];
-	const simpleSubset = (sub, dom, options) => {
-		if (sub === dom) return true;
-		if (sub.length === 1 && sub[0].semver === ANY) if (dom.length === 1 && dom[0].semver === ANY) return true;
-		else if (options.includePrerelease) sub = minimumVersionWithPreRelease;
-		else sub = minimumVersion;
-		if (dom.length === 1 && dom[0].semver === ANY) if (options.includePrerelease) return true;
-		else dom = minimumVersion;
-		const eqSet = /* @__PURE__ */ new Set();
-		let gt, lt;
-		for (const c of sub) if (c.operator === ">" || c.operator === ">=") gt = higherGT(gt, c, options);
-		else if (c.operator === "<" || c.operator === "<=") lt = lowerLT(lt, c, options);
-		else eqSet.add(c.semver);
-		if (eqSet.size > 1) return null;
-		let gtltComp;
-		if (gt && lt) {
-			gtltComp = compare(gt.semver, lt.semver, options);
-			if (gtltComp > 0) return null;
-			else if (gtltComp === 0 && (gt.operator !== ">=" || lt.operator !== "<=")) return null;
-		}
-		for (const eq of eqSet) {
-			if (gt && !satisfies(eq, String(gt), options)) return null;
-			if (lt && !satisfies(eq, String(lt), options)) return null;
-			for (const c of dom) if (!satisfies(eq, String(c), options)) return false;
-			return true;
-		}
-		let higher, lower;
-		let hasDomLT, hasDomGT;
-		let needDomLTPre = lt && !options.includePrerelease && lt.semver.prerelease.length ? lt.semver : false;
-		let needDomGTPre = gt && !options.includePrerelease && gt.semver.prerelease.length ? gt.semver : false;
-		if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt.operator === "<" && needDomLTPre.prerelease[0] === 0) needDomLTPre = false;
-		for (const c of dom) {
-			hasDomGT = hasDomGT || c.operator === ">" || c.operator === ">=";
-			hasDomLT = hasDomLT || c.operator === "<" || c.operator === "<=";
-			if (gt) {
-				if (needDomGTPre) {
-					if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomGTPre.major && c.semver.minor === needDomGTPre.minor && c.semver.patch === needDomGTPre.patch) needDomGTPre = false;
-				}
-				if (c.operator === ">" || c.operator === ">=") {
-					higher = higherGT(gt, c, options);
-					if (higher === c && higher !== gt) return false;
-				} else if (gt.operator === ">=" && !c.test(gt.semver)) return false;
-			}
-			if (lt) {
-				if (needDomLTPre) {
-					if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomLTPre.major && c.semver.minor === needDomLTPre.minor && c.semver.patch === needDomLTPre.patch) needDomLTPre = false;
-				}
-				if (c.operator === "<" || c.operator === "<=") {
-					lower = lowerLT(lt, c, options);
-					if (lower === c && lower !== lt) return false;
-				} else if (lt.operator === "<=" && !c.test(lt.semver)) return false;
-			}
-			if (!c.operator && (lt || gt) && gtltComp !== 0) return false;
-		}
-		if (gt && hasDomLT && !lt && gtltComp !== 0) return false;
-		if (lt && hasDomGT && !gt && gtltComp !== 0) return false;
-		if (needDomGTPre || needDomLTPre) return false;
-		return true;
-	};
-	const higherGT = (a, b, options) => {
-		if (!a) return b;
-		const comp = compare(a.semver, b.semver, options);
-		return comp > 0 ? a : comp < 0 ? b : b.operator === ">" && a.operator === ">=" ? b : a;
-	};
-	const lowerLT = (a, b, options) => {
-		if (!a) return b;
-		const comp = compare(a.semver, b.semver, options);
-		return comp < 0 ? a : comp > 0 ? b : b.operator === "<" && a.operator === "<=" ? b : a;
-	};
-	module.exports = subset;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js
-var require_semver = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const internalRe = require_re();
-	const constants = require_constants();
-	const SemVer = require_semver$1();
-	const identifiers = require_identifiers();
-	const parse = require_parse();
-	const valid = require_valid$1();
-	const clean = require_clean();
-	const inc = require_inc();
-	const diff = require_diff();
-	const major = require_major();
-	const minor = require_minor();
-	const patch = require_patch();
-	const prerelease = require_prerelease();
-	const compare = require_compare();
-	const rcompare = require_rcompare();
-	const compareLoose = require_compare_loose();
-	const compareBuild = require_compare_build();
-	const sort = require_sort();
-	const rsort = require_rsort();
-	const gt = require_gt();
-	const lt = require_lt();
-	const eq = require_eq();
-	const neq = require_neq();
-	const gte = require_gte();
-	const lte = require_lte();
-	const cmp = require_cmp();
-	const coerce = require_coerce();
-	const truncate = require_truncate();
-	const Comparator = require_comparator();
-	const Range = require_range();
-	const satisfies = require_satisfies();
-	const toComparators = require_to_comparators();
-	const maxSatisfying = require_max_satisfying();
-	const minSatisfying = require_min_satisfying();
-	const minVersion = require_min_version();
-	const validRange = require_valid();
-	const outside = require_outside();
-	const gtr = require_gtr();
-	const ltr = require_ltr();
-	const intersects = require_intersects();
-	const simplifyRange = require_simplify();
-	const subset = require_subset();
-	module.exports = {
-		parse,
-		valid,
-		clean,
-		inc,
-		diff,
-		major,
-		minor,
-		patch,
-		prerelease,
-		compare,
-		rcompare,
-		compareLoose,
-		compareBuild,
-		sort,
-		rsort,
-		gt,
-		lt,
-		eq,
-		neq,
-		gte,
-		lte,
-		cmp,
-		coerce,
-		truncate,
-		Comparator,
-		Range,
-		satisfies,
-		toComparators,
-		maxSatisfying,
-		minSatisfying,
-		minVersion,
-		validRange,
-		outside,
-		gtr,
-		ltr,
-		intersects,
-		simplifyRange,
-		subset,
-		SemVer,
-		re: internalRe.re,
-		src: internalRe.src,
-		tokens: internalRe.t,
-		SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
-		RELEASE_TYPES: constants.RELEASE_TYPES,
-		compareIdentifiers: identifiers.compareIdentifiers,
-		rcompareIdentifiers: identifiers.rcompareIdentifiers
-	};
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/manifest.js
-var import_semver = /* @__PURE__ */ __toESM(require_semver(), 1);
-var __awaiter$2 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
-	function adopt(value) {
-		return value instanceof P ? value : new P(function(resolve) {
-			resolve(value);
-		});
-	}
-	return new (P || (P = Promise))(function(resolve, reject) {
-		function fulfilled(value) {
-			try {
-				step(generator.next(value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function rejected(value) {
-			try {
-				step(generator["throw"](value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function step(result) {
-			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-		}
-		step((generator = generator.apply(thisArg, _arguments || [])).next());
-	});
-};
-
-//#endregion
-//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/retry-helper.js
-var __awaiter$1 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
-	function adopt(value) {
-		return value instanceof P ? value : new P(function(resolve) {
-			resolve(value);
-		});
-	}
-	return new (P || (P = Promise))(function(resolve, reject) {
-		function fulfilled(value) {
-			try {
-				step(generator.next(value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function rejected(value) {
-			try {
-				step(generator["throw"](value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function step(result) {
-			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-		}
-		step((generator = generator.apply(thisArg, _arguments || [])).next());
-	});
-};
-/**
-* Internal class for retries
-*/
-var RetryHelper = class {
-	constructor(maxAttempts, minSeconds, maxSeconds) {
-		if (maxAttempts < 1) throw new Error("max attempts should be greater than or equal to 1");
-		this.maxAttempts = maxAttempts;
-		this.minSeconds = Math.floor(minSeconds);
-		this.maxSeconds = Math.floor(maxSeconds);
-		if (this.minSeconds > this.maxSeconds) throw new Error("min seconds should be less than or equal to max seconds");
-	}
-	execute(action, isRetryable) {
-		return __awaiter$1(this, void 0, void 0, function* () {
-			let attempt = 1;
-			while (attempt < this.maxAttempts) {
-				try {
-					return yield action();
-				} catch (err) {
-					if (isRetryable && !isRetryable(err)) throw err;
-					info(err.message);
-				}
-				const seconds = this.getSleepAmount();
-				info(`Waiting ${seconds} seconds before trying again`);
-				yield this.sleep(seconds);
-				attempt++;
-			}
-			return yield action();
-		});
-	}
-	getSleepAmount() {
-		return Math.floor(Math.random() * (this.maxSeconds - this.minSeconds + 1)) + this.minSeconds;
-	}
-	sleep(seconds) {
-		return __awaiter$1(this, void 0, void 0, function* () {
-			return new Promise((resolve) => setTimeout(resolve, seconds * 1e3));
-		});
-	}
-};
-
-//#endregion
-//#region node_modules/.pnpm/@actions+tool-cache@4.0.0/node_modules/@actions/tool-cache/lib/tool-cache.js
-var __awaiter = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
-	function adopt(value) {
-		return value instanceof P ? value : new P(function(resolve) {
-			resolve(value);
-		});
-	}
-	return new (P || (P = Promise))(function(resolve, reject) {
-		function fulfilled(value) {
-			try {
-				step(generator.next(value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function rejected(value) {
-			try {
-				step(generator["throw"](value));
-			} catch (e) {
-				reject(e);
-			}
-		}
-		function step(result) {
-			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
-		}
-		step((generator = generator.apply(thisArg, _arguments || [])).next());
-	});
-};
-var HTTPError = class extends Error {
-	constructor(httpStatusCode) {
-		super(`Unexpected HTTP response: ${httpStatusCode}`);
-		this.httpStatusCode = httpStatusCode;
-		Object.setPrototypeOf(this, new.target.prototype);
-	}
-};
-const IS_WINDOWS = process.platform === "win32";
-const IS_MAC = process.platform === "darwin";
-const userAgent = "actions/tool-cache";
-/**
-* Download a tool from an url and stream it into a file
-*
-* @param url       url of tool to download
-* @param dest      path to download tool
-* @param auth      authorization header
-* @param headers   other headers
-* @returns         path to downloaded tool
-*/
-function downloadTool(url, dest, auth, headers) {
-	return __awaiter(this, void 0, void 0, function* () {
-		dest = dest || path$1.join(_getTempDirectory(), crypto$1.randomUUID());
-		yield mkdirP(path$1.dirname(dest));
-		debug(`Downloading ${url}`);
-		debug(`Destination ${dest}`);
-		return yield new RetryHelper(3, _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MIN_SECONDS", 10), _getGlobal("TEST_DOWNLOAD_TOOL_RETRY_MAX_SECONDS", 20)).execute(() => __awaiter(this, void 0, void 0, function* () {
-			return yield downloadToolAttempt(url, dest || "", auth, headers);
-		}), (err) => {
-			if (err instanceof HTTPError && err.httpStatusCode) {
-				if (err.httpStatusCode < 500 && err.httpStatusCode !== 408 && err.httpStatusCode !== 429) return false;
-			}
-			return true;
-		});
-	});
-}
-function downloadToolAttempt(url, dest, auth, headers) {
-	return __awaiter(this, void 0, void 0, function* () {
-		if (fs.existsSync(dest)) throw new Error(`Destination file path ${dest} already exists`);
-		const http = new HttpClient(userAgent, [], { allowRetries: false });
-		if (auth) {
-			debug("set auth");
-			if (headers === void 0) headers = {};
-			headers.authorization = auth;
-		}
-		const response = yield http.get(url, headers);
-		if (response.message.statusCode !== 200) {
-			const err = new HTTPError(response.message.statusCode);
-			debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
-			throw err;
-		}
-		const pipeline = util.promisify(stream.pipeline);
-		const readStream = _getGlobal("TEST_DOWNLOAD_TOOL_RESPONSE_MESSAGE_FACTORY", () => response.message)();
-		let succeeded = false;
-		try {
-			yield pipeline(readStream, fs.createWriteStream(dest));
-			debug("download complete");
-			succeeded = true;
-			return dest;
-		} finally {
-			if (!succeeded) {
-				debug("download failed");
-				try {
-					yield rmRF(dest);
-				} catch (err) {
-					debug(`Failed to delete '${dest}'. ${err.message}`);
-				}
-			}
-		}
-	});
-}
-/**
-* Extract a compressed tar archive
-*
-* @param file     path to the tar
-* @param dest     destination directory. Optional.
-* @param flags    flags for the tar command to use for extraction. Defaults to 'xz' (extracting gzipped tars). Optional.
-* @returns        path to the destination directory
-*/
-function extractTar(file_1, dest_1) {
-	return __awaiter(this, arguments, void 0, function* (file, dest, flags = "xz") {
-		if (!file) throw new Error("parameter 'file' is required");
-		dest = yield _createExtractFolder(dest);
-		debug("Checking tar --version");
-		let versionOutput = "";
-		yield exec("tar --version", [], {
-			ignoreReturnCode: true,
-			silent: true,
-			listeners: {
-				stdout: (data) => versionOutput += data.toString(),
-				stderr: (data) => versionOutput += data.toString()
-			}
-		});
-		debug(versionOutput.trim());
-		const isGnuTar = versionOutput.toUpperCase().includes("GNU TAR");
-		let args;
-		if (flags instanceof Array) args = flags;
-		else args = [flags];
-		if (isDebug() && !flags.includes("v")) args.push("-v");
-		let destArg = dest;
-		let fileArg = file;
-		if (IS_WINDOWS && isGnuTar) {
-			args.push("--force-local");
-			destArg = dest.replace(/\\/g, "/");
-			fileArg = file.replace(/\\/g, "/");
-		}
-		if (isGnuTar) {
-			args.push("--warning=no-unknown-keyword");
-			args.push("--overwrite");
-		}
-		args.push("-C", destArg, "-f", fileArg);
-		yield exec(`tar`, args);
-		return dest;
-	});
-}
-/**
-* Extract a zip
-*
-* @param file     path to the zip
-* @param dest     destination directory. Optional.
-* @returns        path to the destination directory
-*/
-function extractZip(file, dest) {
-	return __awaiter(this, void 0, void 0, function* () {
-		if (!file) throw new Error("parameter 'file' is required");
-		dest = yield _createExtractFolder(dest);
-		if (IS_WINDOWS) yield extractZipWin(file, dest);
-		else yield extractZipNix(file, dest);
-		return dest;
-	});
-}
-function extractZipWin(file, dest) {
-	return __awaiter(this, void 0, void 0, function* () {
-		const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, "");
-		const escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, "");
-		const pwshPath = yield which("pwsh", false);
-		if (pwshPath) {
-			const args = [
-				"-NoLogo",
-				"-NoProfile",
-				"-NonInteractive",
-				"-ExecutionPolicy",
-				"Unrestricted",
-				"-Command",
-				[
-					`$ErrorActionPreference = 'Stop' ;`,
-					`try { Add-Type -AssemblyName System.IO.Compression.ZipFile } catch { } ;`,
-					`try { [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}', $true) }`,
-					`catch { if (($_.Exception.GetType().FullName -eq 'System.Management.Automation.MethodException') -or ($_.Exception.GetType().FullName -eq 'System.Management.Automation.RuntimeException') ){ Expand-Archive -LiteralPath '${escapedFile}' -DestinationPath '${escapedDest}' -Force } else { throw $_ } } ;`
-				].join(" ")
-			];
-			debug(`Using pwsh at path: ${pwshPath}`);
-			yield exec(`"${pwshPath}"`, args);
-		} else {
-			const args = [
-				"-NoLogo",
-				"-Sta",
-				"-NoProfile",
-				"-NonInteractive",
-				"-ExecutionPolicy",
-				"Unrestricted",
-				"-Command",
-				[
-					`$ErrorActionPreference = 'Stop' ;`,
-					`try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ;`,
-					`if ((Get-Command -Name Expand-Archive -Module Microsoft.PowerShell.Archive -ErrorAction Ignore)) { Expand-Archive -LiteralPath '${escapedFile}' -DestinationPath '${escapedDest}' -Force }`,
-					`else {[System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}', $true) }`
-				].join(" ")
-			];
-			const powershellPath = yield which("powershell", true);
-			debug(`Using powershell at path: ${powershellPath}`);
-			yield exec(`"${powershellPath}"`, args);
-		}
-	});
-}
-function extractZipNix(file, dest) {
-	return __awaiter(this, void 0, void 0, function* () {
-		const unzipPath = yield which("unzip", true);
-		const args = [file];
-		if (!isDebug()) args.unshift("-q");
-		args.unshift("-o");
-		yield exec(`"${unzipPath}"`, args, { cwd: dest });
-	});
-}
-/**
-* Caches a directory and installs it into the tool cacheDir
-*
-* @param sourceDir    the directory to cache into tools
-* @param tool          tool name
-* @param version       version of the tool.  semver format
-* @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
-*/
-function cacheDir(sourceDir, tool, version, arch) {
-	return __awaiter(this, void 0, void 0, function* () {
-		version = import_semver.clean(version) || version;
-		arch = arch || os$1.arch();
-		debug(`Caching tool ${tool} ${version} ${arch}`);
-		debug(`source dir: ${sourceDir}`);
-		if (!fs.statSync(sourceDir).isDirectory()) throw new Error("sourceDir is not a directory");
-		const destPath = yield _createToolPath(tool, version, arch);
-		for (const itemName of fs.readdirSync(sourceDir)) {
-			const s = path$1.join(sourceDir, itemName);
-			yield cp(s, destPath, { recursive: true });
-		}
-		_completeToolPath(tool, version, arch);
-		return destPath;
-	});
-}
-/**
-* Caches a downloaded file (GUID) and installs it
-* into the tool cache with a given targetName
-*
-* @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid.
-* @param targetFile    the name of the file name in the tools directory
-* @param tool          tool name
-* @param version       version of the tool.  semver format
-* @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
-*/
-function cacheFile(sourceFile, targetFile, tool, version, arch) {
-	return __awaiter(this, void 0, void 0, function* () {
-		version = import_semver.clean(version) || version;
-		arch = arch || os$1.arch();
-		debug(`Caching tool ${tool} ${version} ${arch}`);
-		debug(`source file: ${sourceFile}`);
-		if (!fs.statSync(sourceFile).isFile()) throw new Error("sourceFile is not a file");
-		const destFolder = yield _createToolPath(tool, version, arch);
-		const destPath = path$1.join(destFolder, targetFile);
-		debug(`destination file ${destPath}`);
-		yield cp(sourceFile, destPath);
-		_completeToolPath(tool, version, arch);
-		return destFolder;
-	});
-}
-/**
-* Finds the path to a tool version in the local installed tool cache
-*
-* @param toolName      name of the tool
-* @param versionSpec   version of the tool
-* @param arch          optional arch.  defaults to arch of computer
-*/
-function find(toolName, versionSpec, arch) {
-	if (!toolName) throw new Error("toolName parameter is required");
-	if (!versionSpec) throw new Error("versionSpec parameter is required");
-	arch = arch || os$1.arch();
-	if (!isExplicitVersion(versionSpec)) versionSpec = evaluateVersions(findAllVersions(toolName, arch), versionSpec);
-	let toolPath = "";
-	if (versionSpec) {
-		versionSpec = import_semver.clean(versionSpec) || "";
-		const cachePath = path$1.join(_getCacheDirectory(), toolName, versionSpec, arch);
-		debug(`checking cache: ${cachePath}`);
-		if (fs.existsSync(cachePath) && fs.existsSync(`${cachePath}.complete`)) {
-			debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
-			toolPath = cachePath;
-		} else debug("not found");
-	}
-	return toolPath;
-}
-/**
-* Finds the paths to all versions of a tool that are installed in the local tool cache
-*
-* @param toolName  name of the tool
-* @param arch      optional arch.  defaults to arch of computer
-*/
-function findAllVersions(toolName, arch) {
-	const versions = [];
-	arch = arch || os$1.arch();
-	const toolPath = path$1.join(_getCacheDirectory(), toolName);
-	if (fs.existsSync(toolPath)) {
-		const children = fs.readdirSync(toolPath);
-		for (const child of children) if (isExplicitVersion(child)) {
-			const fullPath = path$1.join(toolPath, child, arch || "");
-			if (fs.existsSync(fullPath) && fs.existsSync(`${fullPath}.complete`)) versions.push(child);
-		}
-	}
-	return versions;
-}
-function _createExtractFolder(dest) {
-	return __awaiter(this, void 0, void 0, function* () {
-		if (!dest) dest = path$1.join(_getTempDirectory(), crypto$1.randomUUID());
-		yield mkdirP(dest);
-		return dest;
-	});
-}
-function _createToolPath(tool, version, arch) {
-	return __awaiter(this, void 0, void 0, function* () {
-		const folderPath = path$1.join(_getCacheDirectory(), tool, import_semver.clean(version) || version, arch || "");
-		debug(`destination ${folderPath}`);
-		const markerPath = `${folderPath}.complete`;
-		yield rmRF(folderPath);
-		yield rmRF(markerPath);
-		yield mkdirP(folderPath);
-		return folderPath;
-	});
-}
-function _completeToolPath(tool, version, arch) {
-	const markerPath = `${path$1.join(_getCacheDirectory(), tool, import_semver.clean(version) || version, arch || "")}.complete`;
-	fs.writeFileSync(markerPath, "");
-	debug("finished caching tool");
-}
-/**
-* Check if version string is explicit
-*
-* @param versionSpec      version string to check
-*/
-function isExplicitVersion(versionSpec) {
-	const c = import_semver.clean(versionSpec) || "";
-	debug(`isExplicit: ${c}`);
-	const valid = import_semver.valid(c) != null;
-	debug(`explicit? ${valid}`);
-	return valid;
-}
-/**
-* Get the highest satisfiying semantic version in `versions` which satisfies `versionSpec`
-*
-* @param versions        array of versions to evaluate
-* @param versionSpec     semantic version spec to satisfy
-*/
-function evaluateVersions(versions, versionSpec) {
-	let version = "";
-	debug(`evaluating ${versions.length} versions`);
-	versions = versions.sort((a, b) => {
-		if (import_semver.gt(a, b)) return 1;
-		return -1;
-	});
-	for (let i = versions.length - 1; i >= 0; i--) {
-		const potential = versions[i];
-		if (import_semver.satisfies(potential, versionSpec)) {
-			version = potential;
-			break;
-		}
-	}
-	if (version) debug(`matched: ${version}`);
-	else debug("match not found");
-	return version;
-}
-/**
-* Gets RUNNER_TOOL_CACHE
-*/
-function _getCacheDirectory() {
-	const cacheDirectory = process.env["RUNNER_TOOL_CACHE"] || "";
-	ok(cacheDirectory, "Expected RUNNER_TOOL_CACHE to be defined");
-	return cacheDirectory;
-}
-/**
-* Gets RUNNER_TEMP
-*/
-function _getTempDirectory() {
-	const tempDirectory = process.env["RUNNER_TEMP"] || "";
-	ok(tempDirectory, "Expected RUNNER_TEMP to be defined");
-	return tempDirectory;
-}
-/**
-* Gets a global variable
-*/
-function _getGlobal(key, defaultValue) {
-	const value = global[key];
-	return value !== void 0 ? value : defaultValue;
-}
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/sentinels.js
-var require_sentinels = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	/**
-	* @file Core primitives and fundamental constants. Holds sentinels,
-	*   unknown/empty tokens, the internals symbol, and a few shared env-var name
-	*   strings. Intentionally kept small - prefer moving constants to a more
-	*   specific `src/constants/*` module when possible.
-	*/
-	const kInternalsSymbol = Symbol("@socketregistry.constants.internals");
-	const LOOP_SENTINEL = 1e6;
-	const UNKNOWN_ERROR = "Unknown error";
-	const UNKNOWN_VALUE = "<unknown>";
-	const EMPTY_FILE = "/* empty */\n";
-	const EMPTY_VALUE = "<value>";
-	const UNDEFINED_TOKEN = void 0;
-	const COLUMN_LIMIT = 80;
-	const V = "v";
-	const NODE_AUTH_TOKEN = "NODE_AUTH_TOKEN";
-	const NODE_ENV = "NODE_ENV";
-	exports.COLUMN_LIMIT = COLUMN_LIMIT;
-	exports.EMPTY_FILE = EMPTY_FILE;
-	exports.EMPTY_VALUE = EMPTY_VALUE;
-	exports.LOOP_SENTINEL = LOOP_SENTINEL;
-	exports.NODE_AUTH_TOKEN = NODE_AUTH_TOKEN;
-	exports.NODE_ENV = NODE_ENV;
-	exports.UNDEFINED_TOKEN = UNDEFINED_TOKEN;
-	exports.UNKNOWN_ERROR = UNKNOWN_ERROR;
-	exports.UNKNOWN_VALUE = UNKNOWN_VALUE;
-	exports.V = V;
-	exports.kInternalsSymbol = kInternalsSymbol;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/error.js
-var require_error = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	/**
-	* @file Safe references to `Error` and its subclass constructors, plus V8's
-	*   stack-trace API. `Error.isError` is ES2025; `captureStackTrace` /
-	*   `prepareStackTrace` / `stackTraceLimit` are V8 extensions absent on
-	*   JavaScriptCore and SpiderMonkey. Each is typed `Function | undefined` so
-	*   non-V8 importers stay safe.
-	*/
-	const ErrorCtor = Error;
-	const AggregateErrorCtor = AggregateError;
-	const EvalErrorCtor = EvalError;
-	const RangeErrorCtor = RangeError;
-	const ReferenceErrorCtor = ReferenceError;
-	const SyntaxErrorCtor = SyntaxError;
-	const TypeErrorCtor = TypeError;
-	const URIErrorCtor = URIError;
-	const ErrorIsError = Error.isError;
-	const ErrorCaptureStackTrace = Error.captureStackTrace;
-	const ErrorPrepareStackTrace = Error.prepareStackTrace;
-	const stackTraceLimitGetter = (() => {
-		const getter = Error.__lookupGetter__?.("stackTraceLimit");
-		/* c8 ignore start */
-		if (typeof getter === "function") return () => getter.call(Error);
-		/* c8 ignore stop */
-	})();
-	function ErrorStackTraceLimit() {
-		/* c8 ignore start - non-V8 fallback path unreachable under test */
-		if (stackTraceLimitGetter) return stackTraceLimitGetter();
-		return Error.stackTraceLimit;
-		/* c8 ignore stop */
-	}
-	exports.AggregateErrorCtor = AggregateErrorCtor;
-	exports.ErrorCaptureStackTrace = ErrorCaptureStackTrace;
-	exports.ErrorCtor = ErrorCtor;
-	exports.ErrorIsError = ErrorIsError;
-	exports.ErrorPrepareStackTrace = ErrorPrepareStackTrace;
-	exports.ErrorStackTraceLimit = ErrorStackTraceLimit;
-	exports.EvalErrorCtor = EvalErrorCtor;
-	exports.RangeErrorCtor = RangeErrorCtor;
-	exports.ReferenceErrorCtor = ReferenceErrorCtor;
-	exports.SyntaxErrorCtor = SyntaxErrorCtor;
-	exports.TypeErrorCtor = TypeErrorCtor;
-	exports.URIErrorCtor = URIErrorCtor;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/constants/runtime.js
-var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	/**
-	* @file Runtime environment detection constants. All checks use only
-	*   `typeof`-safe global probes so this module is safe to import in browser,
-	*   Node.js, Deno, Bun, and bundled contexts alike.
-	*/
-	/**
-	* True when running inside a Node.js process. Detected via
-	* `process.versions.node` — present in Node, absent in browsers and Deno/Bun
-	* which expose a different `process.versions` shape (or no `process` at all).
-	*/
-	const IS_NODE = typeof process !== "undefined" && typeof process.versions !== "undefined" && typeof process.versions.node === "string";
-	/**
-	* True when running in a browser context (window + document both defined).
-	* Note: Chrome extensions have `window` in popup contexts but not in service
-	* workers — check `IS_SERVICE_WORKER` for that case.
-	*/
-	const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
-	/**
-	* True when running inside a Web Worker / Chrome MV3 service worker. `self` is
-	* defined without `window` in worker contexts.
-	*/
-	const IS_WORKER = typeof self !== "undefined" && typeof window === "undefined" && typeof document === "undefined";
-	exports.IS_BROWSER = IS_BROWSER;
-	exports.IS_NODE = IS_NODE;
-	exports.IS_WORKER = IS_WORKER;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/node/module.js
-var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_constants_runtime = require_runtime();
-	let module$1 = __require("module");
-	/**
-	* @file Accessors for `node:module` that work across runtimes. Ambient
-	*   `require` is bound in CommonJS but unbound in ESM and inside
-	*   ahead-of-time-compiled package modules (e.g. Perry), where reading it
-	*   throws. And Perry's `require('module')` value omits `isBuiltin`. So instead
-	*   of the ambient `require('module')` lazy-loader, `isBuiltin`/`createRequire`
-	*   are imported as named values from the bare `module` specifier — which
-	*   resolves on Node and Perry, and which browser bundlers can stub via
-	*   resolve.fallback (a `node:` prefix would throw UnhandledSchemeError
-	*   there).
-	*   `require` is DIRECTORY-SPECIFIC: `createRequire(base)` resolves relative
-	*   specifiers (`./x`, `../y`) from `base`'s directory. For builtins and bare
-	*   packages that's irrelevant since they resolve the same anywhere, so the
-	*   cached `getRequire` / `requireBuiltin` bind to THIS file. A RELATIVE
-	*   specifier must resolve from the CALLER's directory, so use `requireFrom`
-	*   with the caller's `import.meta.url` — binding such a load to this file
-	*   would resolve it against `src/node/` instead. Bundled, every module
-	*   collapses to one base and either works; unbundled (e.g. AOT-compiled from
-	*   source), each module sits at its own nested path and the base matters.
-	*/
-	let cachedModule;
-	let cachedRequire;
-	/**
-	* Bind a working `require`. Ambient `require` exists in CommonJS; in ESM and
-	* ahead-of-time-compiled package modules it is unbound (reading it throws or
-	* yields undefined), so fall back to `createRequire`. Returns undefined off
-	* Node and in browsers, where neither is available.
-	*
-	* `fromUrl` sets the resolution base — pass a caller's `import.meta.url` to
-	* resolve that caller's RELATIVE specifiers. When omitted, the base is this
-	* file, which is correct only for builtins / bare packages (dir-independent).
-	* With `fromUrl` the ambient `require` is skipped: it is bound to THIS file, so
-	* it would resolve a relative specifier from the wrong directory.
-	*/
-	function bindRequire(fromUrl) {
-		if (!require_constants_runtime.IS_NODE) return;
-		if (!fromUrl && typeof __require === "function") return __require;
-		if (typeof module$1.createRequire === "function") try {
-			return (0, module$1.createRequire)(fromUrl ?? __require("url").pathToFileURL(__filename).href);
-		} catch {
-			return;
-		}
-	}
-	/**
-	* Returns `node:module` loaded through the bound `require`, or undefined off
-	* Node. Cached across calls.
-	*/
-	function getNodeModule() {
-		return cachedModule ??= requireBuiltin("module");
-	}
-	/**
-	* Returns a working `require` bound to THIS file, binding one on first call
-	* (see bindRequire). Cached across calls; undefined off Node / in browsers.
-	*
-	* For builtins and bare packages only — the resolution base is this file, so a
-	* relative specifier would resolve from `src/node/`. Use `requireFrom` for
-	* relative loads.
-	*/
-	function getRequire() {
-		if (cachedRequire === void 0) cachedRequire = bindRequire();
-		return cachedRequire;
-	}
-	/**
-	* Is `name` a Node built-in module? Resolved from the statically-imported
-	* `isBuiltin`, so it works on Node and on ahead-of-time-compiled binaries
-	* (Perry), where ambient `require('module')` would lack `isBuiltin`. Returns
-	* false in browsers, where the bare `module` import is stubbed away.
-	*
-	* Single source of truth for "is this a Node builtin?" probes across socket-lib
-	* (used by the smol-binding loaders to gate their `node:smol-*` loads).
-	*/
-	function isNodeBuiltin(name) {
-		if (!require_constants_runtime.IS_NODE || typeof module$1.isBuiltin !== "function") return false;
-		return (0, module$1.isBuiltin)(name);
-	}
-	/**
-	* Load a built-in module by *computed* specifier through the bound `require`
-	* (see getRequire). The specifier is a parameter — never a literal at the call
-	* site — so browser bundlers neither walk nor bundle it. Returns undefined
-	* where no `require` can be bound.
-	*
-	* Builtins / bare packages only (dir-independent); for a relative specifier use
-	* `requireFrom`. Used by `getNodeModule` for `node:module`, and by the
-	* smol-binding loaders for the optional `node:smol-*` native bindings (gated
-	* behind `isNodeBuiltin`, true only on socket-btm's smol Node binary).
-	*/
-	function requireBuiltin(specifier) {
-		const req = getRequire();
-		if (req) return req(specifier);
-	}
-	/**
-	* Load a module by specifier from a CALLER-supplied base (its
-	* `import.meta.url`). Use this for RELATIVE specifiers (`./x`, `../y`), whose
-	* resolution depends on the caller's directory — `requireBuiltin` binds to this
-	* file and would resolve them from `src/node/`. Not cached: the binding is
-	* per-caller. Returns undefined where no `require` can be bound.
-	*/
-	function requireFrom(fromUrl, specifier) {
-		const req = bindRequire(fromUrl);
-		if (req) return req(specifier);
-	}
-	exports.bindRequire = bindRequire;
-	exports.getNodeModule = getNodeModule;
-	exports.getRequire = getRequire;
-	exports.isNodeBuiltin = isNodeBuiltin;
-	exports.requireBuiltin = requireBuiltin;
-	exports.requireFrom = requireFrom;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/smol/detect.js
-var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_node_module = require_module();
-	/**
-	* @file Smol detection + lazy-loader for `node:smol-util`. Two
-	*   responsibilities:
-	*
-	*   1. `isSmol()` — memoized boolean detector for socket-btm's smol Node binary.
-	*      Mirrors `isSeaBinary()` from `src/sea.ts`. Probes via
-	*      `node:module.isBuiltin('node:smol-util')` since only the smol binary
-	*      registers any `node:smol-*` builtins.
-	*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
-	*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
-	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
-	*      + `Function.prototype.call` trampoline that the JS form
-	*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
-	*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
-	*      + non-Node runtimes. Result is cached across calls; the lazy-loader
-	*      follows the same shape as `src/node/fs.ts` etc.
-	*
-	* @see https://github.com/SocketDev/socket-btm — socket-btm builds
-	*   the smol binary that exposes the `node:smol-util` binding.
-	*/
-	/**
-	* Cached smol-binary detection result.
-	*/
-	let isSmolCache;
-	/**
-	* Cached `node:smol-util` binding. `null` = probed and unavailable; `undefined`
-	* = not yet probed. JS truthiness collapses both to "no binding" at the call
-	* site.
-	*/
-	let smolUtilCache;
-	let smolUtilProbed = false;
-	/**
-	* Returns `node:smol-util` when running on the smol Node binary, otherwise
-	* `undefined`. Result is cached across calls.
-	*/
-	function getSmolUtil() {
-		if (!smolUtilProbed) {
-			smolUtilProbed = true;
-			/* c8 ignore start - smol Node binary only. */
-			if (require_node_module.isNodeBuiltin("node:smol-util")) smolUtilCache = require_node_module.requireBuiltin("node:smol-util");
-		}
-		return smolUtilCache;
-	}
-	/**
-	* Detect if the current process is running on socket-btm's smol Node binary.
-	* Memoized on first call.
-	*
-	* Defensive across runtimes: returns `false` on stock Node, browsers (no
-	* `node:module`), Deno and Bun, whose module resolution differs, and worker
-	* threads, each of which has its own builtin table.
-	*
-	* @example
-	*   ;```ts
-	*   import { isSmol } from '@socketsecurity/lib/smol/detect'
-	*
-	*   if (isSmol()) {
-	*     // running on the smol binary; native fast paths available
-	*   }
-	*   ```
-	*/
-	function isSmol() {
-		if (isSmolCache === void 0) isSmolCache = require_node_module.isNodeBuiltin("node:smol-util");
-		return isSmolCache;
-	}
-	exports.getSmolUtil = getSmolUtil;
-	exports.isSmol = isSmol;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/uncurry.js
-var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	/**
-	* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
-	*   Node.js's internal/per_context/primordials.js. Every other primordials leaf
-	*   depends on `uncurryThis` to expose prototype-method primordials, so this
-	*   file must be import-safe before any of them. Smol fast paths
-	*   (`node:smol-util`) replace the JS forms when running on socket-btm's smol
-	*   Node binary; stock Node and other runtimes fall back to the standard
-	*   `bind.bind(call)` shape. **IMPORTANT**: do not destructure on `globalThis`
-	*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
-	*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
-	*/
-	const smolUtil = require_detect().getSmolUtil();
-	const { apply, bind, call } = Function.prototype;
-	const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
-	const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
-	const applyBoundForSafe = applyBind;
-	const applySafe = smolUtil?.applySafe ?? ((fn) => {
-		const apply2 = applyBoundForSafe(fn);
-		return (self, args) => {
-			try {
-				return apply2(self, args);
-			} catch {
-				return;
-			}
-		};
-	});
-	const bindCallFallback = ((fn, thisArg, ...presetArgs) => Function.prototype.bind.apply(fn, [thisArg, ...presetArgs]));
-	const bindCall = smolUtil?.bindCall ?? bindCallFallback;
-	const weakRefSafe = smolUtil?.weakRefSafe ?? ((target) => {
-		try {
-			return new WeakRef(target);
-		} catch {
-			return;
-		}
-	});
-	exports.applyBind = applyBind;
-	exports.applySafe = applySafe;
-	exports.bindCall = bindCall;
-	exports.uncurryThis = uncurryThis;
-	exports.weakRefSafe = weakRefSafe;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/object.js
-var require_object = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
-	/**
-	* @file Safe references to `Object` static methods and prototype methods. Annex
-	*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
-	*   are exposed alongside the canonical static methods — implementations exist
-	*   in V8, SpiderMonkey, and JavaScriptCore even though the spec calls them
-	*   "normative optional".
-	*/
-	const ObjectCtor = Object;
-	const ObjectAssign = Object.assign;
-	const ObjectCreate = Object.create;
-	const ObjectDefineProperties = Object.defineProperties;
-	const ObjectDefineProperty = Object.defineProperty;
-	const ObjectEntries = Object.entries;
-	const ObjectFreeze = Object.freeze;
-	const ObjectFromEntries = Object.fromEntries;
-	const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-	const ObjectGetOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
-	const ObjectGetOwnPropertyNames = Object.getOwnPropertyNames;
-	const ObjectGetOwnPropertySymbols = Object.getOwnPropertySymbols;
-	const ObjectGetPrototypeOf = Object.getPrototypeOf;
-	const ObjectHasOwn = Object.hasOwn;
-	const ObjectIs = Object.is;
-	const ObjectIsExtensible = Object.isExtensible;
-	const ObjectIsFrozen = Object.isFrozen;
-	const ObjectIsSealed = Object.isSealed;
-	const ObjectKeys = Object.keys;
-	const ObjectPreventExtensions = Object.preventExtensions;
-	const ObjectSeal = Object.seal;
-	const ObjectSetPrototypeOf = Object.setPrototypeOf;
-	const ObjectValues = Object.values;
-	const ObjectPrototype = Object.prototype;
-	const ObjectPrototypeHasOwnProperty = require_primordials_uncurry.uncurryThis(Object.prototype.hasOwnProperty);
-	const ObjectPrototypeIsPrototypeOf = require_primordials_uncurry.uncurryThis(Object.prototype.isPrototypeOf);
-	const ObjectPrototypePropertyIsEnumerable = require_primordials_uncurry.uncurryThis(Object.prototype.propertyIsEnumerable);
-	const ObjectPrototypeToString = require_primordials_uncurry.uncurryThis(Object.prototype.toString);
-	const ObjectPrototypeValueOf = require_primordials_uncurry.uncurryThis(Object.prototype.valueOf);
-	const objectProto = Object.prototype;
-	const ObjectPrototypeDefineGetter = require_primordials_uncurry.uncurryThis(objectProto.__defineGetter__);
-	const ObjectPrototypeDefineSetter = require_primordials_uncurry.uncurryThis(objectProto.__defineSetter__);
-	const ObjectPrototypeLookupGetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupGetter__);
-	const ObjectPrototypeLookupSetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupSetter__);
-	exports.ObjectAssign = ObjectAssign;
-	exports.ObjectCreate = ObjectCreate;
-	exports.ObjectCtor = ObjectCtor;
-	exports.ObjectDefineProperties = ObjectDefineProperties;
-	exports.ObjectDefineProperty = ObjectDefineProperty;
-	exports.ObjectEntries = ObjectEntries;
-	exports.ObjectFreeze = ObjectFreeze;
-	exports.ObjectFromEntries = ObjectFromEntries;
-	exports.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
-	exports.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
-	exports.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
-	exports.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
-	exports.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
-	exports.ObjectHasOwn = ObjectHasOwn;
-	exports.ObjectIs = ObjectIs;
-	exports.ObjectIsExtensible = ObjectIsExtensible;
-	exports.ObjectIsFrozen = ObjectIsFrozen;
-	exports.ObjectIsSealed = ObjectIsSealed;
-	exports.ObjectKeys = ObjectKeys;
-	exports.ObjectPreventExtensions = ObjectPreventExtensions;
-	exports.ObjectPrototype = ObjectPrototype;
-	exports.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
-	exports.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
-	exports.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
-	exports.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
-	exports.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
-	exports.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
-	exports.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
-	exports.ObjectPrototypeToString = ObjectPrototypeToString;
-	exports.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
-	exports.ObjectSeal = ObjectSeal;
-	exports.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
-	exports.ObjectValues = ObjectValues;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/smol/primordial.js
-var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_node_module = require_module();
-	/**
-	* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
-	*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
-	*   and Number.is* primordials, registered with `CFunction::Make()` so TurboFan
-	*   inlines them directly into JIT- compiled JS callers. Bypasses the
-	*   FunctionCallbackInfo trampoline entirely — ~30-50% gain on hot loops where
-	*   V8 doesn't already auto-inline. Returns `undefined` on stock Node +
-	*   non-Node runtimes. Result is cached across calls.
-	*
-	* @internal — used by `src/primordials.ts` to resolve smol-aware
-	*   Math.* / Number.is* fast paths. Most callers should use the
-	*   standard `primordials` exports, which already route through this
-	*   when smol is present.
-	*
-	* @see https://v8.dev/blog/v8-release-99 — V8 Fast API Calls overview
-	*/
-	let smolPrimordial;
-	let smolPrimordialProbed = false;
-	/**
-	* Returns `node:smol-primordial` when running on the smol Node binary,
-	* otherwise `undefined`. Result is cached across calls.
-	*/
-	function getSmolPrimordial() {
-		if (!smolPrimordialProbed) {
-			smolPrimordialProbed = true;
-			/* c8 ignore start - smol Node binary only. */
-			if (require_node_module.isNodeBuiltin("node:smol-primordial")) smolPrimordial = require_node_module.requireBuiltin("node:smol-primordial");
-		}
-		return smolPrimordial;
-	}
-	exports.getSmolPrimordial = getSmolPrimordial;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/string.js
-var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
-	/**
-	* @file Safe references to `String` static methods and prototype methods.
-	*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
-	*   inputs, which reduces to a single byte load, and translates the `-1` Fast
-	*   API sentinel back to `NaN` to preserve spec parity. Two-byte strings fall
-	*   back to the uncurried `String.prototype.charCodeAt`.
-	*
-	*   ## Fast API surface — and why it's small
-	*
-	*   Mirrors the design rationale from socket-btm's `primordial_binding.cc`
-	*   (lines 41-72). The smol Fast API exposes exactly one string op
-	*   (`stringCharCodeAt`) because that's the one shape where the C++ trampoline
-	*   genuinely beats V8's existing hot path: a single ASCII byte load, no
-	*   encoding dispatch, no HandleScope, returns a primitive. String **searches**
-	*   (`startsWith` / `endsWith` / `includes` / `indexOf` / `lastIndexOf`) are
-	*   intentionally NOT exposed. V8's existing hot path dispatches on encoding
-	*   and runs native SIMD memcmp — a Fast API binding would add overhead without
-	*   winning. Same for `Map.has` / `Set.has` / `Array.includes`. Fast API also
-	*   has a hard constraint: a fast-path function cannot return a new V8 object —
-	*   only primitives, Local<Value/Object/Array>, or FastOneByteString. That
-	*   rules out anything that produces a new string (`slice`, `substring`,
-	*   `toUpperCase`, `concat`, `repeat`, `padStart`/`padEnd`, formatted-number)
-	*   from ever being a Fast API win on the return path. Net: the current surface
-	*   is approximately the ceiling. Adding more Fast API string ops without a
-	*   flamegraph showing the cost is a regression risk, not a perf win. See
-	*   `socket-btm/packages/node-smol-builder/additions/source-patched/`
-	*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
-	*   canonical design statement.
-	*/
-	const smolPrimordial = require_primordial().getSmolPrimordial();
-	const StringCtor = String;
-	const StringFromCharCode = String.fromCharCode;
-	const StringFromCodePoint = String.fromCodePoint;
-	const StringRaw = String.raw;
-	const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
-	const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
-	const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
-	/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
-	const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
-		const code = smolCharCodeAt(s, i);
-		return code === -1 ? NaN : code;
-	} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
-	/* c8 ignore stop */
-	const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
-	const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
-	const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
-	const StringPrototypeIncludes = require_primordials_uncurry.uncurryThis(String.prototype.includes);
-	const StringPrototypeIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.indexOf);
-	const StringPrototypeIsWellFormed = smolPrimordial?.stringIsWellFormed ?? require_primordials_uncurry.uncurryThis(String.prototype.isWellFormed);
-	const StringPrototypeLastIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.lastIndexOf);
-	const StringPrototypeLocaleCompare = require_primordials_uncurry.uncurryThis(String.prototype.localeCompare);
-	const StringPrototypeMatch = require_primordials_uncurry.uncurryThis(String.prototype.match);
-	const StringPrototypeMatchAll = require_primordials_uncurry.uncurryThis(String.prototype.matchAll);
-	const StringPrototypeNormalize = require_primordials_uncurry.uncurryThis(String.prototype.normalize);
-	const StringPrototypePadEnd = require_primordials_uncurry.uncurryThis(String.prototype.padEnd);
-	const StringPrototypePadStart = require_primordials_uncurry.uncurryThis(String.prototype.padStart);
-	const StringPrototypeRepeat = require_primordials_uncurry.uncurryThis(String.prototype.repeat);
-	const StringPrototypeReplace = require_primordials_uncurry.uncurryThis(String.prototype.replace);
-	const StringPrototypeReplaceAll = require_primordials_uncurry.uncurryThis(String.prototype.replaceAll);
-	const StringPrototypeSearch = require_primordials_uncurry.uncurryThis(String.prototype.search);
-	const StringPrototypeSlice = require_primordials_uncurry.uncurryThis(String.prototype.slice);
-	const StringPrototypeSplit = require_primordials_uncurry.uncurryThis(String.prototype.split);
-	const StringPrototypeStartsWith = require_primordials_uncurry.uncurryThis(String.prototype.startsWith);
-	const StringPrototypeSubstring = require_primordials_uncurry.uncurryThis(String.prototype.substring);
-	const StringPrototypeToLocaleLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleLowerCase);
-	const StringPrototypeToLocaleUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleUpperCase);
-	const StringPrototypeToLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLowerCase);
-	const StringPrototypeToString = require_primordials_uncurry.uncurryThis(String.prototype.toString);
-	const StringPrototypeToUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toUpperCase);
-	const StringPrototypeToWellFormed = require_primordials_uncurry.uncurryThis(String.prototype.toWellFormed);
-	const StringPrototypeTrim = require_primordials_uncurry.uncurryThis(String.prototype.trim);
-	const StringPrototypeTrimEnd = require_primordials_uncurry.uncurryThis(String.prototype.trimEnd);
-	const StringPrototypeTrimStart = require_primordials_uncurry.uncurryThis(String.prototype.trimStart);
-	const StringPrototypeValueOf = require_primordials_uncurry.uncurryThis(String.prototype.valueOf);
-	exports.StringCtor = StringCtor;
-	exports.StringFromCharCode = StringFromCharCode;
-	exports.StringFromCodePoint = StringFromCodePoint;
-	exports.StringPrototypeAt = StringPrototypeAt;
-	exports.StringPrototypeCharAt = StringPrototypeCharAt;
-	exports.StringPrototypeCharCodeAt = StringPrototypeCharCodeAt;
-	exports.StringPrototypeCodePointAt = StringPrototypeCodePointAt;
-	exports.StringPrototypeConcat = StringPrototypeConcat;
-	exports.StringPrototypeEndsWith = StringPrototypeEndsWith;
-	exports.StringPrototypeIncludes = StringPrototypeIncludes;
-	exports.StringPrototypeIndexOf = StringPrototypeIndexOf;
-	exports.StringPrototypeIsWellFormed = StringPrototypeIsWellFormed;
-	exports.StringPrototypeLastIndexOf = StringPrototypeLastIndexOf;
-	exports.StringPrototypeLocaleCompare = StringPrototypeLocaleCompare;
-	exports.StringPrototypeMatch = StringPrototypeMatch;
-	exports.StringPrototypeMatchAll = StringPrototypeMatchAll;
-	exports.StringPrototypeNormalize = StringPrototypeNormalize;
-	exports.StringPrototypePadEnd = StringPrototypePadEnd;
-	exports.StringPrototypePadStart = StringPrototypePadStart;
-	exports.StringPrototypeRepeat = StringPrototypeRepeat;
-	exports.StringPrototypeReplace = StringPrototypeReplace;
-	exports.StringPrototypeReplaceAll = StringPrototypeReplaceAll;
-	exports.StringPrototypeSearch = StringPrototypeSearch;
-	exports.StringPrototypeSlice = StringPrototypeSlice;
-	exports.StringPrototypeSplit = StringPrototypeSplit;
-	exports.StringPrototypeStartsWith = StringPrototypeStartsWith;
-	exports.StringPrototypeSubstring = StringPrototypeSubstring;
-	exports.StringPrototypeToLocaleLowerCase = StringPrototypeToLocaleLowerCase;
-	exports.StringPrototypeToLocaleUpperCase = StringPrototypeToLocaleUpperCase;
-	exports.StringPrototypeToLowerCase = StringPrototypeToLowerCase;
-	exports.StringPrototypeToString = StringPrototypeToString;
-	exports.StringPrototypeToUpperCase = StringPrototypeToUpperCase;
-	exports.StringPrototypeToWellFormed = StringPrototypeToWellFormed;
-	exports.StringPrototypeTrim = StringPrototypeTrim;
-	exports.StringPrototypeTrimEnd = StringPrototypeTrimEnd;
-	exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
-	exports.StringPrototypeValueOf = StringPrototypeValueOf;
-	exports.StringRaw = StringRaw;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/errors/predicates.js
-var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_error = require_error();
-	const require_primordials_object = require_object();
-	const require_primordials_string = require_string();
-	/**
-	* @file Error type-guard predicates — `isError` (with the `isErrorBuiltin` /
-	*   `isErrorShim` building blocks) and the libuv errno-code narrower
-	*   `isErrnoException`. Both are cross-realm-safe (they use `[[ErrorData]]`
-	*   slot semantics rather than `instanceof Error`).
-	*/
-	/**
-	* Reference to the native ES2025 `Error.isError` when the running engine ships
-	* it, otherwise `undefined`. Consumes the single primordial snapshot
-	* ({@link ErrorIsError}) rather than re-probing the global — one capture point.
-	* Exposed separately so tests and callers can detect the fast-path.
-	*/
-	const isErrorBuiltin = require_primordials_error.ErrorIsError;
-	/**
-	* Narrow a caught value to a Node.js `ErrnoException` — an Error with a `.code`
-	* string set by libuv/syscall failures (e.g. `'ENOENT'`, `'EACCES'`, `'EBUSY'`,
-	* `'EPERM'`). Cross-realm safe (builds on {@link isError}), and checks that
-	* `code` is a string so a merely branded Error without a real errno code
-	* returns `false`.
-	*
-	* @example
-	*   try {
-	*     await fsPromises.readFile(path)
-	*   } catch (e) {
-	*     if (isErrnoException(e) && e.code === 'ENOENT') {
-	*       // … retry, or return default …
-	*     } else {
-	*       throw e
-	*     }
-	*   }
-	*/
-	function isErrnoException(value) {
-		if (!isError(value)) return false;
-		const code = value.code;
-		if (typeof code !== "string" || code.length === 0) return false;
-		const first = require_primordials_string.StringPrototypeCharCodeAt(code, 0);
-		return first >= 65 && first <= 90;
-	}
-	/**
-	* `Error.isError` fallback shim — the in-language approximation used when the
-	* native ES2025 method isn't available.
-	*
-	* Exported separately so test suites on engines that ship the native method can
-	* still exercise the shim branch directly. Consumers should prefer
-	* {@link isError}, which picks the native method when present.
-	*/
-	function isErrorShim(value) {
-		if (value === null || typeof value !== "object") return false;
-		return require_primordials_object.ObjectPrototypeToString(value) === "[object Error]";
-	}
-	/**
-	* Prefer the native ES2025 `Error.isError` when available (exact
-	* `[[ErrorData]]` slot check, cross-realm-safe); fall back to
-	* {@link isErrorShim} otherwise.
-	*/
-	const isError = isErrorBuiltin ?? isErrorShim;
-	exports.isErrnoException = isErrnoException;
-	exports.isError = isError;
-	exports.isErrorBuiltin = isErrorBuiltin;
-	exports.isErrorShim = isErrorShim;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/primordials/map-set.js
-var require_map_set = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
-	const require_primordials_error = require_error();
-	/**
-	* @file Safe references to `Map`, `Set`, `WeakMap`, `WeakSet`, and `WeakRef`.
-	*   Constructors plus uncurried prototype methods. `WeakRef` exposes only its
-	*   constructor — there's a separate `weakRefSafe` wrapper in `./uncurry` for
-	*   the throws-on-non-Object case.
-	*/
-	const MapCtor = Map;
-	const SetCtor = Set;
-	const WeakMapCtor = WeakMap;
-	const WeakRefCtor = WeakRef;
-	const WeakSetCtor = WeakSet;
-	const MapPrototypeClear = require_primordials_uncurry.uncurryThis(Map.prototype.clear);
-	const MapPrototypeDelete = require_primordials_uncurry.uncurryThis(Map.prototype.delete);
-	const MapPrototypeEntries = require_primordials_uncurry.uncurryThis(Map.prototype.entries);
-	const MapPrototypeForEach = require_primordials_uncurry.uncurryThis(Map.prototype.forEach);
-	const MapPrototypeGet = require_primordials_uncurry.uncurryThis(Map.prototype.get);
-	const MapPrototypeGetOrInsert = Map.prototype.getOrInsert === void 0 ? mapGetOrInsertFallback : require_primordials_uncurry.uncurryThis(Map.prototype.getOrInsert);
-	const MapPrototypeGetOrInsertComputed = Map.prototype.getOrInsertComputed === void 0 ? mapGetOrInsertComputedFallback : require_primordials_uncurry.uncurryThis(Map.prototype.getOrInsertComputed);
-	const MapPrototypeHas = require_primordials_uncurry.uncurryThis(Map.prototype.has);
-	const MapPrototypeKeys = require_primordials_uncurry.uncurryThis(Map.prototype.keys);
-	const MapPrototypeSet = require_primordials_uncurry.uncurryThis(Map.prototype.set);
-	const MapPrototypeValues = require_primordials_uncurry.uncurryThis(Map.prototype.values);
-	const SetPrototypeAdd = require_primordials_uncurry.uncurryThis(Set.prototype.add);
-	const SetPrototypeClear = require_primordials_uncurry.uncurryThis(Set.prototype.clear);
-	const SetPrototypeDelete = require_primordials_uncurry.uncurryThis(Set.prototype.delete);
-	const SetPrototypeDifference = require_primordials_uncurry.uncurryThis(Set.prototype.difference);
-	const SetPrototypeEntries = require_primordials_uncurry.uncurryThis(Set.prototype.entries);
-	const SetPrototypeForEach = require_primordials_uncurry.uncurryThis(Set.prototype.forEach);
-	const SetPrototypeHas = require_primordials_uncurry.uncurryThis(Set.prototype.has);
-	const SetPrototypeIntersection = require_primordials_uncurry.uncurryThis(Set.prototype.intersection);
-	const SetPrototypeIsDisjointFrom = require_primordials_uncurry.uncurryThis(Set.prototype.isDisjointFrom);
-	const SetPrototypeIsSubsetOf = require_primordials_uncurry.uncurryThis(Set.prototype.isSubsetOf);
-	const SetPrototypeIsSupersetOf = require_primordials_uncurry.uncurryThis(Set.prototype.isSupersetOf);
-	const SetPrototypeKeys = require_primordials_uncurry.uncurryThis(Set.prototype.keys);
-	const SetPrototypeSymmetricDifference = require_primordials_uncurry.uncurryThis(Set.prototype.symmetricDifference);
-	const SetPrototypeUnion = require_primordials_uncurry.uncurryThis(Set.prototype.union);
-	const SetPrototypeValues = require_primordials_uncurry.uncurryThis(Set.prototype.values);
-	const WeakMapPrototypeDelete = require_primordials_uncurry.uncurryThis(WeakMap.prototype.delete);
-	const WeakMapPrototypeGet = require_primordials_uncurry.uncurryThis(WeakMap.prototype.get);
-	const WeakMapPrototypeGetOrInsert = WeakMap.prototype.getOrInsert === void 0 ? weakMapGetOrInsertFallback : require_primordials_uncurry.uncurryThis(WeakMap.prototype.getOrInsert);
-	const WeakMapPrototypeGetOrInsertComputed = WeakMap.prototype.getOrInsertComputed === void 0 ? weakMapGetOrInsertComputedFallback : require_primordials_uncurry.uncurryThis(WeakMap.prototype.getOrInsertComputed);
-	const WeakMapPrototypeHas = require_primordials_uncurry.uncurryThis(WeakMap.prototype.has);
-	const WeakMapPrototypeSet = require_primordials_uncurry.uncurryThis(WeakMap.prototype.set);
-	const WeakSetPrototypeAdd = require_primordials_uncurry.uncurryThis(WeakSet.prototype.add);
-	const WeakSetPrototypeDelete = require_primordials_uncurry.uncurryThis(WeakSet.prototype.delete);
-	const WeakSetPrototypeHas = require_primordials_uncurry.uncurryThis(WeakSet.prototype.has);
-	function mapGetOrInsertComputedFallback(map, key, callbackfn) {
-		if (typeof callbackfn !== "function") throw new require_primordials_error.TypeErrorCtor(`getOrInsertComputed takes a callback. Saw ${typeof callbackfn}, wanted a function computing the value to insert.`);
-		if (MapPrototypeHas(map, key)) return MapPrototypeGet(map, key);
-		const value = callbackfn(key);
-		MapPrototypeSet(map, key, value);
-		return value;
-	}
-	function mapGetOrInsertFallback(map, key, value) {
-		if (MapPrototypeHas(map, key)) return MapPrototypeGet(map, key);
-		MapPrototypeSet(map, key, value);
-		return value;
-	}
-	function weakMapGetOrInsertComputedFallback(map, key, callbackfn) {
-		if (typeof callbackfn !== "function") throw new require_primordials_error.TypeErrorCtor(`getOrInsertComputed takes a callback. Saw ${typeof callbackfn}, wanted a function computing the value to insert.`);
-		if (WeakMapPrototypeHas(map, key)) return WeakMapPrototypeGet(map, key);
-		const value = callbackfn(key);
-		WeakMapPrototypeSet(map, key, value);
-		return value;
-	}
-	function weakMapGetOrInsertFallback(map, key, value) {
-		if (WeakMapPrototypeHas(map, key)) return WeakMapPrototypeGet(map, key);
-		WeakMapPrototypeSet(map, key, value);
-		return value;
-	}
-	exports.MapCtor = MapCtor;
-	exports.MapPrototypeClear = MapPrototypeClear;
-	exports.MapPrototypeDelete = MapPrototypeDelete;
-	exports.MapPrototypeEntries = MapPrototypeEntries;
-	exports.MapPrototypeForEach = MapPrototypeForEach;
-	exports.MapPrototypeGet = MapPrototypeGet;
-	exports.MapPrototypeGetOrInsert = MapPrototypeGetOrInsert;
-	exports.MapPrototypeGetOrInsertComputed = MapPrototypeGetOrInsertComputed;
-	exports.MapPrototypeHas = MapPrototypeHas;
-	exports.MapPrototypeKeys = MapPrototypeKeys;
-	exports.MapPrototypeSet = MapPrototypeSet;
-	exports.MapPrototypeValues = MapPrototypeValues;
-	exports.SetCtor = SetCtor;
-	exports.SetPrototypeAdd = SetPrototypeAdd;
-	exports.SetPrototypeClear = SetPrototypeClear;
-	exports.SetPrototypeDelete = SetPrototypeDelete;
-	exports.SetPrototypeDifference = SetPrototypeDifference;
-	exports.SetPrototypeEntries = SetPrototypeEntries;
-	exports.SetPrototypeForEach = SetPrototypeForEach;
-	exports.SetPrototypeHas = SetPrototypeHas;
-	exports.SetPrototypeIntersection = SetPrototypeIntersection;
-	exports.SetPrototypeIsDisjointFrom = SetPrototypeIsDisjointFrom;
-	exports.SetPrototypeIsSubsetOf = SetPrototypeIsSubsetOf;
-	exports.SetPrototypeIsSupersetOf = SetPrototypeIsSupersetOf;
-	exports.SetPrototypeKeys = SetPrototypeKeys;
-	exports.SetPrototypeSymmetricDifference = SetPrototypeSymmetricDifference;
-	exports.SetPrototypeUnion = SetPrototypeUnion;
-	exports.SetPrototypeValues = SetPrototypeValues;
-	exports.WeakMapCtor = WeakMapCtor;
-	exports.WeakMapPrototypeDelete = WeakMapPrototypeDelete;
-	exports.WeakMapPrototypeGet = WeakMapPrototypeGet;
-	exports.WeakMapPrototypeGetOrInsert = WeakMapPrototypeGetOrInsert;
-	exports.WeakMapPrototypeGetOrInsertComputed = WeakMapPrototypeGetOrInsertComputed;
-	exports.WeakMapPrototypeHas = WeakMapPrototypeHas;
-	exports.WeakMapPrototypeSet = WeakMapPrototypeSet;
-	exports.WeakRefCtor = WeakRefCtor;
-	exports.WeakSetCtor = WeakSetCtor;
-	exports.WeakSetPrototypeAdd = WeakSetPrototypeAdd;
-	exports.WeakSetPrototypeDelete = WeakSetPrototypeDelete;
-	exports.WeakSetPrototypeHas = WeakSetPrototypeHas;
-	exports.mapGetOrInsertComputedFallback = mapGetOrInsertComputedFallback;
-	exports.mapGetOrInsertFallback = mapGetOrInsertFallback;
-	exports.weakMapGetOrInsertComputedFallback = weakMapGetOrInsertComputedFallback;
-	exports.weakMapGetOrInsertFallback = weakMapGetOrInsertFallback;
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/external/pony-cause.js
-var require_pony_cause$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	const { SetCtor: _p_SetCtor } = require_map_set();
-	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
-	var require_error_with_cause = /* @__PURE__ */ __commonJSMin(((exports$1, module$2) => {
-		module$2.exports = { ErrorWithCause: class ErrorWithCause extends Error {
-			/**
-			* @param {string} message
-			* @param {{ cause?: T }} options
-			*/
-			constructor(message, { cause } = {}) {
-				super(message);
-				/** @type {string} */
-				this.name = ErrorWithCause.name;
-				if (cause)
- /** @type {T} */
-				this.cause = cause;
-				/** @type {string} */
-				this.message = message;
-			}
-		} };
-	}));
-	var require_helpers = /* @__PURE__ */ __commonJSMin(((exports$2, module$3) => {
-		const isError = typeof Error.isError === "function" ? Error.isError : (v) => v !== null && typeof v === "object" && Object.prototype.toString.call(v) === "[object Error]";
-		/**
-		* @template {Error} T
-		* @param {unknown} err
-		* @param {new(...args: any[]) => T} reference
-		* @returns {T|undefined}
-		*/
-		const findCauseByReference = (err, reference) => {
-			if (!err || !reference) return;
-			if (!isError(err)) return;
-			if (!(reference.prototype instanceof Error) && reference !== Error) return;
-			/**
-			* Ensures we don't go circular
-			*
-			* @type {Set<Error>}
-			*/
-			const seen = /* @__PURE__ */ new _p_SetCtor();
-			/** @type {Error|undefined} */
-			let currentErr = err;
-			while (currentErr && !seen.has(currentErr)) {
-				seen.add(currentErr);
-				if (currentErr instanceof reference) return currentErr;
-				currentErr = getErrorCause(currentErr);
-			}
-		};
-		/**
-		* @param {Error|{ cause?: unknown|(()=>err)}} err
-		* @returns {Error|undefined}
-		*/
-		const getErrorCause = (err) => {
-			if (!err || typeof err !== "object" || !("cause" in err)) return;
-			if (typeof err.cause === "function") {
-				const causeResult = err.cause();
-				return isError(causeResult) ? causeResult : void 0;
-			} else return isError(err.cause) ? err.cause : void 0;
-		};
-		/**
-		* Internal method that keeps a track of which error we have already added, to avoid circular recursion
-		*
-		* @private
-		* @param {Error} err
-		* @param {Set<Error>} seen
-		* @returns {string}
-		*/
-		const _stackWithCauses = (err, seen) => {
-			if (!isError(err)) return "";
-			const stack = err.stack || "";
-			if (seen.has(err)) return stack + "\ncauses have become circular...";
-			const cause = getErrorCause(err);
-			if (cause) {
-				seen.add(err);
-				return stack + "\ncaused by: " + _stackWithCauses(cause, seen);
-			} else return stack;
-		};
-		/**
-		* @param {Error} err
-		* @returns {string}
-		*/
-		const stackWithCauses = (err) => _stackWithCauses(err, /* @__PURE__ */ new _p_SetCtor());
-		/**
-		* Internal method that keeps a track of which error we have already added, to avoid circular recursion
-		*
-		* @private
-		* @param {Error} err
-		* @param {Set<Error>} seen
-		* @param {boolean} [skip]
-		* @returns {string}
-		*/
-		const _messageWithCauses = (err, seen, skip) => {
-			if (!isError(err)) return "";
-			const message = skip ? "" : err.message || "";
-			if (seen.has(err)) return message + ": ...";
-			const cause = getErrorCause(err);
-			if (cause) {
-				seen.add(err);
-				const skipIfVErrorStyleCause = "cause" in err && typeof err.cause === "function";
-				return message + (skipIfVErrorStyleCause ? "" : ": ") + _messageWithCauses(cause, seen, skipIfVErrorStyleCause);
-			} else return message;
-		};
-		/**
-		* @param {Error} err
-		* @returns {string}
-		*/
-		const messageWithCauses = (err) => _messageWithCauses(err, /* @__PURE__ */ new _p_SetCtor());
-		module$3.exports = {
-			findCauseByReference,
-			getErrorCause,
-			stackWithCauses,
-			messageWithCauses
-		};
-	}));
-	var require_pony_cause = /* @__PURE__ */ __commonJSMin(((exports$3, module$4) => {
-		const { ErrorWithCause } = require_error_with_cause();
-		const { findCauseByReference, getErrorCause, messageWithCauses, stackWithCauses } = require_helpers();
-		module$4.exports = {
-			ErrorWithCause,
-			findCauseByReference,
-			getErrorCause,
-			stackWithCauses,
-			messageWithCauses
-		};
-	}));
-	module.exports = require_pony_cause();
-}));
-
-//#endregion
-//#region node_modules/.pnpm/@socketsecurity+lib@6.5.2_typescript@7.0.2/node_modules/@socketsecurity/lib/dist/errors/message.js
-var require_message = /* @__PURE__ */ __commonJSMin(((exports) => {
-	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_constants_sentinels = require_sentinels();
-	const require_errors_predicates = require_predicates();
-	let src_external_pony_cause = require_pony_cause$1();
-	/**
-	* @file Human-readable error-message extractor. `errorMessage` walks the
-	*   `cause` chain via pony-cause's `messageWithCauses` for Errors and falls
-	*   back to the shared `UNKNOWN_ERROR` sentinel for everything else.
-	*   `messageWithCauses` and `UNKNOWN_ERROR` are re-exported for callers that
-	*   need them directly.
-	*/
-	/**
-	* Extract a human-readable message from any caught value.
-	*
-	* Walks the `cause` chain for Errors (via {@link messageWithCauses}); coerces
-	* primitives and objects to string; returns {@link UNKNOWN_ERROR} for `null`,
-	* `undefined`, empty strings, `[object Object]`, or Errors with no message.
-	*
-	* @example
-	*   try {
-	*     await readConfig(path)
-	*   } catch (e) {
-	*     throw new ErrorCtor(`Failed to read ${path}: ${errorMessage(e)}`, {
-	*       cause: e,
-	*     })
-	*   }
-	*/
-	function errorMessage(value) {
-		if (require_errors_predicates.isError(value)) return (0, src_external_pony_cause.messageWithCauses)(value) || "Unknown error";
-		if (value === null || value === void 0) return require_constants_sentinels.UNKNOWN_ERROR;
-		const s = String(value);
-		if (s === "" || s === "[object Object]") return require_constants_sentinels.UNKNOWN_ERROR;
-		return s;
-	}
-	exports.UNKNOWN_ERROR = require_constants_sentinels.UNKNOWN_ERROR;
-	exports.errorMessage = errorMessage;
-	exports.messageWithCauses = src_external_pony_cause.messageWithCauses;
-}));
-
-//#endregion
-//#region src/tools/firewall.js
-var import_message = require_message();
-/**
-* `<platform>-<arch>` (Node's own spelling) to the suffix of the release asset
-* that carries that build. A key missing here is a platform the firewall does
-* not publish a binary for, and the action fails fast rather than downloading
-* a 404.
-*/
-const FIREWALL_DISTRIBUTIONS = {
-	"darwin-arm64": "macos-arm64",
-	"darwin-x64": "macos-x86_64",
-	"linux-arm64": "linux-arm64",
-	"linux-x64": "linux-x86_64",
-	"win32-arm64": "windows-arm64.exe",
-	"win32-x64": "windows-x86_64.exe"
-};
-/**
-* Name the firewall binary is cached and executed under.
-*/
-const FIREWALL_EXEC_NAME = "sfw";
-/**
-* Downloads firewall binary if not in cache, and adds to exec path.
-*
-* @param {object} inputs Action inputs, including the `edition` to install.
-*/
-async function downloadFirewall({ edition = "free", ...inputs }) {
-	const distributionKey = `${process.platform}-${process.arch}`;
-	const distribution = FIREWALL_DISTRIBUTIONS[distributionKey];
-	if (!distribution) throw new Error(`Unsupported architecture ${distributionKey}`);
-	const repo = edition === "free" ? "sfw-free" : "firewall-release";
-	const octokit = getOctokit(inputs.tokenGithub, { userAgent: "Socket-GitHub-Action" });
-	let response;
-	try {
-		const method = inputs.versionFirewall === "latest" ? "getLatestRelease" : "getReleaseByTag";
-		response = await octokit.rest.repos[method]({
-			tag: inputs.versionFirewall ? `v${inputs.versionFirewall}` : void 0,
-			owner: "socketdev",
-			repo
-		});
-	} catch (error) {
-		debug(`[${error?.status}] ${error?.response?.url} ${(0, import_message.errorMessage)(error)}`);
-		throw new Error(`failed to check version ${inputs.versionFirewall}`);
-	}
-	const { tag_name: versionToDownload } = response.data;
-	let nameDownload = "sfw";
-	if (edition === "free") nameDownload += "-free";
-	nameDownload += `-${distribution}`;
-	const cacheOptions = [
-		`socket-firewall-${edition}`,
-		versionToDownload,
-		process.arch
-	];
-	const url = `https://github.com/SocketDev/${repo}/releases/download/${versionToDownload}/${nameDownload}`;
-	let pathCache;
-	if (inputs.useCache) pathCache = find(...cacheOptions);
-	if (!pathCache) {
-		debug(`downloading Socket Firewall binary from: ${url}`);
-		try {
-			pathCache = await cacheFile(await downloadTool(url), "sfw", ...cacheOptions);
-		} catch (error) {
-			throw new Error(`Failed to download Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
-		}
-	}
-	const pathBinary = path.join(pathCache, "sfw");
-	if (process.platform !== "win32") await exec("chmod", ["+x", pathBinary]);
-	setOutput("firewall-path-binary", pathBinary);
-	addPath(pathCache);
-	info(`Socket Firewall ${edition} edition installed, requested: ${inputs.versionFirewall}, resolved: ${versionToDownload}`);
-	debug(`binary location: ${pathCache}`);
-	if (inputs.jobSummary !== "none") {
-		const pathReport = `${path.join(process.env.RUNNER_TEMP, crypto.randomUUID())}.json`;
-		exportVariable("SFW_JSON_REPORT_PATH", pathReport);
-		setOutput("firewall-path-report", pathReport);
-		debug(`report path set to : ${pathReport}`);
-	}
-}
-
-//#endregion
 //#region src/tools/patch.js
 /**
 * `<platform>-<arch>` (Node's own spelling) to the socket-patch release asset
@@ -23838,6 +24978,7 @@ async function main() {
 		patchCwd: getInput("patch-cwd"),
 		patchDryRun: getBooleanInput("patch-dry-run"),
 		patchEcosystems: getInput("patch-ecosystems"),
+		shims: getBooleanInput("shims"),
 		tokenGithub: getInput("github-token", { required: true }),
 		tokenSocket: getInput("socket-token"),
 		useCache: getBooleanInput("use-cache"),

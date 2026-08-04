@@ -37,6 +37,7 @@ export async function main() {
     patchCwd: getInput('patch-cwd'),
     patchDryRun: getBooleanInput('patch-dry-run'),
     patchEcosystems: getInput('patch-ecosystems'),
+    shims: getBooleanInput('shims'),
     tokenGithub: getInput('github-token', { required: true }),
     tokenSocket: getInput('socket-token'),
     useCache: getBooleanInput('use-cache'),
