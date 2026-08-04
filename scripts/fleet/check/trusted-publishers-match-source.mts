@@ -36,8 +36,14 @@ import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 
+import {
+  loadRosterFromRepo,
+  publishesTo,
+  resolveRepoName,
+} from '../../../.claude/hooks/fleet/_shared/fleet-roster.mts'
 import { isMainModule } from '../_shared/is-main-module.mts'
 import { runNpmWebAuth } from '../npm-web-auth.mts'
+import { REPO_ROOT } from '../paths.mts'
 
 const logger = getDefaultLogger()
 
@@ -251,9 +257,38 @@ export async function expectedRepositoryFor(
   }
 }
 
+/**
+ * True when this repo ships nothing to npm, so there is no trusted-publisher
+ * binding for it to have. Read from the roster's `publishes` list, the same
+ * source `committed-dist-is-current` gates on. An unreadable roster or an
+ * unresolvable repo name answers `false`: the caller then takes the normal
+ * path, which fails loudly rather than skipping on a guess.
+ */
+export function repoHasNoNpmChannel(repoRoot: string): boolean {
+  const roster = loadRosterFromRepo(repoRoot)
+  if (!roster) {
+    return false
+  }
+  const repoName = resolveRepoName(repoRoot)
+  if (!repoName) {
+    return false
+  }
+  return !publishesTo(roster, repoName, 'js')
+}
+
 export default async function main(): Promise<void> {
   const packages = process.argv.slice(2).filter(a => !a.startsWith('-'))
   if (!packages.length) {
+    // The release tier runs this step for every member. A member with no npm
+    // channel — a crate, a Go module, a GitHub Action consumed at a tag — has
+    // no packument and no binding, so "no names were passed" is the expected
+    // state there rather than a missing argument.
+    if (repoHasNoNpmChannel(REPO_ROOT)) {
+      logger.log(
+        '[trusted-publishers-match-source] SKIPPED — this repo publishes nothing to npm, so it has no trusted-publisher binding.',
+      )
+      return
+    }
     logger.fail(
       'no packages: pass the published names to check, e.g. @socketregistry/packageurl-js.',
     )
