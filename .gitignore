@@ -128,4 +128,10 @@ pnpm-debug.log
 *.tgz
 # </fleet>
 # <repo>
+# dist/ is the SHIPPED artifact here, not a throwaway build output. A consumer
+# resolves `SocketDev/action@<tag>` straight from the git tree and the runner
+# executes the committed `dist/main.js` + `dist/post.js`, so both files have to
+# stay tracked. This re-include undoes the fleet block's blanket `**/dist/`
+# for the repo root only; a `dist/` anywhere deeper stays ignored.
+!/dist/
 # </repo>
