@@ -1,0 +1,7 @@
+{
+  "$schema": "../fleet/lockstep.schema.json",
+  "area": "action",
+  "description": "Lock-step manifest. action ships the Socket GitHub Action as a committed dist/ bundle consumed at a git tag, with no submodule upstreams and no sibling language ports — empty rows is the expected state.",
+  "upstreams": {},
+  "rows": []
+}

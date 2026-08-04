@@ -1,0 +1,6 @@
+{
+  "allow": {
+    "action.yml": "GitHub reads an action's metadata from `action.yml` at the repository root; a consumer resolving `owner/repo@<tag>` finds it nowhere else, so the path is fixed by the Actions runtime.",
+    "dist": "The bundle a workflow runner executes. `action.yml` names `dist/main.js` and `dist/post.js` by root-relative path, and the runner checks the repo out at a tag with no build step, so the built output is committed here rather than produced into a tier directory."
+  }
+}
