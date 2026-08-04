@@ -21827,7 +21827,7 @@ const FIREWALL_DISTRIBUTIONS = {
 * Release tag every checksum below was taken from, and the version the action
 * installs when `firewall-version` is left at its default.
 */
-const FIREWALL_VERSION = "v1.6.1";
+const FIREWALL_VERSION = "v1.15.0";
 /**
 * SHA256 of each `FIREWALL_VERSION` asset, per edition and per
 * `<platform>-<arch>`. The hashes are pinned in source rather than read from a
@@ -21837,18 +21837,20 @@ const FIREWALL_VERSION = "v1.6.1";
 */
 const FIREWALL_CHECKSUMS = {
 	enterprise: {
-		"darwin-arm64": "acad0b517601bb7408e2e611c9226f47dcccbd83333d7fc5157f1d32ed2b953d",
-		"darwin-x64": "01d64d40effda35c31f8d8ee1fed1388aac0a11aba40d47fba8a36024b77500c",
-		"linux-arm64": "671270231617142404a1564e52672f79b806f9df3f232fcc7606329c0246da55",
-		"linux-x64": "9115b4ca8021eb173eb9e9c3627deb7f1066f8debd48c5c9d9f3caabb2a26a4b",
-		"win32-x64": "9a50e1ddaf038138c3f85418dc5df0113bbe6fc884f5abe158beaa9aea18d70a"
+		"darwin-arm64": "98c87f9316a3caf67f33bb065f6b08123ae90325164535cf5b692cb1024cb64e",
+		"darwin-x64": "fc39d500171dfa53eba26e4f59dfd187f3ae47094b8d3a54b7ac53df1c770245",
+		"linux-arm64": "4cc5c51eb224cfa1c9819c218cc39753bce5273e89a50dfd226d8d71449bfd95",
+		"linux-x64": "5d33de4859e5138633592fb49a62fb9ac520a6a16211100d21bcb871a9b2d77f",
+		"win32-arm64": "c42f3580db87f65492946687dd07c483620a8e00306252371ddf8bfba0defecc",
+		"win32-x64": "7869366709d7ca25c096ec0bcd98f5b69d9f2f13c4c0964dd5b8f656d0fb4359"
 	},
 	free: {
-		"darwin-arm64": "bf1616fc44ac49f1cb2067fedfa127a3ae65d6ec6d634efbb3098cfa355e5555",
-		"darwin-x64": "724ccea19d847b79db8cc8e38f5f18ce2dd32336007f42b11bed7d2e5f4a2566",
-		"linux-arm64": "df2eedb2daf2572eee047adb8bfd81c9069edcb200fc7d3710fca98ec3ca81a1",
-		"linux-x64": "4a1e8b65e90fce7d5fd066cf0af6c93d512065fa4222a475c8d959a6bc14b9ff",
-		"win32-x64": "c953e62ad7928d4d8f2302f5737884ea1a757babc26bed6a42b9b6b68a5d54af"
+		"darwin-arm64": "fa473291b8b76220f4b636cf655e8a4dc03332145bdea3acfd9bc96887b2da20",
+		"darwin-x64": "07cfcc9805812130ebca07f73c51c2cd9c0181b394f25be4c969c0d31c9dc26f",
+		"linux-arm64": "55671fa409ef3d40fcee66acbba4d7acfff8a5332d349ad47cca809ebf473cd0",
+		"linux-x64": "c80371910a808ea5c68916c48e5451716a91ca411cf5e422fdbd8119729b742c",
+		"win32-arm64": "926a228e5275fb1b0d6479a427a754bbf07189959c76aff021fa6ccc35c43c61",
+		"win32-x64": "029882f10e1020c96353b184ec0dba7da853e0f6d35131ca930515a7e61e89e6"
 	}
 };
 /**
