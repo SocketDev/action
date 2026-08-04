@@ -94,4 +94,8 @@ test/fleet/publish-infra-placeholder.test.mts linguist-generated=true
 test/fleet/scripts/setup.mts linguist-generated=true
 # </fleet>
 # <repo>
+# The committed bundle is what the runner executes, so it is tracked — but it
+# is rolldown output, not authored code. Keep it out of diffs and language
+# stats; check-dist.yml is what verifies it matches src/.
+dist/** -diff linguist-generated
 # </repo>
