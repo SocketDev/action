@@ -1,6 +1,5 @@
 {
   "allow": {
-    ".releaserc.json": "semantic-release discovers its config by walking up from the working directory and only accepts a `.releaserc*` file (or a package.json `release` key) — it never reads a tier directory, so the config is tool-anchored at the root.",
     "action.yml": "GitHub reads an action's metadata from `action.yml` at the repository root; a consumer resolving `owner/repo@<tag>` finds it nowhere else, so the path is fixed by the Actions runtime.",
     "dist": "The bundle a workflow runner executes. `action.yml` names `dist/main.js` and `dist/post.js` by root-relative path, and the runner checks the repo out at a tag with no build step, so the built output is committed here rather than produced into a tier directory."
   }
