@@ -1,0 +1,12 @@
+{
+  "$schema": "./socket-wheelhouse-schema.json",
+  "schemaVersion": 1,
+  "repoName": "action",
+  "repo": {
+    "type": "solo"
+  },
+  "build": {
+    "from": "github-action",
+    "type": "js"
+  }
+}
