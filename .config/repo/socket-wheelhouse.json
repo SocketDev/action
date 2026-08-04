@@ -9,6 +9,10 @@
     "from": "github-action",
     "type": "js"
   },
+  "fuzz": {
+    "exempt": true,
+    "reason": "The action parses no untrusted input. Every value it handles is either a workflow-author-supplied `with:` input that it passes straight to a GitHub API call or a subprocess argument, or a JSON report the Socket Firewall binary wrote in the same job. The only pure logic is two `<platform>-<arch>` lookup tables, whose whole input domain is the finite set of values Node reports for `process.platform`/`process.arch` — test/unit/tools/*.test.mts enumerates it exhaustively, so a coverage-guided vitiate lane has nothing left to explore."
+  },
   "hooks": {
     "enablePrePush": true,
     "enableCommitMsg": true,
