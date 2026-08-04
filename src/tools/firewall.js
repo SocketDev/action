@@ -1,32 +1,41 @@
-import core from '@actions/core'
-import exec from '@actions/exec'
-import github from '@actions/github'
-import io from '@actions/io'
-import tool from '@actions/tool-cache'
+import crypto from 'node:crypto'
 import path from 'node:path'
-import { randomUUID } from 'node:crypto'
-import { writeFile } from 'node:fs/promises'
 
-// supported distributions map
-const distributions = {
-  'linux-x64': 'linux-x86_64',
-  'linux-arm64': 'linux-arm64',
-  'darwin-x64': 'macos-x86_64',
-  'darwin-arm64': 'macos-arm64',
-  'win32-x64': 'windows-x86_64.exe',
-  'win32-arm64': 'windows-arm64.exe'
-}
+import { addPath, debug, exportVariable, info, setOutput } from '@actions/core'
+import { exec } from '@actions/exec'
+import { getOctokit } from '@actions/github'
+import { cacheFile, downloadTool, find } from '@actions/tool-cache'
 
-// executable name
-const nameExec = 'sfw'
+import { errorMessage } from '@socketsecurity/lib/errors/message'
 
 /**
- * downloads firewall binary if not in cache, and adds to exec path
- * @param {boolean} useCache flag to use or bypass cache
+ * `<platform>-<arch>` (Node's own spelling) to the suffix of the release asset
+ * that carries that build. A key missing here is a platform the firewall does
+ * not publish a binary for, and the action fails fast rather than downloading
+ * a 404.
  */
-export default async function download ({ edition = 'free', ...inputs }) {
+export const FIREWALL_DISTRIBUTIONS = {
+  'darwin-arm64': 'macos-arm64',
+  'darwin-x64': 'macos-x86_64',
+  'linux-arm64': 'linux-arm64',
+  'linux-x64': 'linux-x86_64',
+  'win32-arm64': 'windows-arm64.exe',
+  'win32-x64': 'windows-x86_64.exe',
+}
+
+/**
+ * Name the firewall binary is cached and executed under.
+ */
+export const FIREWALL_EXEC_NAME = 'sfw'
+
+/**
+ * Downloads firewall binary if not in cache, and adds to exec path.
+ *
+ * @param {object} inputs Action inputs, including the `edition` to install.
+ */
+export async function downloadFirewall({ edition = 'free', ...inputs }) {
   const distributionKey = `${process.platform}-${process.arch}`
-  const distribution = distributions[distributionKey]
+  const distribution = FIREWALL_DISTRIBUTIONS[distributionKey]
 
   // exit early
   if (!distribution) {
@@ -37,20 +46,25 @@ export default async function download ({ edition = 'free', ...inputs }) {
   const repo = edition === 'free' ? 'sfw-free' : 'firewall-release'
 
   // octokit client
-  const octokit = github.getOctokit(inputs.tokenGithub, { userAgent: 'Socket-GitHub-Action' })
+  const octokit = getOctokit(inputs.tokenGithub, {
+    userAgent: 'Socket-GitHub-Action',
+  })
 
   // check github releases for matching version
   let response
 
   try {
-    const method = inputs.versionFirewall === 'latest' ? 'getLatestRelease' : 'getReleaseByTag'
+    const method =
+      inputs.versionFirewall === 'latest'
+        ? 'getLatestRelease'
+        : 'getReleaseByTag'
     response = await octokit.rest.repos[method]({
       tag: inputs.versionFirewall ? `v${inputs.versionFirewall}` : undefined,
       owner: 'socketdev',
-      repo
+      repo,
     })
   } catch (error) {
-    core.debug(`[${error?.status}] ${error?.response?.url} ${error.message}`)
+    debug(`[${error?.status}] ${error?.response?.url} ${errorMessage(error)}`)
     throw new Error(`failed to check version ${inputs.versionFirewall}`)
   }
 
@@ -61,13 +75,19 @@ export default async function download ({ edition = 'free', ...inputs }) {
   let nameDownload = 'sfw'
 
   // free edition?
-  if (edition === 'free') nameDownload += '-free'
+  if (edition === 'free') {
+    nameDownload += '-free'
+  }
 
   // add distribution
   nameDownload += `-${distribution}`
 
   // cache options
-  const cacheOptions = [`socket-firewall-${edition}`, versionToDownload, process.arch]
+  const cacheOptions = [
+    `socket-firewall-${edition}`,
+    versionToDownload,
+    process.arch,
+  ]
 
   // construct the download url
   const url = `https://github.com/SocketDev/${repo}/releases/download/${versionToDownload}/${nameDownload}`
@@ -76,50 +96,58 @@ export default async function download ({ edition = 'free', ...inputs }) {
 
   // find previous cache entry
   if (inputs.useCache) {
-    pathCache = tool.find(...cacheOptions)
+    pathCache = find(...cacheOptions)
   }
 
   // no cache, download new
   if (!pathCache) {
-    core.debug(`downloading Socket Firewall binary from: ${url}`)
+    debug(`downloading Socket Firewall binary from: ${url}`)
 
     try {
       // download it
-      const pathDownload = await tool.downloadTool(url)
+      const pathDownload = await downloadTool(url)
 
       // cache it
-      pathCache = await tool.cacheFile(pathDownload, nameExec, ...cacheOptions)
+      pathCache = await cacheFile(
+        pathDownload,
+        FIREWALL_EXEC_NAME,
+        ...cacheOptions,
+      )
     } catch (error) {
-      throw new Error(`Failed to download Socket Firewall binary: ${error}`)
+      throw new Error(
+        `Failed to download Socket Firewall binary: ${errorMessage(error)}`,
+      )
     }
   }
 
-  const pathBinary = path.join(pathCache, nameExec)
+  const pathBinary = path.join(pathCache, FIREWALL_EXEC_NAME)
 
   // make executable on Unix systems
   if (process.platform !== 'win32') {
-    await exec.exec('chmod', ['+x', pathBinary])
+    await exec('chmod', ['+x', pathBinary])
   }
 
   // send to outputs
-  core.setOutput('firewall-path-binary', pathBinary)
+  setOutput('firewall-path-binary', pathBinary)
 
   // Add to $PATH
-  core.addPath(pathCache)
+  addPath(pathCache)
 
-  core.info(`Socket Firewall ${edition} edition installed, requested: ${inputs.versionFirewall}, resolved: ${versionToDownload}`)
+  info(
+    `Socket Firewall ${edition} edition installed, requested: ${inputs.versionFirewall}, resolved: ${versionToDownload}`,
+  )
 
-  core.debug(`binary location: ${pathCache}`)
+  debug(`binary location: ${pathCache}`)
 
   // set report path env
   if (inputs.jobSummary !== 'none') {
-    const pathReport = `${path.join(process.env.RUNNER_TEMP, randomUUID())}.json`
+    const pathReport = `${path.join(process.env.RUNNER_TEMP, crypto.randomUUID())}.json`
     // set the env info to be used in "post.js" step
-    core.exportVariable('SFW_JSON_REPORT_PATH', pathReport)
+    exportVariable('SFW_JSON_REPORT_PATH', pathReport)
 
     // send to outputs
-    core.setOutput('firewall-path-report', pathReport)
+    setOutput('firewall-path-report', pathReport)
 
-    core.debug(`report path set to : ${pathReport}`)
+    debug(`report path set to : ${pathReport}`)
   }
 }

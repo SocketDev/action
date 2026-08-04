@@ -1,20 +1,24 @@
 {
-  "private": true,
   "name": "socket-github-action",
   "version": "0.0.0-semantically-released",
+  "private": true,
   "description": "GitHub Action for Socket.dev",
-  "type": "module",
-  "main": "src/main.js",
+  "keywords": [
+    "action",
+    "github",
+    "security",
+    "socket"
+  ],
   "license": "MIT",
   "author": {
     "name": "Socket Inc",
     "email": "eng@socket.dev",
     "url": "https://socket.dev"
   },
+  "type": "module",
+  "main": "src/main.js",
   "scripts": {
-    "build": "npm run build:main && npm run build:post",
-    "build:main": "rollup --config rollup.config.js src/main.js --file dist/main.js",
-    "build:post": "rollup --config rollup.config.js src/post.js --file dist/post.js",
+    "build": "node scripts/repo/build.mts",
     "check": "node scripts/fleet/check.mts",
     "check:paths": "node scripts/fleet/check/paths-are-canonical.mts",
     "ci:local": "node scripts/fleet/agent-ci-skip-locks.mts run --all --quiet --pause-on-failure --github-token",
@@ -26,7 +30,9 @@
     "format:check": "node scripts/fleet/format.mts --check",
     "lockstep": "node scripts/fleet/lockstep.mts",
     "lockstep:emit-schema": "node scripts/fleet/lockstep-emit-schema.mts",
-    "prepare": "node scripts/fleet/install-git-hooks.mts && node scripts/fleet/prepare.mts",
+    "prepare": "node scripts/repo/bootstrap/prepare.mts && node scripts/fleet/install-git-hooks.mts && node scripts/fleet/prepare.mts",
+    "prune:backups": "node scripts/fleet/backup-branches.mts prune",
+    "prune:caches": "node scripts/fleet/prune-actions-caches.mts",
     "security": "node scripts/fleet/security.mts",
     "setup-security-tools": "node .claude/hooks/fleet/setup-security-tools/install.mts",
     "sync-oxlint-rules": "node scripts/fleet/sync-oxlint-rules.mts",
@@ -50,30 +56,16 @@
     "weekly-update": "node scripts/fleet/weekly-update.mts",
     "weekly-update:ci": "gh workflow run weekly-update.lock.yml"
   },
-  "keywords": [
-    "github",
-    "action",
-    "socket",
-    "security"
-  ],
-  "engines": {
-    "node": ">=24",
-    "pnpm": ">=11.0.5"
-  },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.1",
-    "@actions/io": "^1.1.3",
-    "@actions/tool-cache": "^2.0.2",
-    "packageurl-js": "^2.0.1"
+    "@actions/core": "3.0.1",
+    "@actions/exec": "3.0.0",
+    "@actions/github": "9.1.1",
+    "@actions/tool-cache": "4.0.0",
+    "packageurl-js": "2.0.1"
   },
   "devDependencies": {
     "@actions/cache": "catalog:",
     "@redwoodjs/agent-ci": "catalog:",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-terser": "^0.4.4",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@shadscan/cli": "catalog:",
@@ -107,13 +99,25 @@
     "playwright-core": "catalog:",
     "portless": "catalog:",
     "regjsparser": "catalog:",
-    "rollup": "^4.52.2",
+    "rolldown": "catalog:",
     "semantic-release": "^24.2.9",
     "semver": "catalog:",
     "shell-quote": "catalog:",
     "taze": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0 <12.0.0",
+      "onFail": "error"
+    }
+  },
+  "engines": {
+    "node": ">=24",
+    "npm": ">=12.0.1",
+    "pnpm": ">=11.0.5"
   },
   "allowScripts": {
     "cpu-features": false,
