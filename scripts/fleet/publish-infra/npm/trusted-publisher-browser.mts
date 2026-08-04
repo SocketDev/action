@@ -17,30 +17,14 @@
  *   Fail-soft per package: one failure never aborts the batch; a summary
  *   prints at the end. The pure planners live in
  *   `trusted-publisher-parse.mts` + `trusted-publisher-plan.mts`; the
- *   page-level form I/O in `trusted-publisher-page.mts`.
- *   THE SIGN-IN AND CHALLENGE CONTRACT, taken from socket-registry's proven
- *   configurator (`scripts/npm/configure-staged-publishing-browser.mts`,
- *   which mass-configured npm package settings across that registry):
- *
- *   - NO login is ever scripted. The operator signs in ONCE in the headed window;
- *     the profile persists, so it is a per-machine step. No password, OTP, or
- *     cookie passes through this process.
- *   - The ONLY auth signal is npm's own `/-/whoami`, and the only auth failure
- *     reported is "signed out".
- *   - The launch shape is exactly that module's:
- *     `launchPersistentContext(profileDir, { channel, chromiumSandbox: true,
- *     headless, ignoreDefaultArgs: ['--enable-automation',
- *     '--use-mock-keychain'] })` — no args array, sandbox ON (playwright
- *     defaults it off and injects --no-sandbox, which current Chrome refuses
- *     outright), and exactly those two ignored defaults (navigator.webdriver
- *     bot signal off; a cookie store bare Chrome can share).
- *   - A human-verification challenge PAUSES the run for the operator with a
- *     visible elapsed/remaining countdown and is NEVER retried blindly: a retry
- *     ladder against a bot challenge earns a rate limit, which then masquerades
- *     as a broken session. Nothing is written while a challenge is outstanding.
- *     Usage: node scripts/fleet/publish-infra/npm/trusted-publisher-browser.mts
- *     read|apply [<pkg>…] [--socket-registry] [--drive] [--repo <owner/name>]
- *     [--profile-dir <dir>]
+ *   page-level form I/O in `trusted-publisher-page.mts`. The sign-in and
+ *   challenge contract — reuse the seeded session, PAUSE a human-verification
+ *   challenge for the operator instead of blind-retrying — is owned by
+ *   `browser-session.mts` (`runChallengeAware`); see
+ *   `docs/agents.md/fleet/npm-anti-bot-rhythm.md`.
+ *   Usage: node scripts/fleet/publish-infra/npm/trusted-publisher-browser.mts
+ *   read|apply [<pkg>…] [--socket-registry] [--drive] [--repo <owner/name>]
+ *   [--profile-dir <dir>]
  */
 
 import { promises as fs } from 'node:fs'
@@ -59,14 +43,15 @@ import type {
   NpmBrowserSessionOptions,
 } from './browser-session.mts'
 import {
-  awaitVerifiedSave,
-  driveFormEdits,
+  accessUrl,
+  driveVerifiedSave,
   readTrustedPublisher,
 } from './trusted-publisher-page.mts'
 import {
   desiredTrustedPublisher,
   diffTrustedPublisher,
   formatApplySummary,
+  formatPartialSaveFailure,
   parseSocketRegistryManifest,
   renderPlannedEdits,
   renderReadTable,
@@ -214,11 +199,13 @@ export async function applyOne(
       logger.log(`[dry-run] ${renderPlannedEdits(pkg, edits)}`)
       return { pkg, status: 'planned' }
     }
-    await driveFormEdits(page, pkg, desired)
-    const verify = await awaitVerifiedSave(page, pkg, desired)
-    if (!verify.ok) {
+    const saved = await driveVerifiedSave(page, pkg, desired)
+    if (!saved.ok) {
       return {
-        detail: `saved state did not verify: ${verify.mismatches.join('; ')}`,
+        detail: formatPartialSaveFailure({
+          mismatches: saved.mismatches,
+          url: accessUrl(pkg),
+        }),
         pkg,
         status: 'failed',
       }

@@ -343,11 +343,17 @@ function main(): void {
   if (existsSync(templateDispatch)) {
     // The template mirror is cascade-locked read-only in the wheelhouse just
     // like the live outputs above; lift the lock around each write.
-    const templateTable = path.join(templateDispatch, 'dispatch-table.mts')
-    writeThroughMirrorLock(
-      templateTable,
-      generateDispatchTableSource(FLEET_HOOKS_DIR),
-    )
+    // Mirror EVERY table variant (full / snapshot / excluded), not just the
+    // full one: the variants are generated + gitignored, so a clean CI checkout
+    // has none of them, and a static re-export of the excluded table (see
+    // _shared/excluded-entry.mts) then reads as an import the cascade never
+    // delivers. The live-output loop above already writes all three.
+    for (const [variant, outPath] of TABLE_OUTPUTS) {
+      writeThroughMirrorLock(
+        path.join(templateDispatch, path.basename(outPath)),
+        generateDispatchTableSource(FLEET_HOOKS_DIR, variant),
+      )
+    }
     const templateManifest = path.join(
       REPO_ROOT,
       'template/base/.claude/hooks/fleet/_shared/dispatch-manifest.json',

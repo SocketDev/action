@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 // Claude Code PreToolUse hook — agent-prompt-budget-guard.
 //
-// Blocks an EXPENSIVE, OPEN-ENDED subagent spawn (`Agent` / `Task`) whose
-// prompt states NEITHER a wall-clock / tool-call BUDGET NOR a DONE-CONDITION.
+// Refuses an EXPENSIVE, OPEN-ENDED subagent spawn (`Agent` / `Task`) outright,
+// and caps the wall-clock a scoped one may declare.
 // docs/agents.md/fleet/agent-delegation.md already requires both — "state the
 // expected response shape AND a wall-clock budget in the prompt itself", with
-// tiers of ~1 min (sanity), ~3 min (second implementation), ~10 min (deep
+// tiers of ~1 min (sanity), ~2 min (second implementation), ~5 min (deep
 // rescue). Nothing enforced it. On 2026-08-03 seven subagents ran 40-129
 // minutes each, 117-203 tool calls, because every brief bundled several
 // deliverables behind an open-ended investigation and none carried a budget.
 //
-// A stated budget is also CAPPED at MAX_BUDGET_MINUTES, checked ahead of the
-// open-ended gate so a short brief buying an hour is caught too. Requiring a
-// number without bounding it just moves the unbounded spawn behind a figure
-// the author never expects to reach.
+// Two verdicts, in order. An open-ended brief is REFUSED — no budget and no
+// done-condition buys that shape, because a ceiling large enough to finish it
+// is large enough to park the session. A scoped brief may state a ceiling, and
+// that ceiling is CAPPED at MAX_BUDGET_MINUTES; requiring a number without
+// bounding it just moves the unbounded spawn behind a figure the author never
+// expects to reach.
 //
 // GUARD, not nudge — deliberately, and against the usual "advisory first"
 // default:
@@ -120,12 +122,26 @@ const BUDGET_PATTERNS: readonly RegExp[] = [
   /\btimeout\b/i,
 ]
 
-// The longest wall-clock a spawn may declare. Measured, not guessed: a
-// seven-file module consolidation with tests and a cascade finished in 10.4
-// minutes, so ten is enough for real work and short enough that a stall
-// surfaces while the main session can still act on it. A budget the author
-// never expects to reach is the same unbounded spawn wearing a number.
-export const MAX_BUDGET_MINUTES = 10
+// The longest wall-clock a spawn may declare. Derived from measured pace, not
+// from how long past work happened to take.
+//
+// A TIGHT brief (explicit file list, stated done-condition) sustains about
+// 6.4-7.4 seconds per tool call; an OPEN-ENDED one ("survey", "audit") runs
+// 13.6-43.8, because per-step deliberation scales with how much context the
+// agent carries. Five minutes therefore buys roughly 40-45 tool calls of tight
+// work, which is a real unit: a module split with tests, or a fix plus its
+// regression case.
+//
+// Set to force decomposition rather than to fit the work already being
+// written. Sizing the cap to the longest observed run would ratify the habit
+// it exists to break. A brief that cannot state its finish inside five minutes
+// is several briefs, and they can run in parallel, which one long spawn
+// cannot. A budget the author never expects to reach is the same unbounded
+// spawn wearing a number.
+//
+// The floor is ~15 seconds of fixed startup per spawn, so decomposing below
+// about a minute of real work starts paying more overhead than it saves.
+export const MAX_BUDGET_MINUTES = 5
 
 // Wall-clock figures a prompt can state, normalized to minutes.
 const WALL_CLOCK_RE =
@@ -245,9 +261,39 @@ export const check = (payload: ToolCallPayload): GuardResult => {
   if (!prompt) {
     return undefined
   }
-  // Checked ahead of the open-ended gate: an over-long ceiling parks the
-  // session whatever the brief's length, so a short prompt declaring an hour
-  // is caught too.
+  // An open-ended brief is REFUSED, not rationed. No budget buys this shape:
+  // measured over 2026-08-03, open-ended briefs ran 13.6-43.8 seconds per tool
+  // call against 6.4-7.4 for one naming its files and its done-condition, so
+  // any ceiling large enough to finish the work is large enough to park the
+  // session. The remedy is to rewrite the brief, which is also the edit that
+  // makes it four to six times faster per step.
+  const signal = openEndedSignal(prompt)
+  if (signal) {
+    return block(
+      [
+        '[agent-prompt-budget-guard] Open-ended brief. Scope it instead.',
+        '',
+        `  What:   the brief reads as open-ended ("${signal}") and runs past`,
+        `          ${MIN_BRIEF_WORDS} words.`,
+        '  Where:  the spawn prompt.',
+        '  Saw:    work whose end is discovered rather than stated.',
+        '  Wanted: a scoped brief — the files to touch, the change to make, and',
+        '          the done-condition, all named up front.',
+        '',
+        '  A budget does not fix this shape. Open-ended briefs measured 13.6-43.8',
+        '  seconds per tool call against 6.4-7.4 for a scoped one, so a ceiling',
+        '  big enough to finish is big enough to park the session.',
+        '',
+        '  Fix:    do the discovery yourself first (grep, read, list the files),',
+        '          then spawn one scoped brief per unit of work. They run in',
+        `          parallel, each under ${MAX_BUDGET_MINUTES} min, which one long spawn cannot.`,
+        '',
+        '  See agent-delegation.md.',
+      ].join('\n'),
+    )
+  }
+  // A scoped brief still states a ceiling, and that ceiling is capped. Checked
+  // regardless of length, so a short prompt buying an hour is caught too.
   const stated = largestStatedMinutes(prompt)
   if (stated !== undefined && stated > MAX_BUDGET_MINUTES) {
     const rounded = Number.isInteger(stated)
@@ -263,8 +309,8 @@ export const check = (payload: ToolCallPayload): GuardResult => {
         '',
         '  Pick the smallest tier likely to succeed:',
         '    - sanity check          ~1 min',
-        '    - second implementation ~3 min',
-        '    - deep rescue           ~10 min',
+        '    - second implementation ~2 min',
+        '    - deep rescue           ~5 min',
         '',
         '  A ceiling the author never expects to reach is an unbounded spawn',
         '  wearing a number. Split the work and spawn again instead of buying',
@@ -273,51 +319,7 @@ export const check = (payload: ToolCallPayload): GuardResult => {
       ].join('\n'),
     )
   }
-  const signal = openEndedSignal(prompt)
-  if (!signal) {
-    return undefined
-  }
-  const budget = statedBudget(prompt)
-  const done = statedDoneCondition(prompt)
-  // BOTH must be missing to fire, not either. Over the 2026-07/08 sample only
-  // 2.5% of briefs stated a done-condition at all, so an either-missing rule
-  // fires on 29.3% of spawns — a block on nearly a third of all delegation
-  // gets bypassed on day one and then ignored. Requiring both absent isolates
-  // the genuinely unbounded brief and leaves a stated budget alone as
-  // sufficient evidence the author thought about cost.
-  if (budget || done) {
-    return undefined
-  }
-  // Reaching here means BOTH are absent, so the message states both outright.
-  // An earlier draft assembled it from a `missing` list with a per-field
-  // ternary for each "found" line; under the both-missing rule none of those
-  // branches was reachable, and an unreachable branch in a guard is a claim
-  // no test can hold to account.
-  return block(
-    [
-      '[agent-prompt-budget-guard] Open-ended spawn missing a BUDGET (wall-clock or tool-call ceiling) and a DONE-CONDITION (what finished looks like).',
-      '',
-      `  The prompt reads as open-ended ("${signal}") and runs past`,
-      `  ${MIN_BRIEF_WORDS} words, so it is an expensive delegation.`,
-      '  No budget found: no wall-clock, tool-call, or word ceiling.',
-      '  No done-condition found: the prompt lists work, not completion.',
-      '',
-      '  Add both to the prompt itself and re-spawn. Pick the smallest tier',
-      '  likely to succeed:',
-      '    - sanity check          ~1 min',
-      '    - second implementation ~3 min',
-      '    - deep rescue           ~10 min',
-      '',
-      '  Example line to paste into the prompt:',
-      '    "Budget: ~3 minutes / 30 tool calls. If you pass that, STOP and',
-      '     report what landed. Done = the failing assertion named with',
-      '     file:line and a one-paragraph cause."',
-      '',
-      '  An unbounded agent parks the main session: on 2026-08-03 seven',
-      '  spawns ran 40-129 minutes each. A partial result on time beats a',
-      '  complete one an hour late. See agent-delegation.md.',
-    ].join('\n'),
-  )
+  return undefined
 }
 
 export const hook = defineHook({

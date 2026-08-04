@@ -31,6 +31,14 @@ export function buildPathsAndSupplyChainSteps(): CheckStep[] {
     // runs it. Past incident (2026-06-06): a check rename left doctor:auth
     // pointing at a deleted file and no gate caught it.
     () => run('node', ['scripts/fleet/check/script-paths-resolve.mts']),
+    // A managed file's relative imports must be managed too. The cascade ships
+    // only what a manifest list names, so a managed file importing an unmanaged
+    // sibling delivers a module whose import target never arrives. Past incident:
+    // the conditional vitest group shipped `.config/repo/vitest.config.mts`
+    // without the `./vitest.settings.mts` it imports, and every member's suite
+    // died before a single test ran.
+    () =>
+      run('node', ['scripts/fleet/check/managed-file-imports-are-managed.mts']),
     // Root `scripts/` is a namespace only: fleet and repo automation must
     // declare ownership by living below scripts/fleet/ or scripts/repo/.
     () => run('node', ['scripts/fleet/check/root-scripts-are-segregated.mts']),

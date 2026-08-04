@@ -37,6 +37,7 @@ import {
   describeHolder,
   fixerLockPath,
 } from './_shared/fixer-lock.mts'
+import { isCascadeMirrorPath } from './_shared/cascade-mirror-scope.mts'
 import {
   filterFormatIgnored,
   getModifiedFiles,
@@ -177,7 +178,13 @@ function lintFileSet(scopeLabel: string, files: string[]): void {
   // pre-commit gate on bytes the format run never owns. template/** is exempt
   // inside filterFormatIgnored, the wheelhouse canon stays gated.
   const extLintable = filterLintable(files)
-  const lintable = filterFormatIgnored(extLintable)
+  // The ignore file is a hand-kept list, so it drifts from CASCADE_MIRROR_GLOBS
+  // — socket-lib gated `.config/repo/vitest.config.mts`, a template-owned file
+  // no member may legally edit, because the ignore file had not caught up.
+  // Consult the glob set directly so the two cannot disagree.
+  const lintable = filterFormatIgnored(extLintable).filter(
+    f => !isCascadeMirrorPath(f),
+  )
   const ignoredCount = extLintable.length - lintable.length
   if (ignoredCount > 0) {
     log(

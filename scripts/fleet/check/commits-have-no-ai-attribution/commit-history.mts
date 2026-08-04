@@ -158,15 +158,45 @@ export function describeGitFailure(
 /**
  * Throw when the checkout is shallow. A truncated graph makes both "all
  * reachable history" and tag ancestry unreliable, and a boundary read off a
- * truncated graph would freeze the wrong span of commits.
+ * truncated graph would freeze the wrong span of commits. On a CI runner the
+ * shallow state is the bootstrap checkout's own depth-1 fetch, not an
+ * operator's choice, so the check self-heals there: one `git fetch
+ * --unshallow --tags` completes the graph, and only a still-shallow repo
+ * after that fetch throws. Off-runner the refusal stays loud and
+ * network-free — a dev box's shallow clone is the operator's to fix.
  */
-export async function assertNotShallowCheckout(git: GitRunner): Promise<void> {
+export async function assertNotShallowCheckout(
+  git: GitRunner,
+  env: Record<string, string | undefined> = process.env,
+): Promise<void> {
   const shallow = await git(['rev-parse', '--is-shallow-repository'])
-  if (shallow.ok && shallow.stdout.trim() === 'true') {
-    throw new AttributionScanError(
-      'this checkout is a shallow clone, so "all reachable history" would be a lie — fetch full history (e.g. `git fetch --unshallow`) or pass --unpushed to scan only the commits not yet on the default branch',
-    )
+  if (!shallow.ok || shallow.stdout.trim() !== 'true') {
+    return
   }
+  // When the self-heal runs and the checkout is STILL shallow, the reason the
+  // fetch gave is the whole diagnosis. Discarding it leaves CI reporting only
+  // "shallow clone", which is the symptom the heal was supposed to remove.
+  let healReport = ''
+  if (env['GITHUB_ACTIONS'] === 'true') {
+    const fetched = await git([
+      'fetch',
+      '--quiet',
+      '--unshallow',
+      '--tags',
+      'origin',
+    ])
+    const after = await git(['rev-parse', '--is-shallow-repository'])
+    if (after.ok && after.stdout.trim() !== 'true') {
+      return
+    }
+    healReport = fetched.ok
+      ? ' The CI self-heal fetch exited 0 yet the checkout is still shallow.'
+      : ` The CI self-heal fetch failed: ${fetched.error || 'git reported no error text'}.`
+  }
+  throw new AttributionScanError(
+    'this checkout is a shallow clone, so "all reachable history" would be a lie — fetch full history (e.g. `git fetch --unshallow`) or pass --unpushed to scan only the commits not yet on the default branch.' +
+      healReport,
+  )
 }
 
 /**

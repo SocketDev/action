@@ -38,6 +38,15 @@ catalog:
   # Rust wasm parser artifact (dot-naming: acorn.rs.wasm = acorn, Rust impl,
   # wasm target) — the AST dep of the fleet hooks + the socket/* oxlint plugin.
   '@ultrathink/acorn.rs.wasm': 0.1.1
+  # brace-expansion — pinned only so the interop patch can ride beside it.
+  # 5.0.7 dropped the default export from BOTH builds: the CJS half breaks
+  # minimatch@9's `__importDefault`, and the ESM half breaks any `import x from
+  # 'brace-expansion'`, which is the shape the fleet CI cache action resolves
+  # through. An unpatched member dies at setup before a test runs. Members had
+  # drifted across 5.0.5 / 5.0.6 / 5.0.7 / 5.0.8, so the fleet converges here.
+  # Soaked (5.0.8 published 2026-07-23; 5.0.9 published 2026-07-30 is still
+  # inside the 7-day cooldown).
+  'brace-expansion': 5.0.8
   # istanbul-org converter for raw NODE_V8_COVERAGE output — cover.mts turns
   # spawned-child coverage into the children merge tier with `c8 report`.
   # Soaked (11.0.0 published 2026-02-22).
@@ -60,6 +69,16 @@ catalog:
   'markdownlint-cli2': 0.23.2
   'mdast-util-from-markdown': 2.0.3
   'micromark': 4.0.2
+  # minimatch — pinned so the default-export patch has a version to ride, and
+  # so the `minimatch@>=3` override has one target. v10's ESM build ships named
+  # exports only; the patch restores the default on both builds. Members had
+  # drifted across 3.1.5, 9.0.9, and 10.2.5 at the same time.
+  #
+  # patchedDependencies keys on this value, so moving it without regenerating
+  # the patch names a file that is not there and every `pnpm install` in the
+  # repo dies ENOENT. A bump lands the regenerated
+  # patches/minimatch@<version>.patch in the SAME change.
+  'minimatch': 10.2.6
   'neosanitize': 0.3.0
   # Pinned back 15.0.0 -> 14.0.16 on 2026-07-27: 15.0.0 ships
   # @mswjs/interceptors 0.39.8, whose fetch bypass path clones an

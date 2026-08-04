@@ -34,6 +34,7 @@
 import os from 'node:os'
 import process from 'node:process'
 
+import { WIN32 } from '@socketsecurity/lib-stable/constants/platform'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 
 import {
@@ -248,6 +249,7 @@ export async function expectedRepositoryFor(
       // A fleet repo's devEngines pins pnpm and npm refuses to run inside one,
       // so read from a neutral cwd.
       cwd: os.tmpdir(),
+      shell: WIN32,
       stdio: 'pipe',
       stdioString: true,
     })

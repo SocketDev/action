@@ -1,0 +1,85 @@
+name: ✅ Check dist
+
+# A `github-action` member ships THE REPO ITSELF at a git tag: the runner
+# checks out the tag and executes the committed `dist/` bundle, never `src/`.
+# So a `dist/` that does not match its sources ships a bundle silently missing
+# the change — the tag looks right and the code is old.
+#
+# This is the ONLY sound proof that the committed bundle matches `src/`.
+# The `committed-dist-is-current` check compares git commit ancestry, which can
+# prove STALENESS but never CURRENCY: one commit touching both `src/` and
+# `dist/` passes whether or not anyone rebuilt, as does a hand-edited `dist/`.
+# Rebuilding from a clean checkout and diffing is what settles it.
+#
+# Same shape GitHub uses for its own actions — actions/setup-node and
+# actions/checkout both run actions/reusable-workflows' check-dist.yml, which
+# installs, rebuilds, and fails on a non-empty diff, uploading the expected
+# bundle so the author can see what they should have committed.
+
+on:
+  pull_request: {}
+  push: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+# One rebuild per ref; an older run's verdict is worthless once new commits
+# land, so cancel it.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-dist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Socket Firewall + CLI auth for the sfw-wrapped setup + pnpm install —
+      # sfw and socket-cli read SOCKET_API_KEY from the org-wide secret.
+      SOCKET_API_KEY: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
+    steps:
+      # First step must be the third-party actions/checkout (GitHub fetches it
+      # independently) to populate the workspace so the LOCAL
+      # ./.github/actions/* composite resolves.
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 (2026-05-15)
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup + install
+        uses: ./.github/actions/fleet/setup-and-install
+
+      - name: Rebuild dist
+        run: pnpm run build
+
+      # `git status --porcelain` rather than `git diff`: a rebuild that emits a
+      # NEW bundle file leaves it UNTRACKED, and `git diff` reports nothing for
+      # an untracked path. That is a real miss — a new entrypoint would ship
+      # absent from the tag while the gate stayed green. Porcelain reports
+      # modified and untracked alike, and still ignores gitignored paths.
+      - name: Compare the committed dist against the rebuild
+        id: diff
+        run: |
+          changed="$(git status --porcelain -- dist)"
+          if [ -n "$changed" ]; then
+            echo "The committed dist/ does not match a clean rebuild of src/."
+            echo "Run 'pnpm run build' and commit dist/ in the same change as its sources."
+            echo
+            echo "Changed paths:"
+            echo "$changed"
+            echo
+            echo "Diff of tracked files:"
+            git diff --ignore-space-at-eol -- dist
+            exit 1
+          fi
+          echo "dist/ matches a clean rebuild."
+
+      # On failure the author gets the bundle they should have committed, so
+      # fixing it is a download rather than a local toolchain reproduction.
+      - name: Upload the expected dist
+        if: ${{ failure() && steps.diff.conclusion == 'failure' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (2026-08-04)
+        with:
+          name: expected-dist
+          path: dist/
