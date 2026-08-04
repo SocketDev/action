@@ -115,5 +115,10 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "allowScripts": {}
+  "allowScripts": {
+    "cpu-features": false,
+    "protobufjs": false,
+    "puppeteer": false,
+    "ssh2": false
+  }
 }
