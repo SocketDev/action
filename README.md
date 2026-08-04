@@ -1,9 +1,20 @@
 # Socket Security (GitHub Action)
 
+[![Follow @SocketSecurity](https://img.shields.io/twitter/follow/SocketSecurity?style=social)](https://twitter.com/SocketSecurity)
+[![Follow @socket.dev on Bluesky](https://img.shields.io/badge/Follow-@socket.dev-1DA1F2?style=social&logo=bluesky)](https://bsky.app/profile/socket.dev)
+
 A GitHub Action for running [Socket.dev](https://socket.dev)
 
 > [!TIP]
 > A [GitHub App](https://github.com/marketplace/socket-security) is also available for a fully automated SCA workflow.
+
+## Install
+
+There is nothing to install. Reference the action from a workflow step and the
+runner fetches it at the ref you pin — the copy-pasteable step, with the `mode`
+input filled in, is in [Usage](#usage) below. Pin to a commit SHA rather than a
+tag; [Why We Recommend Pinning](#why-we-recommend-pinning) explains the
+trade-off.
 
 ## Usage
 
@@ -78,10 +89,10 @@ jobs:
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     cooldown:
       semver-major-days: 14
       semver-minor-days: 7
@@ -169,10 +180,10 @@ jobs:
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     cooldown:
       semver-major-days: 14
       semver-minor-days: 7
@@ -199,3 +210,25 @@ Add a cooldown period if you want an extra buffer before newly published action 
 | `firewall-path-binary` | Path to the installed binary               |
 
 [job-summary]: https://github.blog/news-insights/product-news/supercharging-github-actions-with-job-summaries
+
+## Development
+
+Requires Node 24+ and pnpm.
+
+```sh
+pnpm install
+pnpm run build
+pnpm run check --all
+```
+
+`src/` holds the action sources and `dist/` holds the bundle a workflow runner
+actually executes — a consumer resolves the action at a git tag and runs the
+committed `dist/main.js` and `dist/post.js`, with no `node_modules` beside
+them. That makes `dist/` part of the source of truth: run `pnpm run build` and
+commit the result in the same change as any `src/` edit, or the next tag ships
+a bundle that silently does not contain your change. The
+`committed-dist-is-current` check is the gate that catches a miss.
+
+## License
+
+MIT

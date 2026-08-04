@@ -18,25 +18,45 @@ jobs:
       # setup github auth with bot
       - name: github auth
         id: bot
-        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4 (2025-09-13)
         with:
           app-id: ${{ secrets.GH_BOT_APP_ID }}
           private-key: ${{ secrets.GH_BOT_APP_PEM_FILE }}
 
-      - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-          persist-credentials: false
+      # A `uses: ./…` composite can only resolve once something is on disk, so
+      # the first step shallow-fetches the workspace by hand. Same shape as
+      # ci.yml's bootstrap: no third-party checkout action, the token
+      # authorizes the fetch inline and is never written to .git/config.
+      - name: bootstrap checkout
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          git init -q
+          git config --local advice.detachedHead false
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "${SERVER_URL}/${REPOSITORY}"
+          FETCH_ARGS=(--no-tags --prune --depth 1 origin "${TRIGGER_REF}")
+          if [ -n "${GITHUB_TOKEN}" ]; then
+            AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+          else
+            git fetch "${FETCH_ARGS[@]}"
+          fi
+          git checkout -q --detach FETCH_HEAD
 
-      - name: setup node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      # Fleet composite: checkout + node + pnpm + install. pnpm is required
+      # because package.json declares deps with the `catalog:` protocol, which
+      # npm cannot resolve. fetch-depth 0 because semantic-release reads the
+      # full tag history to pick the next version.
+      - name: checkout, setup and install
+        uses: ./.github/actions/fleet/setup-and-install
         with:
-          node-version-file: package.json
-          cache: npm
-
-      - name: install deps
-        run: npm ci --ignore-scripts
+          checkout-fetch-depth: '0'
 
       - name: release
         env:
@@ -45,4 +65,4 @@ jobs:
           GIT_COMMITTER_NAME: socket-release-bot[bot]
           GIT_COMMITTER_EMAIL: 234652667+socket-release-bot[bot]@users.noreply.github.com
           GITHUB_TOKEN: ${{ steps.bot.outputs.token }}
-        run: npx semantic-release
+        run: pnpm exec semantic-release
