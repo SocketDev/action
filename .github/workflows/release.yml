@@ -22,6 +22,12 @@ jobs:
         with:
           app-id: ${{ secrets.GH_BOT_APP_ID }}
           private-key: ${{ secrets.GH_BOT_APP_PEM_FILE }}
+          # Least privilege. Without an explicit `permission-*` input the token
+          # inherits every permission the installation holds, which zizmor
+          # flags High. The release only cuts tags and a GitHub Release, and
+          # the semantic-release GitHub plugin has both comment conditions
+          # turned off, so it never needs issues or pull-requests.
+          permission-contents: write
 
       # A `uses: ./…` composite can only resolve once something is on disk, so
       # the first step shallow-fetches the workspace by hand. Same shape as
