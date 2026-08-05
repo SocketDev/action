@@ -1,6 +1,6 @@
 import { core } from '../toolkit/core.js'
-import exec from '@actions/exec'
-import tool from '@actions/tool-cache'
+import { execCommand } from '../toolkit/exec.js'
+import { toolCache as tool } from '../toolkit/tool-cache.js'
 import path from 'node:path'
 
 import { errorMessage } from '@socketsecurity/lib/errors/message'
@@ -126,7 +126,7 @@ export async function patch(inputs) {
 
   // make executable on Unix systems
   if (process.platform !== 'win32') {
-    await exec.exec('chmod', ['+x', pathBinary])
+    await execCommand('chmod', ['+x', pathBinary])
   }
 
   // send to outputs
@@ -151,5 +151,5 @@ export async function patch(inputs) {
   if (inputs.patchCwd) {
     args.push('--cwd', inputs.patchCwd)
   }
-  await exec.exec(pathBinary, args)
+  await execCommand(pathBinary, args)
 }

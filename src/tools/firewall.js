@@ -1,7 +1,7 @@
 import { core } from '../toolkit/core.js'
-import exec from '@actions/exec'
-import io from '@actions/io'
-import tool from '@actions/tool-cache'
+import { execCommand } from '../toolkit/exec.js'
+import { io } from '../toolkit/io.js'
+import { toolCache as tool } from '../toolkit/tool-cache.js'
 import crypto from 'node:crypto'
 import path from 'node:path'
 import { existsSync, promises as fs } from 'node:fs'
@@ -256,7 +256,7 @@ export async function download({ edition = 'free', ...inputs }) {
 
   // make executable on unix systems (linux/mac)
   if (process.platform !== 'win32') {
-    await exec.exec('chmod', ['+x', pathBinary])
+    await execCommand('chmod', ['+x', pathBinary])
   }
 
   // send to outputs so other steps can use the path
