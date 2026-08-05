@@ -18,6 +18,7 @@ import {
   exportVariable,
   getBooleanInput,
   getInput,
+  isDebug,
   setFailed,
   setOutput,
   setSecret,
@@ -196,6 +197,15 @@ describe('workflow commands', () => {
   test('core.info writes the message plus EOL through the default export', () => {
     core.info('hello')
     assert.deepEqual(stdout, [`hello${os.EOL}`])
+  })
+
+  test('isDebug reflects RUNNER_DEBUG=1 exactly', () => {
+    delete process.env['RUNNER_DEBUG']
+    assert.equal(isDebug(), false)
+    process.env['RUNNER_DEBUG'] = '1'
+    assert.equal(isDebug(), true)
+    process.env['RUNNER_DEBUG'] = '0'
+    assert.equal(isDebug(), false)
   })
 })
 

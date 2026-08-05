@@ -155,6 +155,15 @@ export function info(message) {
 }
 
 /**
+ * Whether the runner is in debug mode.
+ *
+ * @returns {boolean} True when step debug logging is on.
+ */
+export function isDebug() {
+  return process.env['RUNNER_DEBUG'] === '1'
+}
+
+/**
  * Writes a `::name key=value,key=value::message` workflow command to stdout.
  *
  * @param {string} command Command name.
@@ -476,6 +485,7 @@ export const core = {
   getBooleanInput,
   getInput,
   info,
+  isDebug,
   setFailed,
   setOutput,
   setSecret,
