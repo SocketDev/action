@@ -20,6 +20,7 @@ import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 import { build } from 'rolldown'
 
 import { actionBundles } from '../../.config/repo/rolldown.config.mts'
+import { isMainModule } from '../fleet/_shared/is-main-module.mts'
 import { ACTION_DIST_DIR } from './paths.mts'
 
 const logger = getDefaultLogger()
@@ -36,7 +37,9 @@ export async function main(): Promise<void> {
   logger.success('build complete')
 }
 
-main().catch((e: unknown) => {
-  logger.error(`Build failed: ${errorMessage(e)}`)
-  process.exitCode = 1
-})
+if (isMainModule(import.meta.url)) {
+  main().catch((e: unknown) => {
+    logger.error(`Build failed: ${errorMessage(e)}`)
+    process.exitCode = 1
+  })
+}
