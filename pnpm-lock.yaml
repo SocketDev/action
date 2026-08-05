@@ -160,9 +160,6 @@ importers:
 
   .:
     dependencies:
-      '@actions/core':
-        specifier: ^1.11.1
-        version: 1.11.1
       '@actions/exec':
         specifier: ^1.1.1
         version: 1.1.1

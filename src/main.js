@@ -1,6 +1,6 @@
 import { inspect } from 'node:util'
-import core from '@actions/core'
-import firewall from './tools/firewall.js'
+import { core } from './toolkit/core.js'
+import { download as firewall } from './tools/firewall.js'
 import { patch } from './tools/patch.js'
 
 /**

@@ -1,4 +1,4 @@
-import core from '@actions/core'
+import { core } from '../toolkit/core.js'
 import exec from '@actions/exec'
 import tool from '@actions/tool-cache'
 import path from 'node:path'
