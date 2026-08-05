@@ -25,9 +25,10 @@
 import { builtinModules } from 'node:module'
 import path from 'node:path'
 
-import type { BuildOptions } from 'rolldown'
+import type { BuildOptions, Plugin } from 'rolldown'
 
 import { ACTION_DIST_DIR, ACTION_SRC_DIR } from '../../scripts/repo/paths.mts'
+import { createBundleStubPlugin } from './rolldown/bundle-stub.mts'
 
 // Node builtins, with and without the `node:` prefix. Everything else is
 // bundled in.
@@ -35,6 +36,51 @@ const externals: string[] = [
   ...builtinModules,
   ...builtinModules.map(name => `node:${name}`),
 ]
+
+/**
+ * Stubs for the two subgraphs `@actions/core` statically pulls in that no
+ * entry here calls into.
+ *
+ * `core.js` imports `OidcClient` solely to serve `getIDToken`, which reaches
+ * `@actions/http-client` and through it undici and tunnel; it also carries
+ * `export * as platform from './platform.js'`, and `platform.js` reaches
+ * `@actions/exec` and through it `@actions/io`. Across `src/` the only names
+ * taken from `@actions/core` are `addPath`, `debug`, `exportVariable`,
+ * `getBooleanInput`, `getInput`, `info`, `setFailed`, `setOutput`, `setSecret`,
+ * `summary`, and `warning` — neither `getIDToken` nor the `platform` namespace
+ * is among them, so both trees are unreachable at runtime and rolldown keeps
+ * them only because it cannot prove the module bodies pure.
+ *
+ * The payoff is lopsided. `post.js` imports nothing else that reaches those
+ * packages, so stubbing drops them from its bundle outright. `main.js` reaches
+ * `@actions/exec` and `@actions/io` from `firewall.js` and `patch.js` and
+ * `@actions/http-client` from `@actions/tool-cache`, and reaches undici for
+ * real through `getOctokit`, which builds a `ProxyAgent` whenever a proxy
+ * variable is set — so it keeps all of them and loses only the two stubbed
+ * files.
+ *
+ * Each stub is fail-loud rather than empty: a call that ever does reach it
+ * throws by name instead of failing later on an undefined member.
+ */
+function coreStubPlugins(): Plugin[] {
+  return [
+    createBundleStubPlugin({
+      stubPattern: /@actions\/core\/lib\/oidc-utils\.js$/,
+      stubCode:
+        'export class OidcClient {' +
+        '  static getIDToken() {' +
+        "    throw new Error('getIDToken is not bundled into this action');" +
+        '  }' +
+        '}',
+    }),
+    createBundleStubPlugin({
+      // `core.js` re-exports this file as a namespace and nothing reads it, so
+      // an empty module is the whole contract.
+      stubPattern: /@actions\/core\/lib\/platform\.js$/,
+      stubCode: 'export {}',
+    }),
+  ]
+}
 
 function entryConfig(name: string): BuildOptions {
   return {
@@ -52,6 +98,7 @@ function entryConfig(name: string): BuildOptions {
       sourcemap: false,
     },
     platform: 'node',
+    plugins: coreStubPlugins(),
   }
 }
 
