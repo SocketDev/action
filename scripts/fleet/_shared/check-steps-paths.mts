@@ -507,6 +507,10 @@ export function buildPathsAndSupplyChainSteps(): CheckStep[] {
     // so --describe and -h/--help print purpose/usage instead of running the
     // script's side effect.
     () => run('node', ['scripts/fleet/check/entry-scripts-self-describe.mts']),
+    // A NEW repo-owned entry script is born with a mirror-named unit test;
+    // pre-contract scripts ride the script-owned bornTested ratchet.
+    () =>
+      run('node', ['scripts/fleet/check/entry-scripts-are-born-tested.mts']),
     // No committed dependency spec resolves through a local filesystem path
     // the repo does not carry: a hand-written `link:`/`file:` spec in a
     // package.json dependency block, or a pnpm-GENERATED lockfile `link:`
