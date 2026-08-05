@@ -54,7 +54,8 @@
     "get-green": "node scripts/fleet/get-green.mts",
     "socket-wheelhouse:emit-schema": "node scripts/fleet/socket-wheelhouse-emit-schema.mts",
     "weekly-update": "node scripts/fleet/weekly-update.mts",
-    "weekly-update:ci": "gh workflow run weekly-update.lock.yml"
+    "weekly-update:ci": "gh workflow run weekly-update.lock.yml",
+    "prune:backups": "node scripts/fleet/backup-branches.mts prune"
   },
   "dependencies": {
     "@actions/exec": "^1.1.1",
@@ -63,7 +64,6 @@
     "packageurl-js": "^2.0.1"
   },
   "devDependencies": {
-    "@actions/cache": "catalog:",
     "@redwoodjs/agent-ci": "catalog:",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-node-resolve": "^16.0.1",
@@ -106,6 +106,7 @@
     "semver": "catalog:",
     "shell-quote": "catalog:",
     "taze": "catalog:",
+    "typebox": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

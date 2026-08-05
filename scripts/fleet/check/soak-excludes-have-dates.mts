@@ -225,7 +225,7 @@ export function removeStaleEntries(content: string, stale: Finding[]): string {
   return lines.join('\n')
 }
 
-function main(): void {
+export function main(): void {
   let content: string
   try {
     content = readFileSync(PNPM_WORKSPACE_YAML, 'utf8')
