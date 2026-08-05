@@ -1,30 +1,62 @@
 import core from '@actions/core'
 import exec from '@actions/exec'
-import github from '@actions/github'
 import tool from '@actions/tool-cache'
 import path from 'node:path'
 
+import { errorMessage } from '@socketsecurity/lib/errors/message'
+
+import { resolveReleaseTag } from './github-release.js'
+
 // supported distributions map
 const distributions = {
-  'linux-x64': { archive: 'socket-patch-x86_64-unknown-linux-musl.tar.gz', ext: 'tar.gz' },
-  'linux-ia32': { archive: 'socket-patch-i686-unknown-linux-gnu.tar.gz', ext: 'tar.gz' },
-  'linux-arm64': { archive: 'socket-patch-aarch64-unknown-linux-gnu.tar.gz', ext: 'tar.gz' },
-  'linux-arm': { archive: 'socket-patch-arm-unknown-linux-gnueabihf.tar.gz', ext: 'tar.gz' },
-  'darwin-x64': { archive: 'socket-patch-x86_64-apple-darwin.tar.gz', ext: 'tar.gz' },
-  'darwin-arm64': { archive: 'socket-patch-aarch64-apple-darwin.tar.gz', ext: 'tar.gz' },
-  'win32-x64': { archive: 'socket-patch-x86_64-pc-windows-msvc.zip', ext: 'zip' },
-  'win32-ia32': { archive: 'socket-patch-i686-pc-windows-msvc.zip', ext: 'zip' },
-  'win32-arm64': { archive: 'socket-patch-aarch64-pc-windows-msvc.zip', ext: 'zip' }
+  'darwin-arm64': {
+    archive: 'socket-patch-aarch64-apple-darwin.tar.gz',
+    ext: 'tar.gz',
+  },
+  'darwin-x64': {
+    archive: 'socket-patch-x86_64-apple-darwin.tar.gz',
+    ext: 'tar.gz',
+  },
+  'linux-arm': {
+    archive: 'socket-patch-arm-unknown-linux-gnueabihf.tar.gz',
+    ext: 'tar.gz',
+  },
+  'linux-arm64': {
+    archive: 'socket-patch-aarch64-unknown-linux-gnu.tar.gz',
+    ext: 'tar.gz',
+  },
+  'linux-ia32': {
+    archive: 'socket-patch-i686-unknown-linux-gnu.tar.gz',
+    ext: 'tar.gz',
+  },
+  'linux-x64': {
+    archive: 'socket-patch-x86_64-unknown-linux-musl.tar.gz',
+    ext: 'tar.gz',
+  },
+  'win32-arm64': {
+    archive: 'socket-patch-aarch64-pc-windows-msvc.zip',
+    ext: 'zip',
+  },
+  'win32-ia32': {
+    archive: 'socket-patch-i686-pc-windows-msvc.zip',
+    ext: 'zip',
+  },
+  'win32-x64': {
+    archive: 'socket-patch-x86_64-pc-windows-msvc.zip',
+    ext: 'zip',
+  },
 }
 
 // executable name
-const nameExec = process.platform === 'win32' ? 'socket-patch.exe' : 'socket-patch'
+const nameExec =
+  process.platform === 'win32' ? 'socket-patch.exe' : 'socket-patch'
 
 /**
- * downloads socket-patch binary if not in cache, and runs socket-patch apply
- * @param {object} inputs action inputs
+ * Downloads socket-patch binary if not in cache, and runs socket-patch apply.
+ *
+ * @param {object} inputs Action inputs.
  */
-export default async function patch (inputs) {
+export async function patch(inputs) {
   const distributionKey = `${process.platform}-${process.arch}`
   const distribution = distributions[distributionKey]
 
@@ -33,26 +65,24 @@ export default async function patch (inputs) {
     throw new Error(`Unsupported architecture ${distributionKey}`)
   }
 
-  // octokit client
-  const octokit = github.getOctokit(inputs.tokenGithub, { userAgent: 'Socket-GitHub-Action' })
-
-  // check github releases for matching version
-  let response
+  // check github releases for matching version; the tag_name is the version
+  // to download
+  let versionToDownload
 
   try {
-    const method = inputs.versionPatch === 'latest' ? 'getLatestRelease' : 'getReleaseByTag'
-    response = await octokit.rest.repos[method]({
-      tag: inputs.versionPatch === 'latest' ? undefined : `v${inputs.versionPatch}`,
+    versionToDownload = await resolveReleaseTag({
       owner: 'SocketDev',
-      repo: 'socket-patch'
+      repo: 'socket-patch',
+      tag:
+        inputs.versionPatch === 'latest'
+          ? undefined
+          : `v${inputs.versionPatch}`,
+      token: inputs.tokenGithub,
     })
   } catch (error) {
-    core.debug(`[${error?.status}] ${error?.response?.url} ${error.message}`)
+    core.debug(`[${error?.status}] ${error?.url} ${errorMessage(error)}`)
     throw new Error(`failed to check version ${inputs.versionPatch}`)
   }
-
-  // use the tag_name as the version to download
-  const { tag_name: versionToDownload } = response.data
 
   // construct the download url
   const url = `https://github.com/SocketDev/socket-patch/releases/download/${versionToDownload}/${distribution.archive}`
@@ -81,7 +111,12 @@ export default async function patch (inputs) {
       }
 
       // cache it
-      pathCache = await tool.cacheDir(extractedPath, 'socket-patch', versionToDownload, process.arch)
+      pathCache = await tool.cacheDir(
+        extractedPath,
+        'socket-patch',
+        versionToDownload,
+        process.arch,
+      )
     } catch (error) {
       throw new Error(`Failed to download socket-patch binary: ${error}`)
     }
@@ -100,13 +135,21 @@ export default async function patch (inputs) {
   // Add to $PATH
   core.addPath(pathCache)
 
-  core.info(`socket-patch installed, requested: ${inputs.versionPatch}, resolved: ${versionToDownload}`)
+  core.info(
+    `socket-patch installed, requested: ${inputs.versionPatch}, resolved: ${versionToDownload}`,
+  )
 
   core.debug(`binary location: ${pathCache}`)
 
   const args = ['apply']
-  if (inputs.patchEcosystems) args.push('--ecosystems', inputs.patchEcosystems)
-  if (inputs.patchDryRun) args.push('--dry-run')
-  if (inputs.patchCwd) args.push('--cwd', inputs.patchCwd)
+  if (inputs.patchEcosystems) {
+    args.push('--ecosystems', inputs.patchEcosystems)
+  }
+  if (inputs.patchDryRun) {
+    args.push('--dry-run')
+  }
+  if (inputs.patchCwd) {
+    args.push('--cwd', inputs.patchCwd)
+  }
   await exec.exec(pathBinary, args)
 }

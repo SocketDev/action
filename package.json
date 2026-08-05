@@ -1,18 +1,24 @@
 {
-  "private": true,
   "name": "socket-github-action",
   "version": "0.0.0-semantically-released",
+  "private": true,
   "description": "GitHub Action for Socket.dev",
-  "type": "module",
-  "main": "src/main.js",
+  "keywords": [
+    "action",
+    "github",
+    "security",
+    "socket"
+  ],
   "license": "MIT",
   "author": {
     "name": "Socket Inc",
     "email": "eng@socket.dev",
     "url": "https://socket.dev"
   },
+  "type": "module",
+  "main": "src/main.js",
   "scripts": {
-    "build": "npm run build:main && npm run build:post",
+    "build": "pnpm run \"/^build:/\"",
     "build:main": "rollup --config rollup.config.js src/main.js --file dist/main.js",
     "build:post": "rollup --config rollup.config.js src/post.js --file dist/post.js",
     "check": "node scripts/fleet/check.mts",
@@ -49,21 +55,6 @@
     "socket-wheelhouse:emit-schema": "node scripts/fleet/socket-wheelhouse-emit-schema.mts",
     "weekly-update": "node scripts/fleet/weekly-update.mts",
     "weekly-update:ci": "gh workflow run weekly-update.lock.yml"
-  },
-  "keywords": [
-    "github",
-    "action",
-    "socket",
-    "security"
-  ],
-  "engines": {
-    "node": ">=24",
-    "pnpm": ">=11.0.5"
-  },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm"
-    }
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
@@ -118,6 +109,15 @@
     "taze": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm"
+    }
+  },
+  "engines": {
+    "node": ">=24",
+    "pnpm": ">=11.0.5"
   },
   "allowScripts": {
     "cpu-features": false,
