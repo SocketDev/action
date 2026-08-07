@@ -266,6 +266,8 @@ packages:
   - .claude/hooks/fleet/*
   - .config/fleet/oxlint-plugin
   - .config/fleet/oxlint-plugin/fleet/*
+  - '.claude/hooks/repo/*'
+  - '.config/repo/oxlint-plugin/*'
 autoInstallPeers: true
 
 # Opt out of pnpm's packageManager-version self-check. CI installs pnpm from
