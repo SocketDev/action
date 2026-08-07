@@ -17,7 +17,7 @@
 // already collapsed, passes without ceremony.
 //
 // Blocks the Stop while violations remain; the message carries the
-// `collapse-bot-comments.mts` command per PR. Fails open on gh /
+// `hide-comments.mts` command per PR. Fails open on gh /
 // network / parse errors (the guard enforces a hygiene contract, it must
 // never wedge a session over GitHub availability).
 //
@@ -34,6 +34,7 @@ import {
   readLines,
   resolveRoleAndContent,
 } from '../_shared/transcript.mts'
+import { verdictLine } from '../_shared/verdict.mts'
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 const BYPASS_PHRASE = 'Allow bot-collapse bypass'
@@ -291,7 +292,7 @@ export const check = (payload: ToolCallPayload): GuardResult | undefined => {
     }
     const surfaces = violations.map(v => `${v.kind} by ${v.author}`).join(', ')
     lines.push(
-      `   ${pr.nameWithOwner}#${pr.number} (${surfaces}) — run: node scripts/fleet/collapse-bot-comments.mts ${pr.nameWithOwner} ${pr.number}`,
+      `   ${pr.nameWithOwner}#${pr.number} (${surfaces}) — run: pnpm run hide-comments ${pr.nameWithOwner} ${pr.number}`,
     )
   }
   if (lines.length === 0) {
@@ -300,7 +301,11 @@ export const check = (payload: ToolCallPayload): GuardResult | undefined => {
 
   return block(
     [
-      '🚨 bot-comment-collapse-guard: threads resolved but bot summaries still expanded — minimize them as RESOLVED via the command(s) below, then end the turn',
+      verdictLine(
+        'block',
+        'bot-comment-collapse-guard',
+        'threads resolved but bot summaries still expanded — minimize them as RESOLVED via the command(s) below, then end the turn',
+      ),
       ...lines,
     ].join('\n'),
   )

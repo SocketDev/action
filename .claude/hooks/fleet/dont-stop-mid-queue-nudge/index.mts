@@ -33,6 +33,8 @@ import {
   readUserText,
   stripCodeFences,
 } from '../_shared/transcript.mts'
+import { authorizesStop } from '../_shared/stop-request.mts'
+import { verdictContinuation, verdictLine } from '../_shared/verdict.mts'
 
 const STOP_PATTERNS: ReadonlyArray<{ label: string; regex: RegExp }> = [
   {
@@ -171,11 +173,6 @@ const STOP_PATTERNS: ReadonlyArray<{ label: string; regex: RegExp }> = [
   },
 ]
 
-// Signals from the user that genuinely authorize stopping. If any
-// recent user turn matches, the hook short-circuits.
-const USER_STOP_AUTHORIZATION_RE =
-  /\b(?:enough\s+for\s+(?:now|today)|halt|hold|let'?s\s+pause|let'?s\s+stop|pause|stop|that'?s\s+enough|wait|we'?re\s+done)\b/i
-
 export const check = (payload: ToolCallPayload): GuardResult => {
   const rawText = readLastAssistantText(payload.transcript_path)
   if (!rawText) {
@@ -205,7 +202,7 @@ export const check = (payload: ToolCallPayload): GuardResult => {
   // user turns — if any contains a stop signal, the assistant is
   // just acknowledging.
   const recentUserText = readUserText(payload.transcript_path, 3)
-  if (USER_STOP_AUTHORIZATION_RE.test(recentUserText)) {
+  if (authorizesStop(recentUserText)) {
     return undefined
   }
 
@@ -215,8 +212,12 @@ export const check = (payload: ToolCallPayload): GuardResult => {
   for (let i = 0, { length } = hits; i < length; i += 1) {
     lines.push(
       i === 0
-        ? `💡 dont-stop-mid-queue-nudge: stop/menu tell "…${hits[i]}…" — pick the next queue item and start it now`
-        : `   "…${hits[i]}…"`,
+        ? verdictLine(
+            'warn',
+            'dont-stop-mid-queue-nudge',
+            `stop/menu tell "…${hits[i]}…" — pick the next queue item and start it now`,
+          )
+        : verdictContinuation(`"…${hits[i]}…"`),
     )
   }
   return notify(lines.join('\n'))

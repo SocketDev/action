@@ -5,8 +5,8 @@
 //
 // PreToolUse (Write/Edit): blocks a write to a human-facing prose surface
 // (CHANGELOG.md, docs/**/*.md, README.md) whose content carries an AI-writing
-// antipattern — throat-clearing openers, "not X, it's Y" contrasts, em-dash
-// chains, vague hedging adverbs. The fleet rule (CLAUDE.md "Prose authoring",
+// antipattern — throat-clearing openers, "not X, it's Y" contrasts, any
+// em-dash, vague hedging adverbs. The fleet rule (CLAUDE.md "Prose authoring",
 // .claude/skills/fleet/prose/SKILL.md): run human-facing prose through the
 // prose skill before it lands. This is the hard gate — it supersedes the old
 // prose-antipattern-nudge Stop hook (a reminder fires after the write and
@@ -41,6 +41,7 @@ import {
   readLastAssistantTurnText,
   stripCodeFences,
 } from '../_shared/transcript.mts'
+import { verdictContinuation, verdictLine } from '../_shared/verdict.mts'
 
 const BYPASS_PHRASE = 'Allow prose-antipattern bypass'
 const CHANGELOG_IMPL_BYPASS_PHRASE = 'Allow changelog-impl-detail bypass'
@@ -127,7 +128,11 @@ export function findProseWriteVerdict(
         .map(hit => `${hit.label} "${hit.match}"`)
         .join('; ')
       return block(
-        `🚨 anti-prose-guard: blocked ${rel} — implementation detail: ${evidence} — state the user-visible change instead (bypass response "${CHANGELOG_IMPL_BYPASS_PHRASE}")`,
+        verdictLine(
+          'block',
+          'anti-prose-guard',
+          `blocked ${rel} — implementation detail: ${evidence} — state the user-visible change instead (bypass response "${CHANGELOG_IMPL_BYPASS_PHRASE}")`,
+        ),
       )
     }
   }
@@ -140,9 +145,25 @@ export function findProseWriteVerdict(
     return undefined
   }
   const evidence = hits.map(hit => `${hit.label} "${hit.match}"`).join('; ')
-  return block(
-    `🚨 anti-prose-guard: blocked ${rel} — ${evidence} — rewrite the flagged span(s), then retry (bypass response "${BYPASS_PHRASE}")`,
-  )
+  // Each pattern carries the replacement to write; without it the verdict says
+  // a span is banned and leaves the author guessing. Sibling hooks (stop-nudge,
+  // outbound-voice) already render theirs, so the shape matches. A row with no
+  // `why` contributes no line rather than an empty one.
+  const lines = [
+    verdictLine(
+      'block',
+      'anti-prose-guard',
+      `blocked ${rel} — ${evidence} — rewrite the flagged span(s), then retry (bypass response "${BYPASS_PHRASE}")`,
+    ),
+  ]
+  const seen = new Set<string>()
+  for (const hit of hits) {
+    if (hit.why && !seen.has(hit.why)) {
+      seen.add(hit.why)
+      lines.push(verdictContinuation(hit.why))
+    }
+  }
+  return block(lines.join('\n'))
 }
 
 // `fleetOnly` replaces the spec-level `scope: 'convention'`: it gates the
@@ -176,8 +197,12 @@ export function findReplyProseVerdict(payload: ToolCallPayload): GuardResult {
   const lines: string[] = []
   for (let i = 0, { length } = hits; i < length; i += 1) {
     const hit = hits[i]!
-    const prefix = i === 0 ? '🚨 anti-prose-guard: ' : '   '
-    lines.push(`${prefix}delete "${hit.matched}" — …${hit.snippet}…`)
+    const body = `delete "${hit.matched}" — …${hit.snippet}…`
+    lines.push(
+      i === 0
+        ? verdictLine('block', 'anti-prose-guard', body)
+        : verdictContinuation(body),
+    )
   }
   // Blocks even mid-retry of another Stop guard. Degrading to a notice there
   // opened a real hole: a reply rewritten to satisfy a DIFFERENT guard can

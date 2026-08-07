@@ -16,8 +16,13 @@ name: ✅ Check dist
 # installs, rebuilds, and fails on a non-empty diff, uploading the expected
 # bundle so the author can see what they should have committed.
 
+# PUSH, never pull_request. The fleet takes no outside contributions and
+# lands on main directly rather than through PRs, so a pull_request trigger
+# adds no coverage a push trigger does not already give — and it is the
+# fragile half: GitHub has narrowed pull_request defaults for security, and a
+# silently non-firing trigger reads as a green repo with no CI at all
+# (observed on sdxgen, 2026-08-06: no run was created for a clean PR).
 on:
-  pull_request: {}
   push: {}
   workflow_dispatch: {}
 
@@ -49,6 +54,11 @@ jobs:
 
       - name: Setup + install
         uses: ./.github/actions/fleet/setup-and-install
+        with:
+          # Authorizes a thin member's bundle download during install. Both
+          # stay empty on a member with no payload App, which skips the mint.
+          payload-token-client-id: ${{ vars.SOCKET_PAYLOAD_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_PAYLOAD_APP_PRIVATE_KEY }}
 
       - name: Rebuild dist
         run: pnpm run build
