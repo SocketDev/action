@@ -87,7 +87,9 @@ export interface CommandSpec {
  * Run multiple commands in sequence, stopping on first failure.
  */
 export async function runSequence(commands: CommandSpec[]): Promise<number> {
-  // oxlint-disable-next-line socket/prefer-cached-for-loop -- destructured command-list record; the cached-length rewrite would lose the destructuring shape.
+  // Destructured command-list record; the cached-length rewrite would lose the
+  // destructuring shape.
+  // oxlint-disable-next-line socket/prefer-cached-for-loop -- destructured
   for (const { args = [], command, options = {} } of commands) {
     // eslint-disable-next-line no-await-in-loop
     const exitCode = await runCommand(command, args, options)

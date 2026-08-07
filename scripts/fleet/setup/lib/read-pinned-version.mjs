@@ -18,7 +18,9 @@ import { argv, exit, stdout } from 'node:process'
 
 const pkgName = argv[2]
 if (!pkgName) {
-  // oxlint-disable-next-line socket/no-module-eval-side-effects -- arg-missing usage bail in a standalone composite-action helper; never bundled into the snapshot.
+  // Arg-missing usage bail in a standalone composite-action helper; never
+  // bundled into the snapshot.
+  // oxlint-disable-next-line socket/no-module-eval-side-effects -- arg-missing
   process.stderr.write('Usage: node read-pinned-version.mjs <package-name>\n') // socket-hook: allow logger -- composite action helper, raw stderr for usage
   exit(2)
 }
@@ -85,7 +87,9 @@ function fromPackageJson(pkg) {
     return undefined
   }
   const json = JSON.parse(readFileSync('package.json', 'utf8'))
-  // oxlint-disable-next-line socket/prefer-cached-for-loop -- iterates a 2-element const tuple; cached-length form would obscure the literal pair.
+  // Iterates a 2-element const tuple; cached-length form would obscure the
+  // literal pair.
+  // oxlint-disable-next-line socket/prefer-cached-for-loop -- iterates
   for (const field of ['dependencies', 'devDependencies']) {
     const deps = json[field]
     if (deps && typeof deps[pkg] === 'string') {

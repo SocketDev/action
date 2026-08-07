@@ -56,7 +56,8 @@ export async function main(): Promise<number> {
     logger.fail(
       'headroom-is-telemetry-locked-down: the headroom lockdown is weakened (module import threw).',
     )
-    // socket-lint: allow logger-decoration
+    // Blank spacer line.
+    // oxlint-disable-next-line socket/no-logger-newline-literal -- blank spacer
     logger.error(`  ${errorMessage(e)}`)
     logger.error(
       '  fix:   restore HEADROOM_LOCKDOWN_ENV (HEADROOM_TELEMETRY=off + HF_HUB_OFFLINE=1) in headroom.mts',

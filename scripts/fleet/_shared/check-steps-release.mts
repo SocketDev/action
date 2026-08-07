@@ -103,6 +103,45 @@ export function buildReleaseAndDocsSteps(): CheckStep[] {
       run('node', [
         'scripts/fleet/check/published-packages-have-files-field.mts',
       ]),
+    // Every GitHub artifact reference (releases/download, gh release download,
+    // archive/raw URLs) names a full sha with a trailing human label, or a
+    // content-addressed ref. REPORT-ONLY until the templated-version backlog
+    // is cleared; the strict flip is named in the check's header.
+    () =>
+      run('node', [
+        'scripts/fleet/check/external-refs-carry-sha-and-label.mts',
+      ]),
+    // Every `<sha> # v<label>` pin still resolves to the sha its tag names.
+    // A moved or deleted tag is a supply-chain signal, so it fails LOUD and is
+    // never auto-repinned. Network-bound: offline / no `gh` skips loudly, so
+    // it rides the release/CI tier and local check --all stays offline.
+    releaseStep(['scripts/fleet/check/pinned-labels-match-shas.mts']),
+    // Every hand-written container reference names immutable content: a
+    // `@sha256:` digest, or a content-addressed tag whose final segment is the
+    // content hash. A plain tag is a mutable pointer, so the image audited
+    // today can serve different bytes tomorrow while the reference is
+    // unchanged. Generated `*.lock.yml` sources are skipped; their refs belong
+    // to the gh-aw compiler.
+    () =>
+      run('node', ['scripts/fleet/check/container-refs-are-digest-pinned.mts']),
+    // Every package the repo DECLARES it publishes (release.publishedPackages)
+    // is actually publishable and the set carries ONE version. A declared
+    // package left `"private": true` is SKIPPED by npm while the release stays
+    // green, and an unsynced set makes a loader pin a platform sibling version
+    // that was never published.
+    () =>
+      run('node', [
+        'scripts/fleet/check/published-packages-are-release-ready.mts',
+      ]),
+    // A private package never wears a publishable identity: unscoped,
+    // path-derived name at 0.0.0. The repo ROOT is exempt (a versioned private
+    // root carries a non-npm channel's release version and is the workspace
+    // versionSource), as is anything in release.publishedPackages, which the
+    // check above owns.
+    () =>
+      run('node', [
+        'scripts/fleet/check/private-packages-are-unpublishable.mts',
+      ]),
     // package.json `files:` allowlist hygiene. Flags publishes that leak
     // dev/test content (overshoot), `files:` entries that match nothing in
     // the publish surface (undershoot), and packages missing the canonical
@@ -237,6 +276,14 @@ export function buildReleaseAndDocsSteps(): CheckStep[] {
     // (fleet-main-protection) and never touches any other. Strict; skips
     // cleanly off the release tier / member checkouts / no gh.
     releaseStep(['scripts/fleet/check/main-branch-rules-are-enforced.mts']),
+    // The ruleset is the ONE branch-law surface. A classic branch protection
+    // rule beside it is unmanaged: it can contradict the ruleset, carries no
+    // Repository-admin bypass, and no fleet tooling converges it — so the
+    // sweep deletes classic rules everywhere (--fix) and fails while any
+    // remain. Skips cleanly off the release tier / member checkouts / no gh.
+    releaseStep([
+      'scripts/fleet/check/classic-branch-protections-are-absent.mts',
+    ]),
     // Every member's GitHub security posture matches the posture law
     // (_shared/security-posture-law.mts): CodeQL default setup configured with
     // a SANITISED language set on public repos — at most one of the
@@ -296,14 +343,60 @@ export function buildReleaseAndDocsSteps(): CheckStep[] {
             output: '',
             skipped: !process.env['FLEET_CHECK_RELEASE'],
           }),
-    // The thin-distribution untrack set must NEVER contain a CI-critical GitHub
-    // path. A thin member git-untracks whatever thinIgnoreEntries returns; GitHub
+    // The fleet-pack-distribution untrack set must NEVER contain a CI-critical GitHub
+    // path. A thin member git-untracks whatever fleetPackOwnedPaths returns; GitHub
     // reads .github/workflows/** + .github/actions/fleet/** from the committed
     // tree BEFORE any fetch could repopulate them, so untracking one breaks CI
     // outright. Proves the shipped fetcher honors isAlwaysTrackedGitHubSurface.
     // Runs per-tree (imports the member's own scripts/repo/bootstrap/fleet.mjs);
     // vacuous pass where that fetcher is absent.
-    () => run('node', ['scripts/fleet/check/thin-untrack-set-is-ci-safe.mts']),
+    () =>
+      run('node', ['scripts/fleet/check/fleet-pack-ci-files-are-tracked.mts']),
+    // Live-state twin of fleet-pack-ci-files-are-tracked: that check feeds
+    // the fetcher a fabricated manifest, this one reads the repo's real
+    // `.gitignore` fleet block against the applied-files marker, so it can
+    // catch an untracked path that no curated array mentions — a path the
+    // bundle does not ship and nothing restores on a fresh clone, or one a
+    // consumer reads before our fetch runs. Vacuous pass on a fat or
+    // never-hydrated member.
+    () =>
+      run('node', [
+        'scripts/fleet/check/thin-untracks-are-recoverable.mts',
+        '--quiet',
+      ]),
+    // The other half of a thin member's CI contract: untracking the payload is
+    // only safe if every workflow can FETCH it back. The wheelhouse release is
+    // private and a workflow's own GITHUB_TOKEN cannot read it, so each fleet
+    // install/checkout step must pass the payload-token inputs that mint an App
+    // token. Omitting them fails at install, before any test runs — and it is
+    // invisible until the member goes thin, which is how ultrathink shipped
+    // nine unwired workflows and went red on every run for three days.
+    () =>
+      run('node', [
+        'scripts/fleet/check/fleet-pack-workflow-payloads-are-fetchable.mts',
+        '--quiet',
+      ]),
+    // A repo that provisions the on-device model has opted into it. Every
+    // layer of the odai path is fail-open and quiet — ready=false, exit 69, a
+    // default-false opt-in — so a workflow can download a ~4 GB model, invoke
+    // it, and produce nothing on a green run. The capability sat dead
+    // fleet-wide for exactly that reason: `ai.localAssist` was undefined in
+    // every repo while the workflows, the version pin, and the model cache
+    // were all in place.
+    () =>
+      run('node', [
+        'scripts/fleet/check/odai-legs-are-switched-on.mts',
+        '--quiet',
+      ]),
+    // Every workflow running a fleet setup composite supplies the Socket API
+    // token, by step input or job env. Omitting BOTH installs the firewall
+    // unauthenticated while the job still reports green — prune-workflow-runs
+    // shipped that way, the one workflow where neither form was present.
+    () =>
+      run('node', [
+        'scripts/fleet/check/workflow-installs-have-the-socket-token.mts',
+        '--quiet',
+      ]),
     // Every slashed pattern in .config/fleet/.prettierignore must be `**/`-anchored
     // or it silently matches nothing (oxfmt roots the matcher at the ignore file's
     // dir via Gitignore::new). Catches the footgun where a bare `vendor/**` looks

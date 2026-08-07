@@ -5,7 +5,9 @@
  *   before `@socketsecurity/lib` / node_modules exist.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap: runs before node_modules exists, so the lib spawn wrapper isn't importable; sync child_process is the only option.
+// Runs before node_modules exists, so the lib spawn wrapper isn't importable;
+// sync child_process is the only option.
+// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap
 import { spawnSync } from 'node:child_process'
 import process from 'node:process'
 

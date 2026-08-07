@@ -183,7 +183,11 @@ function diversifyPool(
       seen.add(candidate.candidateId)
     }
   }
-  // oxlint-disable-next-line unicorn/no-array-sort -- `pool` is a locally-built array (declared `const pool: Candidate[] = []` and filled via .push() above), so the in-place sort can't mutate a shared receiver; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // `pool` is a locally-built array (declared `const pool: Candidate[] = []`
+  // and filled via .push() above), so the in-place sort can't mutate a shared
+  // receiver; .toSorted() would trip
+  // socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- `pool` is a locally-built
   return pool.sort(compareCandidates).slice(0, poolLimit)
 }
 
@@ -304,7 +308,10 @@ export function weightedRrf(
     }
   }
 
-  // oxlint-disable-next-line unicorn/no-array-sort -- the spread of candidates.values() already copies into a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // The spread of candidates.values() already copies into a fresh array, no
+  // shared mutation; .toSorted() would trip
+  // socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- the spread
   const fused = [...candidates.values()].sort(compareCandidates)
   return diversifyPool(applyPerAuthorCap(fused), poolLimit)
 }

@@ -50,7 +50,10 @@ const QUALITY_ROLES = ['discovery', 'remediation']
 export function parseAllRoles(source: string): string[] | undefined {
   // `const ALL_ROLES` then any chars up to `=`, optional space, `[`, then
   // capture group 1 = everything up to the closing `]`, the array body.
-  // oxlint-disable-next-line socket/no-source-sniffing -- this check validates the DECLARED source order of ALL_ROLES; importing the array yields runtime values without their lexical order, so parsing the source text is the intent.
+  // This check validates the DECLARED source order of ALL_ROLES; importing the
+  // array yields runtime values without their lexical order, so parsing the
+  // source text is the intent.
+  // oxlint-disable-next-line socket/no-source-sniffing -- this check validates
   const m = /const ALL_ROLES:[^=]*=\s*\[([^\]]*)\]/.exec(source)
   if (!m) {
     return undefined
@@ -80,7 +83,7 @@ export function orderViolations(roles: readonly string[]): string[] {
   })
 }
 
-function main(): void {
+export function main(): void {
   const quiet = process.argv.includes('--quiet')
   if (!existsSync(RUNNER)) {
     process.exitCode = 0

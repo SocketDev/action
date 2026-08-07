@@ -16,7 +16,8 @@
  *   scripts/fleet/check/release-and-cascade-are-paired.mts [--quiet]
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from gh, no async flow.
+// Needs typed string stdout from gh, no async flow.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
 import os from 'node:os'

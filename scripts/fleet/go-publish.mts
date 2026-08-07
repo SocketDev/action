@@ -69,6 +69,7 @@ import { isMainModule } from './_shared/is-main-module.mts'
 import { runMain } from './_shared/run-main.mts'
 import type { ScriptMeta } from './_shared/run-main.mts'
 
+import { assertGhAuth } from './publish-infra/gh-auth.mts'
 import type { VerifyResult } from './publish-infra/go/shared.mts'
 
 // Re-export the pure helpers so the go-publish.yml workflow, and tests, can
@@ -307,7 +308,8 @@ export async function runGoPublish(
       }
 
       logger.log(`Validating ${modulePath} (go vet + go build)…`)
-      // eslint-disable-next-line no-await-in-loop -- modules publish sequentially.
+      // Modules publish sequentially.
+      // eslint-disable-next-line no-await-in-loop -- modules publish
       const validateCode = await validate(dir)
       if (validateCode !== 0) {
         logger.fail(`${dir}: validation exited ${validateCode}.`)
@@ -320,7 +322,8 @@ export async function runGoPublish(
       }
 
       logger.log(`Tagging + pushing ${tag}…`)
-      // eslint-disable-next-line no-await-in-loop -- modules publish sequentially.
+      // Modules publish sequentially.
+      // eslint-disable-next-line no-await-in-loop -- modules publish
       const pushCode = await tagAndPush(tag, version, rootPath)
       if (pushCode !== 0) {
         logger.fail(`${dir}: git tag/push exited ${pushCode}.`)
@@ -333,7 +336,8 @@ export async function runGoPublish(
       }
 
       logger.log(`Verifying ${modulePath}@${version} on the public proxy…`)
-      // eslint-disable-next-line no-await-in-loop -- modules publish sequentially.
+      // Modules publish sequentially.
+      // eslint-disable-next-line no-await-in-loop -- modules publish
       const verified = await verify(modulePath, version)
       if (!verified.ok) {
         logger.fail(`${dir}: ${verified.detail}`)
@@ -355,7 +359,11 @@ export async function runGoPublish(
   return results
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
+  // Every publish flow tags, releases, or dispatches before it
+  // reaches a registry, so the gh state is a precondition rather
+  // than something to discover after a build has run.
+  assertGhAuth({ flow: 'go:publish', requiredScopes: [] })
   const { values } = parseArgs({
     options: {
       apply: { default: false, type: 'boolean' },
@@ -417,6 +425,8 @@ const SCRIPT_META: ScriptMeta = {
 
 // Entrypoint-guarded: importing this module (unit tests of its exported
 // helpers) must not execute the CLI.
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

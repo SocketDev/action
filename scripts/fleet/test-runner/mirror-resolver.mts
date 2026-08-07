@@ -1,4 +1,7 @@
-/* eslint-disable no-shadow -- nested cached-length for-loops intentionally reuse `i`/`length` names for the fleet-wide cached-loop idiom; renaming would diverge from the codebase pattern. */
+/* eslint-disable no-shadow -- nested cached-length for-loops */
+// Nested cached-length for-loops intentionally reuse `i`/`length` names for the
+// fleet-wide cached-loop idiom; renaming would diverge from the codebase
+// pattern.
 /**
  * @file The MIRROR test resolver for the fleet test runner
  *   (scripts/fleet/test.mts): given a staged/changed source file, find the test

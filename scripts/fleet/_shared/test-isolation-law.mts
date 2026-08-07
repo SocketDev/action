@@ -485,7 +485,8 @@ function collectHomeSmells(source: string, smells: TestIsolationSmell[]): void {
     return
   }
   for (let i = 0, { length } = TOOLCHAIN_ROOT_VARS; i < length; i += 1) {
-    // oxlint-disable-next-line socket/no-source-sniffing -- this module scans other files' text by design.
+    // This module scans other files' text by design.
+    // oxlint-disable-next-line socket/no-source-sniffing -- this module scans
     if (source.includes(TOOLCHAIN_ROOT_VARS[i]!.name)) {
       return
     }

@@ -157,7 +157,9 @@ export async function main(): Promise<void> {
     return
   }
 
-  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- relative path for log output; user invokes `pnpm run fix` from their cwd and expects paths relative to where they ran.
+  // Relative path for log output: the user invokes `pnpm run fix` from their
+  // own cwd and expects paths relative to where they ran it.
+  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- logs
   const cwd = process.cwd()
 
   // No resolvable AI client, claude or a fallback agent, is a clean skip,

@@ -331,7 +331,8 @@ async function main(): Promise<void> {
     const pkg = packages[i]!
     let result: SweepResult
     try {
-      // eslint-disable-next-line no-await-in-loop -- serial by design: the npm-trust docs' rate-limit guidance.
+      // The npm-trust docs' rate-limit guidance.
+      // eslint-disable-next-line no-await-in-loop -- serial by design
       result = await sweepOne(pkg, { drive, repository: repoOverride })
     } catch (e) {
       if (e instanceof TrustAuthDiedError) {
@@ -345,7 +346,8 @@ async function main(): Promise<void> {
           process.exitCode = 1
           return
         }
-        // eslint-disable-next-line no-await-in-loop -- the reopen must complete before the walk resumes.
+        // The reopen must complete before the walk resumes.
+        // eslint-disable-next-line no-await-in-loop -- the reopen must complete
         const reopened = await reopenAuthWindow(
           pkg,
           repoOverride ?? LAW.repository,
@@ -373,7 +375,8 @@ async function main(): Promise<void> {
       logger.log(line)
     }
     if (i < length - 1) {
-      // eslint-disable-next-line no-await-in-loop -- pacing between registry writes.
+      // Pacing between registry writes.
+      // eslint-disable-next-line no-await-in-loop -- pacing between registry
       await sleep(PACE_MS)
     }
   }

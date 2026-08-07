@@ -124,7 +124,8 @@ export async function main(argv: readonly string[]): Promise<number> {
     const m = await measureBundle(repoDir)
     if (argv.includes('--json')) {
       const json = `${JSON.stringify(m, undefined, 2)}\n`
-      // socket-lint: allow console -- machine JSON; logger would corrupt it
+      // Machine JSON; logger would corrupt it.
+      // oxlint-disable-next-line socket/no-console-prefer-logger -- machine
       process.stdout.write(json)
     } else {
       logger.info(

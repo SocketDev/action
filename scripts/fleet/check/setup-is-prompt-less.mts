@@ -225,7 +225,9 @@ export function evaluateSocketTokenInEnv(
   const key = envAsString(inputs.apiKey)
   const value = token || key
   if (value) {
-    // oxlint-disable-next-line socket/socket-api-token-env -- audit output: names the raw slot the operator actually populated, so the legacy alias has to appear verbatim.
+    // Names the raw slot the operator actually populated, so the legacy alias
+    // has to appear verbatim.
+    // oxlint-disable-next-line socket/socket-api-token-env -- audit output
     const source = token ? 'SOCKET_API_TOKEN' : 'SOCKET_API_KEY'
     return {
       detail: `${source} set (length ${value.length}). Hooks read env first; no keychain prompts.`,
@@ -295,7 +297,8 @@ function checkSocketTokenInEnv(): CheckResult {
   // accessor, so `withEnv` / `setEnv` / `vi.stubEnv` reach these reads the same
   // way they reach every other getter.
   // socket-api-token-getter: allow direct-env -- audit names which raw slot the operator populated.
-  // oxlint-disable-next-line socket/socket-api-token-env -- audit script: the legacy alias is the thing being audited.
+  // The legacy alias is the thing being audited.
+  // oxlint-disable-next-line socket/socket-api-token-env -- audit script
   const rawKey = getEnvValue('SOCKET_API_KEY')
   // socket-api-token-getter: allow direct-env -- audit names which raw slot the operator populated.
   const rawToken = getEnvValue('SOCKET_API_TOKEN')

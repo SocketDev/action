@@ -10,11 +10,11 @@ import { fstatSync, readFileSync } from 'node:fs'
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- streaming
 // stdio required to forward `pnpm stage approve` 2FA prompts +
 // `gh release create` upload progress. lib/spawn returns a Promise
 // that resolves only on exit; here we need the live ChildProcess
 // stream.
+// oxlint-disable-next-line socket/prefer-async-spawn -- streaming
 import { spawn } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { REPO_ROOT } from '../paths.mts'

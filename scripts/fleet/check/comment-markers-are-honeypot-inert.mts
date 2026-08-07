@@ -76,7 +76,8 @@ export const SANCTIONED_MARKERS: readonly string[] = [
   '<!-- prose-parens: allow -->',
   '<!-- repo:begin -->',
   '<!-- repo:end -->',
-  '<!-- socket-lint: allow cross-repo -->',
+  '<!-- oxlint-disable-line socket/no-cross-repo-path -->',
+  '<!-- oxlint-disable-next-line socket/no-cross-repo-path -->',
   '<!-- wh:fold allow -->',
 ]
 
@@ -161,7 +162,7 @@ export function scanAll(
 /**
  * Unknown `wh:` markers across the tracked tree, as `file:name` strings.
  */
-async function findStrayNamespaced(): Promise<string[]> {
+export async function findStrayNamespaced(): Promise<string[]> {
   const result = await spawn('git', ['ls-files', '-z'], {
     cwd: REPO_ROOT,
     stdioString: true,
@@ -194,7 +195,7 @@ async function findStrayNamespaced(): Promise<string[]> {
   return out
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   // Arm 0: the namespace is closed.
   const stray = await findStrayNamespaced()
   // Arm 1: sanctioned markers must be inert.

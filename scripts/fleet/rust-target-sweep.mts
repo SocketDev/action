@@ -86,16 +86,17 @@ export function newestTopLevelMtimeMs(dir: string): number {
 }
 
 // A cargo target dir: `<dir>/target` beside a Cargo.toml.
-function targetOf(checkout: string): string | undefined {
+export function targetOf(checkout: string): string | undefined {
   const target = path.join(checkout, 'target')
   return existsSync(path.join(checkout, 'Cargo.toml')) && existsSync(target)
     ? target
     : undefined
 }
 
-function duHuman(dir: string): string {
+export function duHuman(dir: string): string {
   try {
-    // oxlint-disable-next-line socket/prefer-async-spawn -- one-shot sync size probe for the report line.
+    // One-shot sync size probe for the report line.
+    // oxlint-disable-next-line socket/prefer-async-spawn -- one-shot sync size
     const result = spawnSync('du', ['-sh', dir])
     const out = String(result.stdout ?? '').trim()
     return out.split('\t')[0] || '?'
@@ -104,7 +105,7 @@ function duHuman(dir: string): string {
   }
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const argv = process.argv.slice(2)
   const fix = argv.includes('--fix')
   const fleet = argv.includes('--fleet')
@@ -118,7 +119,8 @@ async function main(): Promise<void> {
     return
   }
   const positional = argv.filter(
-    (a, i) => !a.startsWith('--') && i !== staleDaysAt + 1,
+    (a, i) =>
+      !a.startsWith('--') && (staleDaysAt === -1 || i !== staleDaysAt + 1),
   )
   const scriptDir = path.dirname(fileURLToPath(import.meta.url))
   const repoRoot = path.resolve(scriptDir, '../..')
@@ -178,7 +180,8 @@ async function main(): Promise<void> {
       continue
     }
     const size = duHuman(target)
-    // eslint-disable-next-line no-await-in-loop -- serial deletes; each is a large recursive unlink.
+    // Each is a large recursive unlink.
+    // eslint-disable-next-line no-await-in-loop -- serial deletes
     await safeDelete(target)
     swept += 1
     logger.success(`${target}: swept ${size}.`)
@@ -189,7 +192,7 @@ async function main(): Promise<void> {
   )
 }
 
-const SCRIPT_META: ScriptMeta = {
+export const SCRIPT_META: ScriptMeta = {
   describe:
     'sweeps stale multi-GB cargo target/ dirs across checkouts, sparing actively rebuilt trees',
   help: `Usage: node scripts/fleet/rust-target-sweep.mts [<dir>…] [flags]
@@ -200,6 +203,8 @@ const SCRIPT_META: ScriptMeta = {
   --fix            delete the stale dirs (dry-run by default)`,
 }
 
+/* c8 ignore start - entrypoint guard; only runs when node executes this file as the process entry, never under the in-process test runner */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

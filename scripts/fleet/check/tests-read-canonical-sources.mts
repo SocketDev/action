@@ -171,7 +171,7 @@ export function rewriteMirrorImports(source: string): string {
     const specifier = m[1]!
     const canonical = canonicalizeMirrorImport(specifier)
     if (canonical !== undefined) {
-      lines[i] = line.replace(`'${specifier}'`, `'${canonical}'`)
+      lines[i] = line.replace(`'${specifier}'`, () => `'${canonical}'`)
     }
   }
   return lines.join('\n')

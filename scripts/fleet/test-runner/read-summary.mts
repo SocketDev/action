@@ -22,12 +22,11 @@ export function readTestSummaryCounts(
     return undefined
   }
   try {
+    // Each explicit `| undefined` is the fleet optional-explicit-undefined
+    // convention, not a redundant constituent.
     const parsed = JSON.parse(readFileSync(summaryPath, 'utf8')) as {
-      // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
       failed?: unknown | undefined
-      // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
       passed?: unknown | undefined
-      // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
       total?: unknown | undefined
     }
     if (

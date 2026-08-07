@@ -87,7 +87,7 @@ function compactKimiArgsArrays(
       ),
       '      ]',
     ].join('\n')
-    result = result.replace(expanded, compact)
+    result = result.replace(expanded, () => compact)
   }
   return result
 }
@@ -116,7 +116,7 @@ function compactOpenCodeCommandArrays(
       ),
       '      ]',
     ].join('\n')
-    result = result.replace(expanded, compact)
+    result = result.replace(expanded, () => compact)
   }
   return result
 }
@@ -188,7 +188,7 @@ export function mergeKimiMcpConfig(
     throw new Error('Existing Kimi mcpServers value must be a JSON object')
   }
 
-  const mcpServers: Record<string, unknown> = { ...(existing ?? {}) }
+  const mcpServers: Record<string, unknown> = { ...existing }
   for (const [name, server] of Object.entries(servers)) {
     mcpServers[name] =
       server.kind === 'http'

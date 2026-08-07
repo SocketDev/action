@@ -371,7 +371,8 @@ export async function main(): Promise<void> {
       for (let i = 0, { length } = packages; i < length; i += 1) {
         const pkg = packages[i]!
         try {
-          // eslint-disable-next-line no-await-in-loop -- serial per-package reads share one page session.
+          // Serial per-package reads share one page session.
+          // eslint-disable-next-line no-await-in-loop -- serial per-package
           const { current, state } = await readTrustedPublisher(
             session.page,
             pkg,
@@ -403,7 +404,8 @@ export async function main(): Promise<void> {
     }
     const results: ApplyResult[] = []
     for (let i = 0, { length } = packages; i < length; i += 1) {
-      // eslint-disable-next-line no-await-in-loop -- serial per-package applies share one page session.
+      // Serial per-package applies share one page session.
+      // eslint-disable-next-line no-await-in-loop -- serial per-package applies
       const result = await applyOne(session.page, packages[i]!, {
         drive: args.drive,
         repoOverride: args.repo,

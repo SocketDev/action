@@ -257,12 +257,14 @@ export function isGeneratedHookArtifact(filePath: string): boolean {
 export function isNeverGated(filePath: string): boolean {
   const p = normalizePath(filePath)
   // The rolldown-inlined dep-0 fetcher bundle (bootstrap/src/* IS gated).
-  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact path, described above.
+  // Generated-artifact path, described above.
+  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact
   if (/(?:^|\/)bootstrap\/fleet\.mjs$/.test(p)) {
     return true
   }
   // A `.d.ts` / `.d.mts` / `.d.cts` type-declaration file, compiler output.
-  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact path, described above.
+  // Generated-artifact path, described above.
+  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact
   if (/\.d\.[cm]?ts$/.test(p)) {
     return true
   }
@@ -274,8 +276,19 @@ export function isNeverGated(filePath: string): boolean {
     return true
   }
   // The rolldown-bundled fleet oxlint plugin (build-oxlint-bundle.mts output).
-  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact path, described above.
+  // Generated-artifact path, described above.
+  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact
   if (/(?:^|\/)\.config\/fleet\/oxlint-plugin\.mjs$/.test(p)) {
+    return true
+  }
+  // The shipped dep-0 bootstrap seeds. Their SOURCE lives under
+  // `scripts/repo/gen/bootstrap/src/` and is gated; these are rolldown output,
+  // written read-only, so a format finding here has no fix an operator can
+  // apply. Their `template/generated/` twin was already exempt by segment,
+  // which left the shipped copy gated on its own — a red gate with no move.
+  // Generated-artifact path, described above.
+  // oxlint-disable-next-line socket/require-regex-comment -- generated-artifact
+  if (/(?:^|\/)scripts\/repo\/bootstrap\/[\w-]+\.mts$/.test(p)) {
     return true
   }
   return p.split('/').some(seg => NEVER_GATED_SEGMENTS.has(seg))

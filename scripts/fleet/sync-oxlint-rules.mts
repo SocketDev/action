@@ -180,7 +180,10 @@ export function ruleIds(): string[] {
           existsSync(path.join(FLEET_RULES_DIR, d.name, 'index.mts')),
       )
       .map(d => d.name)
-      // oxlint-disable-next-line unicorn/no-array-sort -- .map() already returns a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+      // .map() already returns a fresh array, no shared mutation; .toSorted()
+      // would trip socket/no-runtime-features-below-engine-floor in cascaded
+      // Node-18 repos.
+      // oxlint-disable-next-line unicorn/no-array-sort -- .map() already
       .sort()
   )
 }
@@ -277,7 +280,10 @@ export function rewriteOxlintrc(
   source: string,
   ids: readonly string[],
 ): string {
-  // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already returns a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // .filter() already returns a fresh array, no shared mutation; .toSorted()
+  // would trip socket/no-runtime-features-below-engine-floor in cascaded
+  // Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already returns
   const active = ids.filter(id => !(id in DORMANT_RULES)).sort()
   // Parse to recover any array-form (rule + options) configs we must preserve
   // verbatim rather than flatten to "error".
@@ -322,7 +328,7 @@ export function rewriteOxlintrc(
   }
   // Match each socket/* activation WITHIN the top-level rules block only. An
   // activation with an options array spans multiple lines once oxfmt wraps it
-  // (`"socket/x": ["error", {…}]` → 4 lines), so after a `"socket/` opener,
+  // (`"socket/example-other-rule": ["error", {…}]` → 4 lines), so after a `"socket/` opener,
   // consume continuation lines until the entry's brackets balance and claim
   // the whole span as socket-owned.
   const countEntryDepth = (line: string, depthIn: number): number => {
@@ -404,7 +410,7 @@ interface ReconcileResult {
 // read-only by mirror-mode) is never written directly — the template write is
 // the canonical edit and the next cascade propagates it, so a drifted live
 // copy just reports drift for the cascade to fix.
-function reconcileGenerated(config: {
+export function reconcileGenerated(config: {
   readonly cascadeOwned?: boolean | undefined
   readonly filePath: string
   readonly ids: readonly string[]
@@ -439,7 +445,7 @@ function reconcileGenerated(config: {
   return { drifted: true, problem: undefined }
 }
 
-function main(): number {
+export function main(): number {
   const check = process.argv.includes('--check')
   const ids = ruleIds()
 
@@ -535,6 +541,8 @@ const SCRIPT_META: ScriptMeta = {
   --check  exit non-zero if either generated file would change; no write`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

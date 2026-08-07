@@ -260,9 +260,11 @@ export async function runStagePublish(config: {
   }
   let runId: string | undefined
   for (let i = 0; i < DISPATCHED_RUN_POLL_ATTEMPTS; i += 1) {
-    // eslint-disable-next-line no-await-in-loop -- polling is strictly sequential.
+    // Polling is strictly sequential.
+    // eslint-disable-next-line no-await-in-loop -- polling
     await seams.sleep(DISPATCHED_RUN_POLL_INTERVAL_MS)
-    // eslint-disable-next-line no-await-in-loop -- polling is strictly sequential.
+    // Polling is strictly sequential.
+    // eslint-disable-next-line no-await-in-loop -- polling
     const id = await latestPublishRunId(seams, cfg.cwd)
     if (id !== undefined && id !== baseline) {
       runId = id

@@ -27,7 +27,8 @@ import process from 'node:process'
 import { discoverAiAgents } from '@socketsecurity/lib-stable/ai/discover'
 import { AI_PROFILE } from '@socketsecurity/lib-stable/ai/profiles'
 import { spawnAiAgent } from '@socketsecurity/lib-stable/ai/spawn'
-// oxlint-disable-next-line socket/prefer-async-spawn -- sequential git plumbing; one bounded read per group before the commit loop.
+// One bounded read per group before the commit loop.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sequential git plumbing
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { FLOOR_EFFORT, FLOOR_MODEL } from '../lib/known-models.mts'

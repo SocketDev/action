@@ -157,8 +157,7 @@ function rewriteLeadingFrontmatter(
 export function rewriteSkillName(skillMd: string, mirrorName: string): string {
   return rewriteLeadingFrontmatter(skillMd, frontmatter =>
     quoteUnsafeDescription(
-      frontmatter.replace(
-        /^name:[ \t]*\S.*$/m,
+      frontmatter.replace(/^name:[ \t]*\S.*$/m, () =>
         rewriteFrontmatterLine('name', mirrorName),
       ),
     ),
@@ -306,7 +305,7 @@ export function findMirrorDrift(
   return drift
 }
 
-function main(): void {
+export function main(): void {
   const checkOnly = process.argv.includes('--check')
   if (!existsSync(CLAUDE_SKILLS_DIR)) {
     logger.log(

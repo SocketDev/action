@@ -427,9 +427,11 @@ function buildDependencyChanges(
     const rec = added ?? removed!
     // null is the classify-deps JSON contract: a new dep serializes `"from":null`
     // and a removed dep `"to":null`; undefined would drop the key entirely.
-    // oxlint-disable-next-line socket/prefer-undefined-over-null -- JSON output contract for classify-deps.
+    // JSON output contract for classify-deps.
+    // oxlint-disable-next-line socket/prefer-undefined-over-null -- JSON output
     const from = removed ? removed.spec : null
-    // oxlint-disable-next-line socket/prefer-undefined-over-null -- JSON output contract for classify-deps.
+    // JSON output contract for classify-deps.
+    // oxlint-disable-next-line socket/prefer-undefined-over-null -- JSON output
     const to = added ? added.spec : null
     deps.push({
       name: rec.name,

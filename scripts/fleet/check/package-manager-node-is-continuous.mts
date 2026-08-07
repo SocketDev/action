@@ -13,7 +13,8 @@ import path from 'node:path'
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- a one-shot check probe; no output needs streaming.
+// No output needs streaming.
+// oxlint-disable-next-line socket/prefer-async-spawn -- a one-shot check probe
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { envWithExecutableFirst } from '../lib/ensure-node.mts'

@@ -180,7 +180,8 @@ export async function scanDirectory(
     } else if (entry.isFile()) {
       let size: number
       try {
-        // oxlint-disable-next-line socket/prefer-exists-sync -- need the byte size, not existence.
+        // Need the byte size, not existence.
+        // oxlint-disable-next-line socket/prefer-exists-sync -- need the byte
         size = (await fs.stat(fullPath)).size
       } catch {
         continue

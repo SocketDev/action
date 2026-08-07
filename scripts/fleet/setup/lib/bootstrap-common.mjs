@@ -11,7 +11,10 @@
  *   correct no matter which installer imports them.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap: runs before node_modules exists, so the lib spawn wrapper isn't importable; sync child_process is the only option (same constraint as lib/install-tool.mjs).
+// Runs before node_modules exists, so the lib spawn wrapper isn't importable;
+// sync child_process is the only option (same constraint as
+// lib/install-tool.mjs).
+// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap
 import { spawnSync } from 'node:child_process'
 import {
   chmodSync,
@@ -92,12 +95,14 @@ export function sfwRackDirName(version, flavor) {
 export const REPO_ROOT = findRepoRoot(__dirname)
 
 export function log(msg) {
-  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-pnpm bootstrap; @socketsecurity/lib-stable not installed yet.
+  // Pre-pnpm bootstrap; @socketsecurity/lib-stable not installed yet.
+  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-pnpm
   console.log(msg)
 }
 
 export function warn(msg) {
-  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-pnpm bootstrap; @socketsecurity/lib-stable not installed yet.
+  // Pre-pnpm bootstrap; @socketsecurity/lib-stable not installed yet.
+  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-pnpm
   console.error(msg)
 }
 

@@ -118,8 +118,9 @@ export async function findMismatches(
     if (!name.endsWith('-guard') && !name.endsWith('-nudge')) {
       continue
     }
-    // eslint-disable-next-line no-await-in-loop -- import hooks in order; the set
+    // The set.
     // is small and parallel import would race module initialization.
+    // eslint-disable-next-line no-await-in-loop -- import hooks in order
     const type = await declaredType(path.join(hooksDir, name, 'index.mts'))
     const mism = typeMismatch(name, type)
     if (mism) {

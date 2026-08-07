@@ -75,10 +75,11 @@ export function isWheelhouseOwnedRef(scriptPath: string): boolean {
 // scripts/repo/sync-scaffolding/cli.mts …` — where the `node` path resolves in
 // the wheelhouse, not in the member repo running this check. Such a path is
 // documented-on-purpose, not rot, and the block carries the marker. The marker
-// sits on the `cd` line (`# socket-lint: allow cross-repo`), so the ref one
+// sits on the `cd` line (`# oxlint-disable-next-line socket/no-cross-repo-path`), so the ref one
 // line below it is exempt too: cross-repo cascade instructions are inherently
 // two-line `cd && node` echo blocks.
-const CROSS_REPO_ALLOW_RE = /socket-lint:\s*allow cross-repo/
+const CROSS_REPO_ALLOW_RE =
+  /oxlint-disable-(?:next-)?line\s+socket\/no-cross-repo-path/
 
 export function lineIsCrossRepoExempt(
   lines: readonly string[],
@@ -191,7 +192,7 @@ export function scanRepo(repoRoot: string): DocRefHit[] {
   return hits
 }
 
-function main(): void {
+export function main(): void {
   const quiet = process.argv.includes('--quiet')
   const hits = scanRepo(REPO_ROOT)
   if (hits.length) {

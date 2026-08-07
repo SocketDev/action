@@ -175,7 +175,11 @@ export function writePinToContent(
   if (!match) {
     return undefined
   }
-  return content.replace(pattern, `$1${value}$3`)
+  return content.replace(
+    pattern,
+    (_match: string, open: string, _old: string, close: string) =>
+      `${open}${value}${close}`,
+  )
 }
 
 /**

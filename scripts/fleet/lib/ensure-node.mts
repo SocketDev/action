@@ -15,7 +15,8 @@ import process from 'node:process'
 
 // prefer-async-spawn: sync-required — a startup re-exec must block before the
 // entrypoint's own work runs; there is nothing to stream.
-// oxlint-disable-next-line socket/prefer-async-spawn -- startup re-exec, sync by nature.
+// Sync by nature.
+// oxlint-disable-next-line socket/prefer-async-spawn -- startup re-exec
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 // The hard Node major the fleet hooks assert (`Hook requires Node >= 24.0.0`).
@@ -112,7 +113,7 @@ export function fnmVersionsDir(
 }
 
 // Absolute node-binary path for a fnm version-dir entry.
-function fnmBinFor(versionsDir: string, entry: string): string {
+export function fnmBinFor(versionsDir: string, entry: string): string {
   return path.join(versionsDir, entry, 'installation', 'bin', 'node')
 }
 

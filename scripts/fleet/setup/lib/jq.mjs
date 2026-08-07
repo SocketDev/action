@@ -27,5 +27,7 @@ if (v == null || v === '') {
   process.exit(1)
 }
 
-// oxlint-disable-next-line socket/no-console-prefer-logger -- composite-action helper runs on the raw runner before setup-node; the action's stdout IS the contract, consumed via shell command substitution.
+// This composite-action helper runs on the raw runner before setup-node, and
+// the action's stdout IS the contract, consumed via shell substitution.
+// oxlint-disable-next-line socket/no-console-prefer-logger -- stdout contract
 console.log(typeof v === 'string' ? v : JSON.stringify(v))

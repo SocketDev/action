@@ -184,9 +184,11 @@ export function escalateTier(
  * file, so noise stays low.
  */
 export const RULE_GUIDANCE: Readonly<Record<string, string>> = {
-  // oxlint-disable-next-line socket/prefer-undefined-over-null -- null-prototype object literal.
+  // null-prototype object literal.
+  // oxlint-disable-next-line socket/prefer-undefined-over-null -- proto null
   __proto__: null,
-  // oxlint-disable-next-line socket/inclusive-language -- rule guidance string documents the legacy terms it scans for.
+  // Rule guidance string documents the legacy terms it scans for.
+  // oxlint-disable-next-line socket/inclusive-language -- rule guidance string
   'socket/inclusive-language':
     'Replace `master`/`slave` with the contextually correct term: `main` (branch), `primary`/`controller` (process), `replica`/`worker`/`secondary`/`follower` (subordinate). Read the surrounding code to pick the right one. Do not autofix when an external API field name forces the legacy term — leave a `// inclusive-language: external-api` comment instead.',
   'socket/personal-path-placeholders':
@@ -257,7 +259,7 @@ export const RULE_GUIDANCE: Readonly<Record<string, string>> = {
   1. Read the whole regex. Identify its parts: anchors (\`^\`/\`$\`), character classes (\`[\\s,{]\`), groups (\`(?:…)\`), quantifiers (\`*\`/\`+\`/\`?\`/\`{n}\`), alternations (\`a|b\`), escapes (\`\\d\`, \`\\.\`).
   2. Write 1–6 short lines: for each meaningful part, "<the syntax> <what it matches>". Lead with the overall intent in one phrase.
   3. Place the comment ABOVE the regex line at the same indentation. Don't restate the variable name — explain the PATTERN.
-  4. Don't change the regex itself. If after reading it you judge it genuinely trivial/obvious, add \`// socket-lint: allow uncommented-regex\` on its own line above instead of a breakdown.
+  4. Don't change the regex itself. If after reading it you judge it genuinely trivial/obvious, add \`// oxlint-disable-next-line socket/require-regex-comment\` on its own line above instead of a breakdown.
 </process>
 
 <good-fix description="A property-key matcher, broken into boundary / name / terminator.">

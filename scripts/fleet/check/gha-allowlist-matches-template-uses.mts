@@ -104,7 +104,9 @@ export function isAllowlistGoverned(spec: string): boolean {
 export function patternMatchesSpec(pattern: string, spec: string): boolean {
   const source = pattern
     .split('*')
-    .map(part => part.replaceAll(/[$()+.?[\\\]^{|}]/g, String.raw`\$&`))
+    .map(part =>
+      part.replaceAll(/[$()+.?[\\\]^{|}]/g, (match: string) => `\\${match}`),
+    )
     .join('.*')
   return new RegExp(`^${source}$`, 'i').test(spec)
 }

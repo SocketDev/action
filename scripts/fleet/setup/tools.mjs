@@ -25,7 +25,10 @@
  *      tools.mjs [--ci]
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap: runs before node_modules exists, so the lib spawn wrapper isn't importable; sync child_process is the only option (same constraint as lib/install-tool.mjs).
+// Pre-pnpm bootstrap: this runs before node_modules exists, so the lib spawn
+// wrapper is not importable and sync child_process is the only option. Same
+// constraint as lib/install-tool.mjs.
+// oxlint-disable-next-line socket/prefer-async-spawn -- pre-pnpm bootstrap
 import { spawnSync } from 'node:child_process'
 import {
   appendFileSync,

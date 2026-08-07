@@ -54,6 +54,7 @@
  *          [--reconcile X.Y.Z] [--skip-scan]
  */
 import process from 'node:process'
+import { assertGhAuth } from './publish-infra/gh-auth.mts'
 
 import { parseArgs } from '@socketsecurity/lib-stable/argv/parse'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
@@ -197,7 +198,8 @@ export async function runPublishPipeline(
     // Wall-time the stage: the receipt records how long it took so the
     // --status table names the long poles of the publish chain.
     const stageStartMs = Date.now()
-    // eslint-disable-next-line no-await-in-loop -- stages are strictly sequential.
+    // Stages are strictly sequential.
+    // eslint-disable-next-line no-await-in-loop -- stages
     const outcome = await runStage(stage, state_, cli)
     // A passing verify carries the release-asset checksums — stash them so
     // the post-approve release stage attaches the exact verified bytes.
@@ -224,7 +226,11 @@ export async function runPublishPipeline(
   logger.log(renderRunRecap(state_, { ranStages: ran }))
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
+  // Every publish flow tags, releases, or dispatches before it
+  // reaches a registry, so the gh state is a precondition rather
+  // than something to discover after a build has run.
+  assertGhAuth({ flow: 'npm:publish', requiredScopes: ['workflow'] })
   const { values } = parseArgs({
     options: {
       approve: { default: false, type: 'boolean' },
@@ -314,6 +320,8 @@ const SCRIPT_META: ScriptMeta = {
   help: USAGE,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

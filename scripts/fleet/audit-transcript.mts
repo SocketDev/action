@@ -317,7 +317,8 @@ export function claudeProjectSlug(cwd: string): string {
 
 export function findRecentTranscript(
   home: string = os.homedir(),
-  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- audit-transcript intentionally reads the user-invoked cwd to look up the matching Claude Code transcript dir; anchoring on the script's own location would always return the wheelhouse transcripts.
+  // audit-transcript intentionally reads the user-invoked cwd to look up the matching Claude Code transcript dir; anchoring on the script's own location would always return the wheelhouse transcripts.
+  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- cwd map
   cwd: string = process.cwd(),
 ): string | undefined {
   // ~/.claude/projects/<encoded-cwd>/<session-id>.jsonl
@@ -342,7 +343,10 @@ export function findRecentTranscript(
       }
     })
     .filter((x): x is { full: string; mtime: number } => x !== undefined)
-    // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already returns a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+    // .filter() already returns a fresh array, no shared mutation; .toSorted()
+    // would trip socket/no-runtime-features-below-engine-floor in cascaded
+    // Node-18 repos.
+    // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already
     .sort((a, b) => b.mtime - a.mtime)
   return entries[0]?.full
 }

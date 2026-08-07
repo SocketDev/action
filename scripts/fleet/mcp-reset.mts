@@ -27,7 +27,9 @@ import process from 'node:process'
 import { setTimeout as sleep } from 'node:timers/promises'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- recovery tool needs simple top-level-sync ps/lsof reads; the kill path is the only async part.
+// Recovery tool needs simple top-level-sync ps/lsof reads; the kill path is the
+// only async part.
+// oxlint-disable-next-line socket/prefer-async-spawn -- recovery tool
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { isMainModule } from './_shared/is-main-module.mts'

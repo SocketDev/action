@@ -304,8 +304,9 @@ export function detectFuzzTierSurfaces(root: string): FuzzTierSurfaces {
  * bunfig.toml. The vitest/SWC-based vitiate lane can't run under `bun test`, so
  * such a repo's JS/TS tier is satisfied by fast-check (via bun:test).
  */
-// socket-lint: allow boolean-trap -- internal detector called once with a named
+// Internal detector called once with a named.
 // var (hasPackageJson, already computed by the caller); not a call-site literal.
+// oxlint-disable-next-line socket/no-boolean-trap-param -- internal detector
 export function detectBun(root: string, hasPackageJson: boolean): boolean {
   if (existsSync(path.join(root, 'bunfig.toml'))) {
     return true
@@ -354,7 +355,7 @@ export function detectRustFuzz(root: string): boolean {
   return hasProptest
 }
 
-function main(): void {
+export function main(): void {
   const quiet = process.argv.includes('--quiet')
   const surfaces = detectFuzzTierSurfaces(REPO_ROOT)
   const gaps = findFuzzTierGaps(surfaces)

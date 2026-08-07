@@ -18,7 +18,8 @@
  *   fleet host escapes the gh-aw set.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from `git ls-files`, no async.
+// Needs typed string stdout from `git ls-files`, no async.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -173,8 +174,8 @@ if (!existsSync(allowlistPath)) {
         logger.error(
           `Wanted: every local-egress host also trusted by the CI agent fence. ` +
             `Fix: remove the host from template/base/${ALLOWLIST_REL} + cascade, or ` +
-            `add it to the gh-aw workflow's network.allowed (get-green.md) and recompile ` +
-            `so the fence trusts it too.`,
+            `add it to the network.allowed of whichever gh-aw workflow declares ` +
+            `the fence, then recompile so the fence trusts it too.`,
         )
         process.exitCode = 1
       }

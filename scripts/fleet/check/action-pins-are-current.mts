@@ -40,7 +40,8 @@ import process from 'node:process'
 import { errorMessage } from '@socketsecurity/lib-stable/errors/message'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 import { normalizePath } from '@socketsecurity/lib-stable/paths/normalize'
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check script; needs typed string stdout from git, no async flow.
+// Needs typed string stdout from git, no async flow.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check script
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { REPO_ROOT } from '../paths.mts'
@@ -410,7 +411,7 @@ export function rewritePin(
 ): string {
   // The 40-hex SHA plus any trailing `# …` comment up to end of line.
   const pinRe = new RegExp(`@${oldSha}([ \\t]*#[^\\n]*)?`, 'g')
-  return text.replace(pinRe, `@${newSha} # ${comment}`)
+  return text.replace(pinRe, () => `@${newSha} # ${comment}`)
 }
 
 // Rewrite each stale/unreachable pin's SHA → base HEAD and refresh its

@@ -10,7 +10,8 @@
  *   because it predates this module; new callers should import from here.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync helper; callers are sync check scripts needing a one-shot status read before git ops.
+// Callers are sync check scripts needing a one-shot status read before git ops.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync helper
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 export interface PorcelainEntry {

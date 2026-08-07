@@ -19,7 +19,8 @@
  *   missing lock.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from `git ls-files`, no async.
+// Needs typed string stdout from `git ls-files`, no async.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import crypto from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'

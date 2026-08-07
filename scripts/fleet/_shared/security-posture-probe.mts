@@ -354,7 +354,8 @@ export function scanPresentLanguages(repoDir: string): string[] | undefined {
   if (!existsSync(path.join(repoDir, '.git'))) {
     return undefined
   }
-  // oxlint-disable-next-line socket/prefer-async-spawn -- the caller is a sync CLI sweep; the language read must resolve inline.
+  // The caller is a sync CLI sweep; the language read must resolve inline.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- the caller is a sync
   const result = spawnSync('git', ['-C', repoDir, 'ls-files'], {
     encoding: 'utf8',
     maxBuffer: 64 * 1024 * 1024,

@@ -216,9 +216,10 @@ async function fetchPublishedVersions(name: string): Promise<PackumentRead> {
   const url = `${NPM_REGISTRY_URL}/${encodeURIComponent(name).replaceAll('%40', '@')}`
   let res: Response
   try {
-    // socket-lint: allow global-fetch -- this CLI is dependency-free by
+    // This CLI is dependency-free by.
     // design: the workflow's gap job runs it with no pnpm install, so the
     // lib-stable http helpers are out of reach here.
+    // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- this CLI
     res = await fetch(url, {
       headers: { accept: 'application/vnd.npm.install-v1+json' },
       signal: AbortSignal.timeout(30_000),

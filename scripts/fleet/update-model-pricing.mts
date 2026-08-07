@@ -177,7 +177,10 @@ export function applyPricingUpdate(
 // Restamp the routing-doc snapshot marker to `date`. Returns the rewritten text
 // (unchanged when the marker is absent — a repo may not carry the doc).
 export function restampDocMarker(docText: string, date: string): string {
-  return docText.replace(SNAPSHOT_MARKER_RE, `$1${date}`)
+  return docText.replace(
+    SNAPSHOT_MARKER_RE,
+    (_match: string, marker: string) => `${marker}${date}`,
+  )
 }
 
 // Today's date as YYYY-MM-DD (UTC). Pulled out so a test can inject --date.

@@ -14,7 +14,8 @@
  *   soak pin, the per-project fix is printed.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check script; needs typed string stdout from `git ls-files`, no async.
+// Needs typed string stdout from `git ls-files`, no async.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check script
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import process from 'node:process'
 

@@ -275,7 +275,8 @@ export async function verifyModuleAvailable(config: {
     attempt += 1
     let result: ProxyInfoResult
     try {
-      // eslint-disable-next-line no-await-in-loop -- the poll is strictly sequential.
+      // The poll is strictly sequential.
+      // eslint-disable-next-line no-await-in-loop -- the poll
       result = await fetchInfo(url)
     } catch (e) {
       lastDetail = `proxy read error: ${errorMessage(e)}`
@@ -293,7 +294,8 @@ export async function verifyModuleAvailable(config: {
       lastDetail = `proxy resolved '${got ?? '<none>'}', expected '${cfg.version}'`
     }
     if (attempt < maxAttempts) {
-      // eslint-disable-next-line no-await-in-loop -- backoff between poll attempts.
+      // Backoff between poll attempts.
+      // eslint-disable-next-line no-await-in-loop -- backoff between poll
       await sleep(delay)
       delay = Math.min(delay * 2, VERIFY_MAX_DELAY_MS)
     }

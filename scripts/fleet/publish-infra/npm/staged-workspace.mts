@@ -299,7 +299,9 @@ export async function verifyStagedPlatformEntry(
       const filePath = path.join(packageDir, rel)
       let size = -1
       try {
-        // oxlint-disable-next-line socket/prefer-exists-sync -- the SIZE is the point: a zero-byte payload is as hollow as a missing one.
+        // The SIZE is the point: a zero-byte payload is as hollow as a missing
+        // one.
+        // oxlint-disable-next-line socket/prefer-exists-sync -- the SIZE
         size = statSync(filePath).size
       } catch {
         // Missing file — recorded below.
@@ -345,7 +347,8 @@ export async function packWorkspaceReleaseAssets(
   const assets: string[] = []
   const checksumLines: string[] = []
   for (const pkg of layout.packages) {
-    // eslint-disable-next-line no-await-in-loop -- serial packs; each rewrites its member's manifest in place
+    // Each rewrites its member's manifest in place.
+    // eslint-disable-next-line no-await-in-loop -- serial packs
     const tarballPath = await packWorkspaceMemberTarball(
       layout,
       pkg.name,
@@ -405,7 +408,8 @@ export async function runWorkspacePublish(
   let published = 0
   let skipped = 0
   for (const pkg of order) {
-    // eslint-disable-next-line no-await-in-loop -- serial by design: dependency order is the point
+    // Dependency order is the point.
+    // eslint-disable-next-line no-await-in-loop -- serial by design
     if (await isAlreadyPublished(pkg.name, version)) {
       logger.log(
         `Skipping ${pkg.name}@${version} — already on the registry ` +
@@ -473,7 +477,8 @@ export async function runWorkspacePublish(
           `remaining members — a dependent must never publish ahead of a ` +
           `failed dependency.`,
       )
-      // eslint-disable-next-line no-await-in-loop -- failure path, loop exits here
+      // Loop exits here.
+      // eslint-disable-next-line no-await-in-loop -- failure path
       for (const line of await diagnosePublishFailure({
         mode,
         name: pkg.name,

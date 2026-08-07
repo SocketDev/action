@@ -133,8 +133,9 @@ export function resolveUploadProvenance(): boolean {
  */
 export function readPublishVersion(manifestPath: string): string | undefined {
   try {
+    // The explicit `| undefined` is the fleet optional-explicit-undefined
+    // convention, not a redundant constituent.
     const parsed = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
-      // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
       version?: unknown | undefined
     }
     return typeof parsed.version === 'string' ? parsed.version : undefined

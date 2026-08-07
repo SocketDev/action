@@ -7,9 +7,8 @@
  *   🖐  HUMAN GATE — <name> [i/N]
  *   Need: <what is blocked and why, one sentence>
  *   Mind: <the active guard/tool restriction that shaped the lanes>
- *   A) You: <the exact command or phrase the human runs or types>
- *   B) Me: <what to say so the agent drives the SAME command>
- *   Then: <what the flow resumes once the gate clears>
+ *   You: <the exact command or phrase the human runs or types>
+ *   Me: <what to say so the agent drives the SAME command, then what resumes>
  *   Both lanes are ALWAYS printed. When no agent lane exists (authorization
  *   phrases count only when a human types them in a user turn), lane B says
  *   so honestly instead of vanishing — the operator should never wonder
@@ -24,7 +23,7 @@
 /**
  * A single human-only decision point in an otherwise scripted flow.
  */
-import { fillablePhrase } from './terminal-link.mts'
+import { toCopyLink } from './terminal-link.mts'
 
 export interface HumanGate {
   /**
@@ -88,11 +87,11 @@ export function formatHumanGate(
   if (gate.mind) {
     lines.push(`  Mind: ${gate.mind}`)
   }
-  lines.push(
-    `  A) You: ${gate.humanLane}`,
-    `  B) Me: ${laneB}`,
-    `  Then: ${gate.resumes}`,
-  )
+  // `You:` / `Me:` with no letter labels, and the resume folded into `Me:`.
+  // The letters were pure overhead — two lanes need no enumeration — and a
+  // standalone `Then:` split one thought across two lines, since what the
+  // agent does next IS what resumes.
+  lines.push(`  You: ${gate.humanLane}`, `  Me: ${laneB} ${gate.resumes}`)
   return lines
 }
 
@@ -153,11 +152,11 @@ export function pushGrantGate(
   return {
     agentLaneUnavailable:
       'authorization phrases count only when a human types them in a user turn.',
-    // `fillablePhrase` makes the phrase a click-to-FILL hyperlink where the
+    // `toCopyLink` makes the phrase a click-to-copy hyperlink where the
     // terminal renders OSC 8, and leaves it verbatim everywhere else. Clicking
     // types it into the prompt; the operator's Enter still submits, which is
     // what keeps role provenance meaningful. See _shared/terminal-link.mts.
-    humanLane: `type exactly: ${fillablePhrase(phrase)}`,
+    humanLane: `type exactly: ${toCopyLink(phrase)}`,
     mind:
       'the guard scans transcript role provenance — the phrase works typed ' +
       'here as a normal message, nothing to run.',

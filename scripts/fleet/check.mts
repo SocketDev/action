@@ -39,7 +39,9 @@ const logger = getDefaultLogger()
 // artifact (the _shared/*.cjs bundles, coverage/) is NOT a false positive;
 // only TRACKED-file mutations count.
 function gitPorcelain(): string | undefined {
-  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI runner; the tree snapshot must complete inline before/after the sequential gate loop.
+  // Main() is a sync CLI runner; the tree snapshot must complete inline
+  // before/after the sequential gate loop.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI
   const r = spawnSync('git', ['status', '--porcelain'], { encoding: 'utf8' })
   return r.status === 0 ? String(r.stdout ?? '') : undefined
 }
@@ -148,7 +150,8 @@ export async function runPool<T>(
       while (next < items.length) {
         const idx = next
         next += 1
-        // eslint-disable-next-line no-await-in-loop -- a pool lane drains its queue serially by design
+        // A pool lane drains its queue serially by design.
+        // eslint-disable-next-line no-await-in-loop -- a pool lane drains
         await worker(items[idx]!)
       }
     },
@@ -224,7 +227,8 @@ export async function main(): Promise<void> {
     // --fix steps MUTATE (lint --fix, generators): serial + fail-fast so writes
     // never race and dependent order holds.
     for (let i = 0, { length } = steps; i < length; i += 1) {
-      // eslint-disable-next-line no-await-in-loop -- serial fixer chain: order matters + no write races
+      // Order matters + no write races.
+      // eslint-disable-next-line no-await-in-loop -- serial fixer chain
       const r = await steps[i]!()
       emit(r)
       if (!r.ok) {
@@ -297,6 +301,8 @@ const SCRIPT_META: ScriptMeta = {
   --release  include the release/CI-only checks (CI sets this implicitly)`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

@@ -98,7 +98,11 @@ export function scanRouting(text: string, file: string): RoutingViolation[] {
     for (const q of body.matchAll(QUOTED_RE)) {
       const name = q[1] ?? ''
       if (!KNOWN_BACKENDS.has(name)) {
-        // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies KNOWN_BACKENDS into a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+        // The spread copies KNOWN_BACKENDS into a fresh array, no shared
+        // mutation; .toSorted() would trip
+        // socket/no-runtime-features-below-engine-floor in cascaded Node-18
+        // repos.
+        // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies
         const known = [...KNOWN_BACKENDS].sort().join(', ')
         out.push({
           detail: `preferenceOrder names unknown backend "${name}" — not in @socketsecurity/lib/ai/backends BACKENDS (${known}). Fix the name or add the backend to the registry.`,
@@ -117,7 +121,7 @@ export function scanRouting(text: string, file: string): RoutingViolation[] {
   return out
 }
 
-function main(): void {
+export function main(): void {
   const quiet = process.argv.includes('--quiet')
   const files = globSync([...SCAN_GLOBS], {
     cwd: REPO_ROOT,

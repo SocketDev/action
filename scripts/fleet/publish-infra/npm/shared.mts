@@ -253,7 +253,9 @@ export async function fetchPriorProvenanceMap(
     }
   }
   const result = new Map<string, boolean>()
-  // oxlint-disable-next-line socket/prefer-all-settled -- fail-fast: a failed trust-info fetch makes the audit incomplete; abort rather than report partial attestation results.
+  // A failed trust-info fetch makes the audit incomplete; abort rather than
+  // report partial attestation results.
+  // oxlint-disable-next-line socket/prefer-all-settled -- fail-fast
   await Promise.all(
     [...uniqueNames].map(async name => {
       const versions = await fetchVersionTrustInfo(name, 'abbreviated')

@@ -118,7 +118,10 @@ export function staleBullets(
       !capabilityGated.has(id) &&
       !NON_HOOK_REGISTRY_ENTRIES.has(id),
   )
-  // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already returns a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // .filter() already returns a fresh array, no shared mutation; .toSorted()
+  // would trip socket/no-runtime-features-below-engine-floor in cascaded
+  // Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- .filter() already returns
   return flagged.sort()
 }
 
@@ -143,7 +146,9 @@ export function main(): void {
 
   // Report (non-fatal) undocumented hooks so the completeness gap stays visible.
   const documented = new Set(bullets)
-  // oxlint-disable-next-line unicorn/no-array-sort -- spread already copies; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+  // cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- spread already copies
   const undocumented = [...real].filter(h => !documented.has(h)).sort()
   if (undocumented.length > 0) {
     logger.info(

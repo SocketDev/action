@@ -16,7 +16,9 @@ import path from 'node:path'
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- generator main() is sync (writeThroughMirrorLock); the in-place oxfmt pass below must run before main returns
+// Generator main() is sync (writeThroughMirrorLock); the in-place oxfmt pass
+// below must run before main returns.
+// oxlint-disable-next-line socket/prefer-async-spawn -- generator main()
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { ToolsConfig } from '../lib/external-tools-schema.mts'
@@ -75,7 +77,7 @@ export function serializeSchema(schema: Record<string, unknown>): string {
   return `${JSON.stringify(schema, null, 2)}\n`
 }
 
-function main(): void {
+export function main(): void {
   const generated = buildExternalToolsSchema()
   if (process.argv.includes('--check')) {
     let current: unknown

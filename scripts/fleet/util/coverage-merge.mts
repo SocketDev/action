@@ -505,8 +505,8 @@ export async function mergeCoverageFinal(config: {
     coveredLines += coveredLineSet.size
 
     mergedReport[file] = {
-      ...(iso ?? {}),
-      ...(main ?? {}),
+      ...iso,
+      ...main,
       b: mergedB,
       f: mergedF,
       s: mergedS,

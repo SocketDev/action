@@ -118,7 +118,8 @@ export const AMBIGUOUS_TERMS: readonly string[] = [
  * Compile one term table entry. The leading `\b` stops a mid-word match
  * (`rce` inside "sources" once flagged a plain schema parser).
  */
-// oxlint-disable-next-line socket/require-regex-comment -- the source is a term table entry.
+// The source is a term table entry.
+// oxlint-disable-next-line socket/require-regex-comment -- the source is a term
 export function compileTermMatcher(term: string): RegExp {
   return new RegExp(`\\b${term}`, 'i')
 }
@@ -144,11 +145,13 @@ const TEST_PATH_RE =
   // oxlint-disable-next-line socket/require-regex-comment -- described above
   /(?:^|\/)(?:__tests__|fixtures?|mocks?|tests?)\/|\.(?:bench|fuzz|spec|test)\./
 
-// oxlint-disable-next-line socket/require-regex-comment -- a source-file extension suffix
+// A source-file extension suffix.
+// oxlint-disable-next-line socket/require-regex-comment -- a source-file
 const CODE_PATH_RE = /\.(?:cjs|cts|js|mjs|mts|ts)$/
 
 const DECLARATION_RE =
-  // oxlint-disable-next-line socket/require-regex-comment -- captures the kind and name of a top-level export
+  // Captures the kind and name of a top-level export.
+  // oxlint-disable-next-line socket/require-regex-comment -- captures the kind
   /^export\s+(?:async\s+)?(class|const|function|interface|let|type)\s+([A-Za-z_$][\w$]*)/
 
 // `@unused <reason>` / `@security-disposition <reason>` — the reason must carry
@@ -156,7 +159,8 @@ const DECLARATION_RE =
 // oxlint-disable-next-line socket/require-regex-comment -- described above
 const DISPOSITION_RE = /@(?:security-disposition|unused)[ \t]+(\S[^\n]{9,})/
 
-// oxlint-disable-next-line socket/require-regex-comment -- the bare @security doc tag
+// The bare @security doc tag.
+// oxlint-disable-next-line socket/require-regex-comment -- the bare @security
 const SECURITY_TAG_RE = /@security\b/
 
 // oxlint-disable-next-line socket/require-regex-comment -- a JS identifier

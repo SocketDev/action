@@ -99,7 +99,8 @@ export function frontmatterValue(
     const m = new RegExp(`^${key}:[ \\t]*(.*)$`).exec(line)
     if (m) {
       // Strip one leading or trailing quote char, a YAML-style quoted scalar.
-      // oxlint-disable-next-line socket/require-regex-comment -- described above
+      // Described above.
+      // oxlint-disable-next-line socket/require-regex-comment -- described
       return m[1]!.trim().replace(/^['"]|['"]$/g, '')
     }
   }

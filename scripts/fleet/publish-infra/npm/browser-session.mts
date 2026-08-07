@@ -44,8 +44,9 @@
  *     "login does not persist". The only auth failure reported is "signed
  *     out".
  *   - A human-verification challenge is PAUSED for the operator, never
- *     retried on a ladder; {@link runChallengeAware} owns that rhythm for
- *     every consumer. See `docs/agents.md/fleet/npm-anti-bot-rhythm.md`.
+ *     retried on a ladder, and the pause waits IN PLACE — it never navigates
+ *     the page it is waiting on; {@link runChallengeAware} owns that rhythm
+ *     for every consumer. See `docs/agents.md/fleet/npm-anti-bot-rhythm.md`.
  *     `scripts/fleet/check/playwright-launches-are-sanctioned.mts` enforces the
  *     launch rules across the tree, so a new tool cannot re-derive its own.
  */
@@ -62,6 +63,7 @@ import type { BrowserContext, Page } from 'playwright-core'
 
 import { clearChallengeGate, tickChallengeGate } from './challenge-gate.mts'
 import type { ChallengePauseUx } from './challenge-gate.mts'
+import { REPO_ROOT } from '../../paths.mts'
 import { logger } from '../shared.mts'
 
 export {
@@ -103,10 +105,73 @@ export const CHALLENGE_POLL_MS = 5000
  */
 export const COOLDOWN_OPTIN_SELECTOR = 'input[name="didOptForCooldown"]'
 
+/**
+ * How long a tick waits for the checkbox to become actionable.
+ */
+export const COOLDOWN_TICK_TIMEOUT_MS = 4000
+
+/**
+ * The watcher's budget and pace. The budget covers the operator's whole OTP
+ * step; the pace is cheap and still catches npm's `/escalate/otp` redirect
+ * the moment it renders.
+ */
+export const COOLDOWN_WATCH_BUDGET_MS = 5 * 60_000
+export const COOLDOWN_WATCH_INTERVAL_MS = 1500
+
+/**
+ * The slice of a page the cooldown tick needs, declared beside the selector it
+ * queries so both this module and the trust reconciler share ONE shape.
+ * Structural on purpose: a real playwright `Page` satisfies it, and a unit
+ * test's plain object does too. `locator` optional means a minimal fake
+ * no-ops instead of crashing.
+ */
+export interface CooldownTickablePage {
+  locator?:
+    | ((selector: string) => {
+        first: () => {
+          check: (options: { timeout: number }) => Promise<void>
+        }
+      })
+    | undefined
+}
+
 // Chrome's profile lock. Present while an instance holds the profile; a
 // crashed instance can leave it behind, which is why the guard reports it as
 // "possibly stale" rather than asserting a live holder.
 const SINGLETON_LOCK = 'SingletonLock'
+
+/**
+ * Chrome Web Store id of the 1Password extension. This is PUBLIC data, not a
+ * secret: every Web Store extension's id is the trailing path segment of its
+ * public listing URL — verified 2026-08-06 at
+ * https://chromewebstore.google.com/detail/aeblfdkhhhdcdjpifhhbdiojplfjncoa
+ * ("1Password – Password Manager") — and the same id names the extension's
+ * install directory under the Chrome profile
+ * (`<profile>/Default/Extensions/<id>`). When the durable profile carries
+ * it, the launch also drops Playwright's `--disable-extensions` default so
+ * the operator's vault can autofill sign-in and OTP pages in the window we
+ * spawn for auth.
+ */
+export const ONE_PASSWORD_EXTENSION_IDS: readonly string[] = [
+  'aeblfdkhhhdcdjpifhhbdiojplfjncoa',
+]
+
+/**
+ * Whether the profile carries a known password-manager extension, checked in
+ * the two places Chrome materializes installed extensions (the default
+ * profile subdirectory and the profile root). Pure over the filesystem —
+ * exported for tests.
+ */
+export function profileHasOnePassword(
+  profileDir: string,
+  ids: readonly string[] = ONE_PASSWORD_EXTENSION_IDS,
+): boolean {
+  return ids.some(
+    id =>
+      existsSync(path.join(profileDir, 'Default', 'Extensions', id)) ||
+      existsSync(path.join(profileDir, 'Extensions', id)),
+  )
+}
 
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -127,7 +192,10 @@ export async function fetchInPage(
   try {
     return await page.evaluate(
       async ({ acceptHeader, fetchUrl }) => {
-        // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- runs in the npm page's MAIN world via page.evaluate; the lib httpRequest is unavailable there and only the page's cookies authenticate this request.
+        // Runs in the npm page's MAIN world via page.evaluate; the lib
+        // httpRequest is unavailable there and only the page's cookies
+        // authenticate this request.
+        // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- runs
         const r = await fetch(fetchUrl, {
           cache: 'no-store',
           credentials: 'same-origin',
@@ -180,16 +248,86 @@ export async function resolveNpmUser(page: Page): Promise<string> {
  * a batch of operations rides ONE approval. Fail-soft: any error is swallowed
  * and the flow proceeds exactly as before.
  */
-export async function optIntoChallengeCooldown(page: Page): Promise<void> {
+export async function optIntoChallengeCooldown(
+  page: CooldownTickablePage,
+): Promise<void> {
+  if (typeof page.locator !== 'function') {
+    return
+  }
   try {
-    const box = page.locator(COOLDOWN_OPTIN_SELECTOR).first()
-    if ((await box.count()) > 0 && !(await box.isChecked())) {
-      await box.check({ timeout: 2000 })
-      logger.log(
-        'Ticked the npm challenge-cooldown opt-in — publish/trust operations skip re-challenge for 5 minutes.',
-      )
+    // `check()` straight away rather than count()+isChecked() first: it is
+    // idempotent and carries its own actionability wait, which also covers a
+    // checkbox that hydrates after load.
+    await page
+      .locator(COOLDOWN_OPTIN_SELECTOR)
+      .first()
+      .check({ timeout: COOLDOWN_TICK_TIMEOUT_MS })
+    logger.log(
+      'Ticked the npm challenge-cooldown opt-in — publish/trust operations skip re-challenge for 5 minutes.',
+    )
+  } catch {
+    // The opt-in is a convenience, never load-bearing: an absent checkbox or
+    // a page without one both no-op.
+  }
+}
+
+/**
+ * Keep the cooldown opt-in ticked for `budgetMs` while the operator works,
+ * returning a stop function.
+ *
+ * One tick is not enough. npm REDIRECTS an approval page (`/auth/cli/<id>`)
+ * to its `/escalate/otp` step-up, and the checkbox lives on that LATER page —
+ * a tick fired right after the first navigation lands somewhere that has no
+ * checkbox yet (observed 2026-08-06). Nothing in the expect(1) write path
+ * loops either, because npm polls for the approval itself, so without a
+ * watcher that path never ticks the box at all.
+ *
+ * Fire-and-forget: never throws, and every tick is the same idempotent
+ * {@link optIntoChallengeCooldown}.
+ */
+export function watchCooldownOptIn(
+  page: CooldownTickablePage,
+  budgetMs = COOLDOWN_WATCH_BUDGET_MS,
+  intervalMs = COOLDOWN_WATCH_INTERVAL_MS,
+): () => void {
+  if (typeof page.locator !== 'function') {
+    return () => {}
+  }
+  let stopped = false
+  const deadline = Date.now() + budgetMs
+  const pump = async (): Promise<void> => {
+    while (!stopped && Date.now() < deadline) {
+      // eslint-disable-next-line no-await-in-loop -- paced watcher, one page.
+      await optIntoChallengeCooldown(page)
+      // eslint-disable-next-line no-await-in-loop -- paced watcher, one page.
+      await sleep(intervalMs)
     }
-  } catch {}
+  }
+  void pump().catch(() => undefined)
+  return () => {
+    stopped = true
+  }
+}
+
+/**
+ * The challenge holding screen's source: the Socket sign-in-styled band
+ * (`.config/fleet/playwright/challenge-screen.js`, generated beside the agent
+ * banner) that dresses the vendor challenge page while a pause holds — dark
+ * backdrop, the shield bouncing, "the agent is waiting" copy. A missing or
+ * unreadable asset returns undefined so the pause degrades to the bare vendor
+ * page rather than throwing.
+ */
+export async function readChallengeScreenSource(
+  filePath = path.join(
+    REPO_ROOT,
+    '.config',
+    'fleet',
+    'playwright',
+    'challenge-screen.js',
+  ),
+): Promise<string | undefined> {
+  const source = await fs.readFile(filePath, 'utf8').catch(() => '')
+  return source === '' ? undefined : source
 }
 
 /**
@@ -205,6 +343,14 @@ export async function optIntoChallengeCooldown(page: Page): Promise<void> {
  * caller therefore never needs a retry ladder. `announced` reports what the
  * CALLING loop has printed; the cross-call tracker is authoritative, which is
  * what stops a re-entered loop from re-announcing the same pause.
+ *
+ * The pause waits IN PLACE: it reads the page and never navigates it. A
+ * re-navigation on a fresh pause closed the trusted-publisher form the write
+ * lane had just opened, and the reload loop is itself the traffic shape npm's
+ * bot management answers with a challenge — settings page → form opens →
+ * reload → challenge → pause → reload, once per lap, observed live burning a
+ * full budget without progressing. The operation the caller re-attempts owns
+ * its own navigation, so nothing here needs to.
  */
 export async function pauseForChallenge(
   page: Page,
@@ -215,6 +361,9 @@ export async function pauseForChallenge(
     label: string
     pollMs?: number | undefined
     rerunHint?: string | undefined
+    // The holding-screen asset to inject; tests point it at a fixture. The
+    // default is the cascaded live-mirror copy.
+    screenPath?: string | undefined
     url: string
     ux?: ChallengePauseUx | undefined
   },
@@ -232,11 +381,31 @@ export async function pauseForChallenge(
     throw new Error(tick.expiredMessage)
   }
   if (tick.freshPause) {
-    await page.goto(cfg.url, { waitUntil: 'domcontentloaded' }).catch(() => {})
+    // Bring the window forward, and nothing else. Fronting gets the
+    // operator's attention while the page keeps whatever state the operation
+    // left on it.
     await page.bringToFront().catch(() => {})
   }
   await optIntoChallengeCooldown(page)
-  await sleep(cfg.pollMs ?? CHALLENGE_POLL_MS)
+  // Dress the wait on every tick: the challenge page can swap its body
+  // between polls, the screen dedupes itself in-page, and an injection
+  // failure must never break the pause the operator is mid-way through.
+  // The poll sleep is SCHEDULED before the screen read: the read is real fs
+  // I/O, and a fake-timers caller that advances the clock right after this
+  // call must find the timer already registered or the tick never resolves.
+  const slept = sleep(cfg.pollMs ?? CHALLENGE_POLL_MS)
+  const screen = await readChallengeScreenSource(cfg.screenPath)
+  if (screen !== undefined) {
+    // Injected through the FRAME, not page.evaluate: runtime-identical (same
+    // CSP-exempt CDP evaluate), but off the surface consumers script — a
+    // queue-driven page.evaluate double must not have its sequence eaten by a
+    // pause tick. try/catch, not .catch(): a surface without mainFrame throws
+    // SYNCHRONOUSLY, and the injection must never break the pause either way.
+    try {
+      await page.mainFrame().evaluate(screen)
+    } catch {}
+  }
+  await slept
   return { announced: true }
 }
 
@@ -282,10 +451,13 @@ export async function runChallengeAware<T>(
   const started = Date.now()
   let announced = false
   for (;;) {
-    // eslint-disable-next-line no-await-in-loop -- serial: one live page solves one challenge at a time, each attempt awaiting the last.
+    // One live page solves one challenge at a time, each attempt awaiting the
+    // last.
+    // eslint-disable-next-line no-await-in-loop -- serial
     const step = await operation()
     if (step.kind === 'done') {
-      // eslint-disable-next-line no-await-in-loop -- one await on the way out: a live pause is marked cleared before the value returns.
+      // A live pause is marked cleared before the value returns.
+      // eslint-disable-next-line no-await-in-loop -- one await on the way out
       await clearChallengeGate(page, {
         pkg: cfg.label,
         url: cfg.url,
@@ -296,7 +468,8 @@ export async function runChallengeAware<T>(
     if (step.kind === 'retry') {
       continue
     }
-    // eslint-disable-next-line no-await-in-loop -- serial pause while the operator solves the challenge.
+    // Serial pause while the operator solves the challenge.
+    // eslint-disable-next-line no-await-in-loop -- serial pause
     const pause = await pauseForChallenge(page, {
       announced,
       budgetMs: cfg.budgetMs,
@@ -326,9 +499,11 @@ export async function waitForNpmSignIn(
   for (;;) {
     // The challenge page with the cooldown box can appear at any poll tick
     // while the operator works through sign-in/2FA; keep it ticked.
-    // eslint-disable-next-line no-await-in-loop -- serial poll while the operator signs in.
+    // Serial poll while the operator signs in.
+    // eslint-disable-next-line no-await-in-loop -- serial poll
     await optIntoChallengeCooldown(page)
-    // eslint-disable-next-line no-await-in-loop -- serial poll while the operator signs in.
+    // Serial poll while the operator signs in.
+    // eslint-disable-next-line no-await-in-loop -- serial poll
     const user = await resolveNpmUser(page)
     if (user) {
       return user
@@ -404,10 +579,71 @@ export async function clearStaleSingletons(
     }
   }
   for (let i = 0, { length } = SINGLETON_ARTIFACTS; i < length; i += 1) {
-    // eslint-disable-next-line no-await-in-loop -- three tiny unlinks, sequential by choice.
+    // Sequential by choice.
+    // eslint-disable-next-line no-await-in-loop -- three tiny unlinks
     await safeDelete(path.join(profileDir, SINGLETON_ARTIFACTS[i]!))
   }
   return true
+}
+
+/**
+ * The profile file whose two exit keys drive Chrome's "Restore pages?" bubble,
+ * and the values that mean "last run ended normally".
+ *
+ * The bubble is NOT suppressible from the launch shape. A flag like
+ * `--hide-crash-restore-bubble` would mean an `args` array, and the file header
+ * forbids one: every extra launch arg tried here has cost a live npm session.
+ * Chrome decides the bubble from the profile itself, so the profile is where
+ * this belongs.
+ */
+const PROFILE_PREFERENCES = ['Default', 'Preferences']
+const CLEAN_EXIT = { exit_type: 'Normal', exited_cleanly: true }
+
+/**
+ * Clear the "Restore pages?" bubble before launch by marking the profile's
+ * last exit clean.
+ *
+ * Every run ends by closing the context rather than by Chrome's own quit path,
+ * so Chrome records the previous session as crashed and offers to restore it.
+ * The operator then has a modal sitting on top of the page a tool is driving,
+ * which is how a tick or a sign-in gets missed. Answers whether it rewrote the
+ * file. Fail-soft throughout: a profile with no Preferences yet is a first
+ * launch, which has nothing to restore anyway.
+ */
+export async function markProfileExitedCleanly(
+  profileDir: string,
+): Promise<boolean> {
+  const file = path.join(profileDir, ...PROFILE_PREFERENCES)
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(await fs.readFile(file, 'utf8')) as Record<
+      string,
+      unknown
+    >
+  } catch {
+    return false
+  }
+  const profile = parsed['profile']
+  // A Preferences file whose `profile` is not an object is not one this should
+  // rewrite; leaving it alone beats reshaping something unrecognized.
+  if (!profile || typeof profile !== 'object' || Array.isArray(profile)) {
+    return false
+  }
+  const current = profile as Record<string, unknown>
+  if (
+    current['exit_type'] === CLEAN_EXIT.exit_type &&
+    current['exited_cleanly'] === CLEAN_EXIT.exited_cleanly
+  ) {
+    return false
+  }
+  current['exit_type'] = CLEAN_EXIT.exit_type
+  current['exited_cleanly'] = CLEAN_EXIT.exited_cleanly
+  try {
+    await fs.writeFile(file, JSON.stringify(parsed))
+    return true
+  } catch {
+    return false
+  }
 }
 
 /**
@@ -497,17 +733,26 @@ export async function openNpmBrowserSession(
     if (refusal !== undefined) {
       throw new Error(refusal)
     }
+    // Then clear the restore bubble. Closing the context is not Chrome's own
+    // quit path, so the previous run reads as a crash and Chrome opens with a
+    // "Restore pages?" modal over the page a tool is about to drive.
+    await markProfileExitedCleanly(profileDir)
   }
   // The browser channel defaults to system Chrome but is overridable
   // (SOCKET_BROWSER_CHANNEL=msedge / chromium / …) for a machine without
   // Chrome installed — playwright-core can't conjure a channel it has no
   // binary for, so the operator points it at one they do have.
   const channel = process.env['SOCKET_BROWSER_CHANNEL'] || 'chrome'
+  // A third ignored default, only when the profile actually carries the
+  // 1Password extension: Playwright's --disable-extensions default would
+  // strip the operator's vault from the very window we spawn for sign-in and
+  // OTP entry. A profile without the extension keeps the exact sanctioned
+  // pair, so nothing changes for it.
+  const loadProfileExtensions = profileHasOnePassword(profileDir)
   const doLaunch =
     launch ??
-    // The sanctioned shape: channel + sandbox ON + headedness + the two
-    // ignored defaults below, nothing else. No args array. See the file
-    // header.
+    // The sanctioned shape: channel + sandbox ON + headedness + the ignored
+    // defaults below, nothing else. No args array. See the file header.
     (cfg =>
       chromium.launchPersistentContext(cfg.profileDir, {
         channel,
@@ -526,9 +771,29 @@ export async function openNpmBrowserSession(
         // bare Chrome launch of the same profile can neither read nor add
         // to, so one stray manual launch would poison the session for every
         // tool run.
-        ignoreDefaultArgs: ['--enable-automation', '--use-mock-keychain'],
+        ignoreDefaultArgs: loadProfileExtensions
+          ? [
+              '--enable-automation',
+              '--use-mock-keychain',
+              '--disable-extensions',
+            ]
+          : ['--enable-automation', '--use-mock-keychain'],
       }))
   const context = await doLaunch({ headless, profileDir })
+  // The fleet agent-banner: the same corner ribbon the Playwright MCP injects,
+  // so a human glancing at THIS window can also tell it is agent-driven.
+  // Fail-open — a checkout without the cascaded asset still gets a working
+  // session, just an unmarked one.
+  const bannerPath = path.join(
+    REPO_ROOT,
+    '.config',
+    'fleet',
+    'playwright',
+    'agent-banner.js',
+  )
+  if (existsSync(bannerPath) && typeof context.addInitScript === 'function') {
+    await context.addInitScript({ path: bannerPath }).catch(() => undefined)
+  }
   try {
     const page = context.pages()[0] ?? (await context.newPage())
     const user = scope || (await waitForNpmSignIn(page, profileDir))

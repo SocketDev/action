@@ -16,7 +16,7 @@
  *   `scripts/fleet/check/public-files-are-exported.mts`.
  */
 
-import { promises as fs, readFileSync } from 'node:fs'
+import { existsSync, promises as fs, readFileSync } from 'node:fs'
 import { builtinModules } from 'node:module'
 import path from 'node:path'
 import process from 'node:process'
@@ -122,7 +122,10 @@ export function privatePathMatcher(
   // Sort the configured segments (ASCII) so the alternation is stable +
   // satisfies sort-regex-alternations, then OR them with the defaults.
   const extra = [...privateSegments]
-    // oxlint-disable-next-line unicorn/no-array-sort -- the spread already copies `privateSegments`, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+    // The spread already copies `privateSegments`, no shared mutation;
+    // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+    // cascaded Node-18 repos.
+    // oxlint-disable-next-line unicorn/no-array-sort -- the spread already
     .sort()
     .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join('|')
@@ -596,6 +599,14 @@ export async function runGenerator(): Promise<void> {
   )
 
   const exports = buildExportsMap(config, publicFiles, srcFiles, declFiles)
+  // llms.txt at the package root auto-exports as `./llms.txt`, the same
+  // treatment `./package.json` gets: a plain-text asset agents resolve through
+  // the exports map. The generator owns the entry so a repo cannot ship the
+  // file in `files[]` while leaving it unreachable via `exports` — the exact
+  // drift socket-lib had (published but unexported).
+  if (existsSync(path.join(packageDir, 'llms.txt'))) {
+    exports['./llms.txt'] = './llms.txt'
+  }
   pkgJson['exports'] = exports
   // A declared browser-safe surface implies the package targets the browser, so
   // a downstream browser bundle will traverse its `node:*` imports — stub every

@@ -40,7 +40,9 @@ export const REQUIRED_PROXY_FLAGS = [
 // The REQUIRED_PROXY_FLAGS absent from the `PROXY_ARGS` array literal (empty =
 // all present). A flag mentioned outside the literal does not count.
 export function missingProxyFlags(source: string): string[] {
-  // oxlint-disable-next-line socket/no-source-sniffing -- this check's sole purpose is scanning source text for PROXY_ARGS literal presence.
+  // This check's sole purpose is scanning source text for PROXY_ARGS literal
+  // presence.
+  // oxlint-disable-next-line socket/no-source-sniffing -- this check's sole
   const match = source.match(/const PROXY_ARGS\s*=\s*\[([\s\S]*?)]/)
   if (!match) {
     return [...REQUIRED_PROXY_FLAGS]

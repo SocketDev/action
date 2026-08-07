@@ -18,7 +18,9 @@ import path from 'node:path'
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- single bounded probe in a tiny CLI; sync keeps the exit-code contract trivial.
+// Single bounded probe in a tiny CLI; sync keeps the exit-code contract
+// trivial.
+// oxlint-disable-next-line socket/prefer-async-spawn -- single bounded probe
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { isMainModule } from './_shared/is-main-module.mts'
 import { writeThroughMirrorLock } from './_shared/mirror-lock.mts'

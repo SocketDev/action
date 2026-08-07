@@ -299,7 +299,9 @@ export async function runLocalThreatScan(
   const findings: ThreatFinding[] = []
   for (let i = 0, { length } = selected; i < length; i += 1) {
     const rel = selected[i]!
-    // eslint-disable-next-line no-await-in-loop -- serial: one small-model prompt at a time keeps memory + a single-session engine sane.
+    // One small-model prompt at a time keeps memory + a single-session engine
+    // sane.
+    // eslint-disable-next-line no-await-in-loop -- serial
     const contents = await readCapped(readFile, path.join(packageDir, rel))
     const prompt = buildThreatPrompt(rel, contents)
     // eslint-disable-next-line no-await-in-loop -- serial model generation.

@@ -128,14 +128,15 @@ export function tierFor(surface: CodifySurface): {
  * fleet and passes the relevant guards on the first try.
  */
 export const SURFACE_GUIDANCE: Readonly<Record<CodifySurface, string>> = {
-  // oxlint-disable-next-line socket/prefer-undefined-over-null -- null-prototype object literal.
+  // null-prototype object literal.
+  // oxlint-disable-next-line socket/prefer-undefined-over-null -- proto null
   __proto__: null,
   'agents-doc': `Do NOT author this surface directly. The documentation surface (a terse one-line CLAUDE.md bullet pointing at a detail doc under docs/agents.md/{fleet,repo}/) is owned by scripts/fleet/codify-rule.mts, which keeps the CLAUDE.md edit under the 40KB whole-file cap and the per-section ≤8-line cap by pushing all prose into the doc. The orchestrator shells out to that script; you should not see this guidance unless a routing bug sent you here — stop and report it.`,
   check: `Author a single self-contained fleet check at scripts/fleet/check/<assertion-name>.mts, then register it in scripts/fleet/check.mts.
 
 <conventions>
   - Name the file as an ASSERTION (\`<thing>-is-<property>.mts\`, e.g. \`hook-dirs-are-not-husks.mts\`) — the check-names-are-assertions gate enforces this.
-  - Mirror an existing check's shape (read scripts/fleet/check/hook-dirs-are-not-husks.mts as the canonical template): a header comment (what / why / what fails / usage), pure exported scan functions (\`scanForX(repoRoot): Hit[]\`), a \`main()\` that logs hits + sets \`process.exitCode = 1\` on findings, a \`SCRIPT_META\` (describe + help — the entry-scripts-self-describe gate enforces it), and the entrypoint guard \`if (isMainModule(import.meta.url)) { runMain(main, SCRIPT_META) }\`.
+  - Mirror an existing check's shape (read scripts/fleet/check/hook-dirs-are-not-husks.mts as the canonical template): a header comment (what / why / what fails / usage), pure exported scan functions (\`scanForX(repoRoot): Hit[]\`), a \`main()\` that logs hits + sets \`process.exitCode = 1\` on findings, a \`SCRIPT_META\` (describe + help — the entry-scripts-are-self-describing gate enforces it), and the entrypoint guard \`if (isMainModule(import.meta.url)) { runMain(main, SCRIPT_META) }\`.
   - Import REPO_ROOT from '../paths.mts'; logger from '@socketsecurity/lib-stable/logger/default'. Every other filesystem path the check needs also comes from paths.mts — one path, one reference (docs/agents.md/fleet/path-hygiene.md); never respell a path inline.
   - Register it in scripts/fleet/check.mts as \`() => run('node', ['scripts/fleet/check/<name>.mts'])\` with a 2-4 line comment naming the discipline + the motivating incident generically (no dates/SHAs — the dated-citation rule).
   - Write a vitest test at test/repo/unit/check/<name>.test.mts (a dead-export fixture that fails + a clean one that passes) exercising the exported pure functions, and run it with \`pnpm test test/repo/unit/check/<name>.test.mts\` — a new script is born tested (the scripts-have-unit-tests gate tracks the gap list). Fleet-script tests cascade in lock-step; see docs/agents.md/fleet/test-layout.md.

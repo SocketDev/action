@@ -13,6 +13,11 @@ import { safeDeleteSync } from '@socketsecurity/lib-stable/fs/safe'
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import type { SpawnSyncOptions } from '@socketsecurity/lib-stable/process/spawn/types'
 
+import {
+  clearFailingScope,
+  recordFailingScope,
+  scopeKey,
+} from '../../../.claude/hooks/fleet/_shared/failing-tests-ledger.mts'
 import { readTestSummaryCounts } from './read-summary.mts'
 import {
   allSkippedNotice,
@@ -87,11 +92,17 @@ export function createVitestRunner(ctx: VitestRunnerContext): VitestRunner {
         }),
       },
     )
+    const key = scopeKey(vitestArgs)
     if (r.status !== 0) {
       ctx.log('Tests failed')
+      // Remember the red so a later commit in a DIFFERENT scope cannot walk
+      // past it: the pre-commit gate only re-runs what is staged.
+      recordFailingScope(path.dirname(ctx.rootVitestConfig), { key, label })
       safeDeleteSync(summaryDir)
       return 1
     }
+    // Green for this exact scope is the only thing that clears it.
+    clearFailingScope(path.dirname(ctx.rootVitestConfig), key)
     const counts = readTestSummaryCounts(summaryPath)
     safeDeleteSync(summaryDir)
     if (!counts) {

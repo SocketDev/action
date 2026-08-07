@@ -104,7 +104,8 @@ export function classifyPackStructure(
       } as PackStructureFinding)
     }
     seen.add(entryPath)
-    // oxlint-disable-next-line socket/normalize-path-before-match -- normalizePath COLLAPSES `..` (`lib/../../x` → `../x`), which hides the interior traversal this arm exists to find; the raw listing path is the only honest input.
+    // normalizePath COLLAPSES `..` (`lib/../../x` → `../x`), which hides the interior traversal this arm exists to find; the raw listing path is the only honest input.
+    // oxlint-disable-next-line socket/normalize-path-before-match -- normalized
     if (entryPath.split('/').includes('..')) {
       findings.push({
         __proto__: null,
@@ -114,7 +115,8 @@ export function classifyPackStructure(
         path: entryPath,
       } as PackStructureFinding)
     }
-    // oxlint-disable-next-line socket/normalize-path-before-match -- normalizePath REWRITES a backslash to a forward slash, erasing the exact character this arm looks for; the raw listing path is the only honest input.
+    // normalizePath REWRITES a backslash to a forward slash, erasing the exact character this arm looks for; the raw listing path is the only honest input.
+    // oxlint-disable-next-line socket/normalize-path-before-match -- normalized
     if (entryPath.includes('\\')) {
       findings.push({
         __proto__: null,

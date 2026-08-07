@@ -34,7 +34,7 @@
  *     plus the soak gate — not a comment a human maintains. Per
  *     `generated-files-are-never-gated`, those bytes are never gated in any
  *     scope.
- *   - `# socket-lint: allow uses-no-stamp` on the `uses:` line is the one-off
+ *   - `# oxlint-disable-next-line socket/workflow-uses-has-stamp` on the `uses:` line is the one-off
  *     escape hatch, same marker the edit-time guard honors. Exit 0 — every pin
  *     is stamped (or vacuous: no workflows); 1 — at least one bare or malformed
  *     pin comment. Usage: node
@@ -76,7 +76,8 @@ export const PIN_STAMP_COMMENT_RE = /^#\s+\S[^()]*\s+\(\d{4}-\d{2}-\d{2}\)\s*$/
 /**
  * The one-off escape hatch, identical to the edit-time guard's marker.
  */
-export const PIN_STAMP_ALLOW_MARKER = '# socket-lint: allow uses-no-stamp'
+export const PIN_STAMP_ALLOW_MARKER =
+  '# oxlint-disable-next-line socket/workflow-uses-has-stamp'
 
 export interface UnstampedPin {
   /**

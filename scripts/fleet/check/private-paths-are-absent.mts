@@ -26,7 +26,9 @@
 //
 // Usage: node scripts/fleet/check/private-paths-are-absent.mts [--quiet]
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from `git ls-files`, sequential gate.
+// Needs typed string stdout from `git ls-files`, sequential gate.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
+import { suppressionWaives } from '../../../.claude/hooks/fleet/_shared/suppression-rules.mts'
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -47,8 +49,8 @@ import { SOURCE_FILE_RE } from '../../../.git-hooks/_shared/file-scan.mts'
 import { isPurePlaceholder } from '../../../.git-hooks/_shared/personal-path.mts'
 import { REPO_ROOT } from '../paths.mts'
 import { isMainModule } from '../_shared/is-main-module.mts'
-import { runMain } from '../_shared/run-main.mts'
 import type { ScriptMeta } from '../_shared/run-main.mts'
+import { runMain } from '../_shared/run-main.mts'
 
 const logger = getDefaultLogger()
 
@@ -58,8 +60,20 @@ const JS_TS_FILE_RE = /\.(?:[cm]?[jt]sx?)$/
 // rule), or the fleet's existing same-intent markers `personal-path` (a /Users/
 // example) and `cross-repo` (a `../socket-<repo>/` example) — a doc-comment or
 // fixture that deliberately SHOWS the pattern it documents.
-const SUPPRESS_RE =
-  /socket-lint:\s*allow\s+(?:cross-repo|personal-path|private-path)\b/
+const SUPPRESSED_BY: readonly string[] = [
+  'socket/no-cross-repo-path',
+  'socket/no-private-path-in-source',
+  'socket/personal-path-placeholders',
+]
+
+function lineWaivesPrivatePath(rawLine: string): boolean {
+  for (let i = 0, { length } = SUPPRESSED_BY; i < length; i += 1) {
+    if (suppressionWaives(rawLine, SUPPRESSED_BY[i]!)) {
+      return true
+    }
+  }
+  return false
+}
 
 // Files that legitimately NAME these patterns: the three enforcement surfaces
 // this check, the edit-time hook, the lint rule, the shared matcher, the doc
@@ -99,7 +113,7 @@ function isSelfExempt(relFile: string): boolean {
 // the pattern, not leaking a real path. Matched against the captured path's
 // owner segment.
 const PLACEHOLDER_MATCH_RE =
-  // socket-lint: allow personal-path -- placeholder-token detector, not a real path.
+  // oxlint-disable-next-line socket/personal-path-placeholders -- placeholder-token detector, not a real path.
   /(?:^|[/.])(?:socket-foo\b|Users\/(?:\.\.\.|me|x)(?:\/|$))/
 
 function findingIsDocumentation(
@@ -107,7 +121,7 @@ function findingIsDocumentation(
   kind: PrivatePathFinding['kind'],
   match: string,
 ): boolean {
-  if (SUPPRESS_RE.test(rawLine)) {
+  if (lineWaivesPrivatePath(rawLine)) {
     return true
   }
   if (kind === 'home-abs-path' && isPurePlaceholder(rawLine)) {
@@ -239,7 +253,7 @@ export function scanRepo(repoRoot: string): PrivatePathHit[] {
   return hits
 }
 
-function main(): void {
+export function main(): void {
   const quiet = process.argv.includes('--quiet')
   const hits = scanRepo(REPO_ROOT)
   if (hits.length) {
@@ -256,7 +270,7 @@ function main(): void {
       '  These leak internal fleet layout, operator-local notes, or a dev-box path into committed source.',
     )
     logger.error(
-      '  Remove the path from the comment (describe the constraint, not where a plan doc lives), or add `// socket-lint: allow private-path` on its own line above a line that must keep an illustrative example. See docs/agents.md/fleet/public-surface-hygiene.md.',
+      '  Remove the path from the comment (describe the constraint, not where a plan doc lives), or waive it with `// oxlint-disable-next-line socket/no-private-path-in-source -- <reason>` above a line that must keep an illustrative example. See docs/agents.md/fleet/public-surface-hygiene.md.',
     )
     process.exitCode = 1
     return
@@ -275,6 +289,8 @@ const SCRIPT_META: ScriptMeta = {
   --quiet   suppress the success line`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

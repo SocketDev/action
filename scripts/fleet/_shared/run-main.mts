@@ -7,17 +7,21 @@
  *   process.exitCode = await main() })()` entry pattern, which crashes with a
  *   raw stack if `main()` throws. Enforced by
  *   `scripts/fleet/check/entry-scripts-are-fail-soft.mts` (a fleet CLI entry
- *   must fail soft — never hard-crash the user).
- *   It also owns the whole-argv concerns every entry shares, so a new script
- *   inherits them instead of having to remember each: `--describe` prints the
- *   script's one-line purpose, `-h`/`--help` prints its usage (both from the
- *   {@link ScriptMeta} the entry passes, both BEFORE `main()` runs or any lock
- *   is taken), and a bare `--` in argv is refused before `main()` runs.
- *   Enforced by `scripts/fleet/check/entry-scripts-self-describe.mts` (every
- *   entry script answers --describe and --help without running its side
- *   effect).
+ *   must fail soft — never hard-crash the user). It also owns the whole-argv
+ *   concerns every entry shares, so a new script inherits them instead of
+ *   having to remember each: `--describe` prints the script's one-line purpose,
+ *   `-h`/`--help` prints its usage (both from the {@link ScriptMeta} the entry
+ *   passes, both BEFORE `main()` runs or any lock is taken), `--describe
+ *   --json` (either order) prints the same identity as a machine-readable
+ *   manifest instead, and a bare `--` in argv is refused before `main()`
+ *   runs. A plain `--json` (no `--describe`) reaches `main()` untouched —
+ *   {@link isJsonRequested} lets a script's own `main()` switch its RESULT
+ *   output to structured JSON without re-parsing argv itself. Enforced by
+ *   `scripts/fleet/check/entry-scripts-are-self-describing.mts` (every entry
+ *   script answers --describe and --help without running its side effect).
  */
 
+import { readFileSync } from 'node:fs'
 import process from 'node:process'
 
 import { errorMessage } from '@socketsecurity/lib-stable/errors/message'
@@ -32,8 +36,8 @@ const logger = getDefaultLogger()
  * parser truncates there — every flag after it is DISCARDED, not collected as a
  * positional. The script then runs with default behaviour while the caller
  * believes they passed flags. That is merely confusing for a read-only script
- * and dangerous for a destructive one: `prune:backups -- --dry-run` drops the
- * `--dry-run` and performs a live run against every repo.
+ * and dangerous for a destructive one: `prune:branch-backups -- --dry-run`
+ * drops the `--dry-run` and performs a live run against every repo.
  *
  * Checked against `process.argv` because by the time parsing finishes the
  * dropped flags are unrecoverable — the parsed result cannot tell you what was
@@ -98,6 +102,18 @@ export function helpRequest(
 }
 
 /**
+ * True when argv carries `--json` on its own — orthogonal to `helpRequest`,
+ * which only reads `--describe`/`-h`/`--help`. A script's own `main()` calls
+ * this to switch its RESULT output to structured JSON without re-parsing
+ * argv itself; `--describe --json` (either order) is answered entirely by
+ * the runner before `main()` runs and never reaches this predicate. Pure —
+ * exported for tests and entry scripts.
+ */
+export function isJsonRequested(argv: readonly string[]): boolean {
+  return argv.includes('--json')
+}
+
+/**
  * The text a help request prints: the one-liner alone for `--describe`, or
  * the one-liner + blank line + usage body for `--help`. Pure — exported for
  * tests.
@@ -106,6 +122,51 @@ export function helpText(kind: 'describe' | 'help', meta: ScriptMeta): string {
   return kind === 'describe'
     ? meta.describe
     : `${meta.describe}\n\n${meta.help}`
+}
+
+/**
+ * The `--describe --json` payload: the fleet CLI self-description manifest
+ * (canonical schema: socket-wheelhouse `schemas/cli-describe.schema.json`),
+ * minimal for a script — identity plus the one-line purpose; a script's flags
+ * live in its `help` prose, not structured meta. Pure — exported for tests.
+ */
+export interface DescribeIdentity {
+  readonly name: string
+  readonly version: string
+}
+
+export function describeManifestText(
+  meta: ScriptMeta,
+  config: DescribeIdentity,
+): string {
+  const { name, version } = { __proto__: null, ...config } as DescribeIdentity
+  return JSON.stringify(
+    {
+      $schema:
+        'https://raw.githubusercontent.com/SocketDev/socket-wheelhouse/main/schemas/cli-describe.schema.json',
+      name,
+      version,
+      description: meta.describe,
+    },
+    undefined,
+    2,
+  )
+}
+
+/**
+ * The version stamped into a script's manifest: the invoking repo root's
+ * `package.json` version. Fail-soft — a script must answer `--describe`
+ * anywhere, including a cwd with no manifest at all.
+ */
+function repoVersion(): string {
+  try {
+    const parsed = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      version?: string | undefined
+    }
+    return parsed.version || '0.0.0'
+  } catch {
+    return '0.0.0'
+  }
 }
 
 /**
@@ -145,7 +206,16 @@ export async function runMainAsync(
     // and while another holder has the repo lock.
     const request = helpRequest(argv)
     if (request) {
-      logger.log(helpText(request, meta))
+      if (request === 'describe' && argv.includes('--json')) {
+        logger.log(
+          describeManifestText(meta, {
+            name: process.argv[1]?.split('/').pop() ?? 'script',
+            version: repoVersion(),
+          }),
+        )
+      } else {
+        logger.log(helpText(request, meta))
+      }
       process.exitCode = 0
       return
     }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * @file OSC 8 terminal hyperlinks, and the click-to-FILL URL a gate's lane A
+ * @file OSC 8 terminal hyperlinks, and the click-to-copy URL a gate's lane A
  *   uses so the operator never retypes an authorization phrase.
  *
  *   Why this exists rather than socket-lib's `links/create`: that helper colors
@@ -8,14 +8,14 @@
  *   create clickable hyperlinks"). Nothing in the fleet emitted OSC 8 before
  *   this module.
  *
- *   FILL, NEVER SUBMIT — the security property this module is built around.
- *   A `url` handler is invokable by ANY local process: `open x-wh-gate://...`
+ *   Copy, never submit — the security property this module is built around.
+ *   A `url` handler is invokable by ANY local process: `open x-socketsecurity--fleet://...`
  *   from an agent is indistinguishable from a human click. If the handler
  *   submitted, an agent could mint a user-role turn carrying an authorization
  *   phrase and defeat every provenance guard in the fleet at once. So the
- *   handler types the phrase and STOPS. The human's Enter keystroke stays the
+ *   handler copies it to the clipboard and stops. The human's Enter keystroke stays the
  *   provenance anchor, which is exactly the property
- *   push-protected-branch-guard depends on. `FILL_ACTION` is the only action
+ *   push-protected-branch-guard depends on. `COPY_ACTION` is the only action
  *   this module can spell; there is deliberately no submit action to reach.
  */
 
@@ -26,14 +26,14 @@ import process from 'node:process'
  * unregistered-scheme convention, and `wh` for wheelhouse, matching the
  * `wh:` HTML-comment marker namespace.
  */
-export const GATE_URL_SCHEME = 'x-wh-gate'
+export const FLEET_URL_SCHEME = 'x-socketsecurity--fleet'
 
 /*
  * The ONLY action. Adding a submit action here would silently convert every
  * existing gate into an agent-reachable self-authorization, so the absence of
  * one is load-bearing and belongs in review.
  */
-export const FILL_ACTION = 'fill'
+export const COPY_ACTION = 'copy'
 
 const OSC = '\u001B]'
 const ST = '\u0007'
@@ -97,15 +97,16 @@ export function osc8Link(
 }
 
 /**
- * The click-to-fill URL for `phrase`.
+ * The click-to-copy URL for `text`.
  *
- * The phrase rides in the URL because the handler must type it verbatim and
- * has no session to look it up from. That is safe precisely BECAUSE filling is
- * all it can do: the URL carries no authority, only text. Encoded with
- * `encodeURIComponent` so a phrase containing spaces or punctuation survives.
+ * The text rides in the URL because the handler must place it on the clipboard
+ * verbatim and has no session to look it up from. That is safe precisely
+ * BECAUSE filling is all it can do: the URL carries no authority, only text.
+ * Encoded with `encodeURIComponent` so a phrase containing spaces or
+ * punctuation survives.
  */
-export function gateFillUrl(phrase: string): string {
-  return `${GATE_URL_SCHEME}://${FILL_ACTION}?phrase=${encodeURIComponent(phrase)}`
+export function copyUrl(text: string): string {
+  return `${FLEET_URL_SCHEME}://${COPY_ACTION}?text=${encodeURIComponent(text)}`
 }
 
 /**
@@ -116,11 +117,11 @@ export function gateFillUrl(phrase: string): string {
  * A is copy-pasteable by rule, so the link text has to be exactly what the
  * operator would otherwise type.
  */
-export function fillablePhrase(
-  phrase: string,
+export function toCopyLink(
+  text: string,
   env: NodeJS.ProcessEnv = process.env,
 ): string {
-  return osc8Link(phrase, gateFillUrl(phrase), env)
+  return osc8Link(text, copyUrl(text), env)
 }
 
 /*
@@ -129,20 +130,3 @@ export function fillablePhrase(
  * of a detached terminal the agent cannot read.
  */
 export const RUN_PREFIX = '! '
-
-/**
- * A command rendered as a click-to-FILL `! <command>` line: clickable where
- * the terminal supports OSC 8, verbatim everywhere else.
- *
- * Same fill-only rule as `fillablePhrase`, and it matters MORE here. A click
- * that both filled and ran a command would give any local process arbitrary
- * shell execution through a URL. This one prefills the prompt and stops, so
- * the operator reads the command before pressing Enter.
- */
-export function fillableCommand(
-  command: string,
-  env: NodeJS.ProcessEnv = process.env,
-): string {
-  const line = `${RUN_PREFIX}${command}`
-  return osc8Link(line, gateFillUrl(line), env)
-}

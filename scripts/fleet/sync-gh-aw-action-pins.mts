@@ -168,7 +168,9 @@ export function compileOne(mdPath: string): CompileResult {
 export function workflowOutputPaths(mdPath: string): string[] {
   const dir = path.dirname(mdPath)
   const awDir = path.join(path.dirname(dir), 'aw')
-  // oxlint-disable-next-line socket/sort-set-args -- non-literal elements, runtime path calls; already alphanumeric by call text (actionsLockPathFor < lockYmlPathFor).
+  // Runtime path calls; already alphanumeric by call text (actionsLockPathFor <
+  // lockYmlPathFor).
+  // oxlint-disable-next-line socket/sort-set-args -- non-literal elements
   const out = new Set<string>([
     actionsLockPathFor(mdPath),
     lockYmlPathFor(mdPath),
@@ -368,7 +370,7 @@ export function sweepUndeclaredEmissions(mdFiles: readonly string[]): string[] {
   return undeclared
 }
 
-function main(): void {
+export function main(): void {
   const { quiet } = parseSyncArgs(process.argv.slice(2))
 
   const mdFiles = listTrackedMarkdown()
@@ -493,6 +495,8 @@ const SCRIPT_META: ScriptMeta = {
   --quiet  suppress the clean-state line`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

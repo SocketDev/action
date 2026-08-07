@@ -23,7 +23,8 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from `git ls-files`, sequential gate.
+// Needs typed string stdout from `git ls-files`, sequential gate.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
 import { normalizePath } from '@socketsecurity/lib-stable/paths/normalize'
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 

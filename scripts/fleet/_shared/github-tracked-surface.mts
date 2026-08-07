@@ -6,11 +6,11 @@
  *   checkout. So these paths never enter the thin untrack set — the release
  *   bundle still ships them, but they reach members in the cascade COMMIT,
  *   tracked. ONE declaration shared by the dep-0 bootstrap installer
- *   (`thinIgnoreEntries` excludes them) and the enforcing check
- *   (`thin-untrack-set-is-ci-safe`), so the two can never disagree. Pure — no
+ *   (`fleetPackOwnedPaths` excludes them) and the enforcing check
+ *   (`fleet-pack-ci-files-are-tracked`), so the two can never disagree. Pure — no
  *   imports — so rolldown inlines it into the dep-0 `fleet.mjs` without pulling
  *   anything into the bare-node fetcher. See
- *   docs/agents.md/fleet/thin-distribution.md ("Always tracked: the GitHub
+ *   docs/agents.md/fleet/fleet-pack-distribution.md ("Always tracked: the GitHub
  *   surface").
  */
 
@@ -20,16 +20,50 @@
 // `.github/actions/fleet/` do.
 export const ALWAYS_TRACKED_GITHUB_PREFIXES: readonly string[] = [
   '.github/actions/fleet/',
+  // GitHub reads dependabot.yml from the committed tree, so untracking it does
+  // not error — it silently DISABLES Dependabot for the repo. A thin
+  // conversion untracked it on 2026-08-06 and nothing caught it, because
+  // `fleet-pack-ci-files-are-tracked` derives its expectation from this very
+  // array: a surface missing here is invisible to the guard that exists to
+  // protect it.
+  '.github/dependabot.yml',
   '.github/workflows/',
 ]
 
 /**
+ * Non-GitHub surfaces a member must keep tracked. The unifying rule for BOTH
+ * lists: anything a consumer reads BEFORE our fetch runs has to be in the
+ * commit. pnpm reads `.npmrc` and resolves `patchedDependencies` at install
+ * time, which on a thin member happens after hydration but on a FRESH clone
+ * can precede it; GitHub reads workflows and dependabot.yml from the
+ * committed tree. Same rule, different consumers.
+ *
+ * These cannot live in ALWAYS_TRACKED_GITHUB_PREFIXES: that predicate is
+ * `.github/`-scoped by construction, so a `.npmrc` entry there would never
+ * be reached.
+ */
+export const ALWAYS_TRACKED_PREFIXES: readonly string[] = ['.npmrc', 'patches/']
+
+/**
+ * True when `relPath` is any always-tracked surface, GitHub or not. This is
+ * what an untrack set should consult; the GitHub-only predicate below stays
+ * exported for callers that mean the CI surface specifically.
+ */
+export function isAlwaysTrackedSurface(relPath: string): boolean {
+  const p = relPath.replaceAll('\\', '/')
+  for (let i = 0, { length } = ALWAYS_TRACKED_PREFIXES; i < length; i += 1) {
+    if (p.startsWith(ALWAYS_TRACKED_PREFIXES[i]!)) {
+      return true
+    }
+  }
+  return isAlwaysTrackedGitHubSurface(p)
+}
+
+/**
  * True when `relPath`, repo-relative, either separator, is part of the GitHub
- * CI surface a member must keep git-tracked even when thin — a workflow file or
- * a fleet composite action. `thinIgnoreEntries` gates on this so the untrack
- * set can never strand CI: GitHub reads both surfaces from the committed tree
- * before any fetch step runs, so a `git rm --cached` would break the member's
- * CI outright.
+ * CI surface a member must keep git-tracked even when thin — a workflow file,
+ * a fleet composite action, or dependabot.yml. GitHub reads all of them from
+ * the committed tree before any fetch step runs.
  */
 export function isAlwaysTrackedGitHubSurface(relPath: string): boolean {
   const p = relPath.replaceAll('\\', '/')

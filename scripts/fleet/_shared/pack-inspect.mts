@@ -16,7 +16,8 @@ import { existsSync, mkdtempSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync CLI checks; pack, listing, and extraction are sequential by nature.
+// Pack, listing, and extraction are sequential by nature.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync CLI checks
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { tarExecutable } from './tar-executable.mts'

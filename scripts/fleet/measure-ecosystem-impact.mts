@@ -210,7 +210,8 @@ export async function resolveDependencyClosure(
   let frontier = [...new Set(roots)]
   for (let depth = 0; depth < depthCap && frontier.length > 0; depth += 1) {
     const pending = frontier.filter(name => !graph.has(name))
-    // eslint-disable-next-line no-await-in-loop -- one level at a time: the next frontier is only known after this one resolves.
+    // The next frontier is only known after this one resolves.
+    // eslint-disable-next-line no-await-in-loop -- one level at a time
     const resolved = await Promise.all(
       pending.map(async name => [name, await resolve(name)] as const),
     )
@@ -278,7 +279,8 @@ export function createRegistryResolver(
     }
     let waitMs = 500
     for (let attempt = 0; attempt <= retries; attempt += 1) {
-      // eslint-disable-next-line no-await-in-loop -- a retry loop is serial by definition.
+      // A retry loop is serial by definition.
+      // eslint-disable-next-line no-await-in-loop -- a retry loop is serial
       const response = await doFetch(
         `${REGISTRY_BASE}/${encodeURIComponent(name).replace(/^%40/, '@')}/latest`,
       )
@@ -286,7 +288,8 @@ export function createRegistryResolver(
         if (attempt === retries) {
           break
         }
-        // eslint-disable-next-line no-await-in-loop -- backoff must elapse before the next attempt.
+        // Backoff must elapse before the next attempt.
+        // eslint-disable-next-line no-await-in-loop -- backoff must elapse
         await sleep(waitMs)
         waitMs *= 2
         continue
@@ -304,7 +307,8 @@ export function createRegistryResolver(
             '  Fix: re-run when the registry recovers, or pass --offline to use the cached graph.',
         )
       }
-      // eslint-disable-next-line no-await-in-loop -- the body belongs to this attempt.
+      // The body belongs to this attempt.
+      // eslint-disable-next-line no-await-in-loop -- the body belongs
       const manifest = (await response.json()) as {
         dependencies?: Record<string, string> | undefined
       }
@@ -563,6 +567,8 @@ const SCRIPT_META: ScriptMeta = {
   help: impactHelpText(),
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

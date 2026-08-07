@@ -153,7 +153,10 @@ export function parseBlocks(lines: string[]): Block[] {
       // prefix, (2) an optional parenthesized `(<YYYY-MM-DD>)` committer date,
       // (3) an optional `sha256:<hex>` stamp, (4) any trailing text.
       const header =
-        /* oxlint-disable-next-line socket/require-regex-comment -- captures the ref, its optional date, and its optional sha256 stamp from a .gitmodules header comment */ /^(#\s+[A-Za-z0-9][A-Za-z0-9.-]*-\S+?)(?:\s+\((\d{4}-\d{2}-\d{2})\))?(?:\s+sha256:([0-9a-f]+))?(\s.*)?$/.exec(
+        // Captures the ref, its optional date, and its optional sha256 stamp
+        // from a .gitmodules header comment.
+        // oxlint-disable-next-line socket/require-regex-comment -- header pin
+        /^(#\s+[A-Za-z0-9][A-Za-z0-9.-]*-\S+?)(?:\s+\((\d{4}-\d{2}-\d{2})\))?(?:\s+sha256:([0-9a-f]+))?(\s.*)?$/.exec(
           prev,
         )
       if (header) {
@@ -177,7 +180,9 @@ export function parseBlocks(lines: string[]): Block[] {
       // `owner/repo` (sans optional `.git`). Alternation sorted (`git@` before
       // `https`) per sort-regex-alternations.
       const urlMatch =
-        /* oxlint-disable-next-line socket/require-regex-comment -- captures the owner/repo from a .gitmodules url line */ /^\s*url\s*=\s*(?:git@github\.com:|https?:\/\/github\.com\/)([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/.exec(
+        // Captures the owner/repo from a .gitmodules url line.
+        // oxlint-disable-next-line socket/require-regex-comment -- owner/repo
+        /^\s*url\s*=\s*(?:git@github\.com:|https?:\/\/github\.com\/)([^/\s]+\/[^/\s]+?)(?:\.git)?\s*$/.exec(
           next,
         )
       if (urlMatch) {
@@ -741,7 +746,7 @@ async function runSet(argv: string[], gitmodulesPath: string): Promise<void> {
   if (block.refLine !== undefined) {
     lines[block.refLine] = lines[block.refLine]!.replace(
       /(ref\s*=\s*)[0-9a-f]+/,
-      `$1${newRef}`,
+      (_match: string, keyPrefix: string) => `${keyPrefix}${newRef}`,
     )
   } else {
     lines.splice(block.openLine + 1, 0, `\tref = ${newRef}`)

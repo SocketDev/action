@@ -45,7 +45,10 @@
 //
 // Usage: node scripts/fleet/check/ai-spawns-have-paired-effort.mts
 
-// oxlint-disable-next-line socket/no-agent-brand-assumption -- flags this file's "claude block" comment, a real backend-registry key reference, not generic Claude guidance; rule reports comment hits at the Program node.
+// Flags this file's "claude block" comment, a real backend-registry key
+// reference, not generic Claude guidance; rule reports comment hits at the
+// Program node.
+// oxlint-disable-next-line socket/no-agent-brand-assumption -- flags
 import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'

@@ -36,7 +36,8 @@ import path from 'node:path'
 import { getCI } from '@socketsecurity/lib-stable/env/ci'
 import { safeDeleteSync } from '@socketsecurity/lib-stable/fs/safe'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- a check main() is a sync CLI gate; build + boot run inline in sequence.
+// A check main() is a sync CLI gate; build + boot run inline in sequence.
+// oxlint-disable-next-line socket/prefer-async-spawn -- a check main()
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { DISPATCH_DIR, REPO_ROOT } from '../paths.mts'
@@ -124,7 +125,7 @@ export function isFreshSnapshotCheckout(config: {
   )
 }
 
-function main(): number {
+export function main(): number {
   // Member without the snapshot infra: nothing to verify (the fast path isn't
   // shipped here — the portable compile-cache baseline is the only dispatch
   // path). Keeps the check from red-lighting a bare member checkout.
@@ -248,6 +249,8 @@ const SCRIPT_META: ScriptMeta = {
   help: 'Usage: node scripts/fleet/check/hook-snapshot-is-wired.mts',
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

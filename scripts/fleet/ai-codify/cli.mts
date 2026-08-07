@@ -85,7 +85,11 @@ export function parseArgs(argv: readonly string[]): CodifyGapArgs {
       const value = argv[i + 1] ?? ''
       i += 1
       if (!isCodifySurface(value)) {
-        // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies CODIFY_SURFACES into a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+        // The spread copies CODIFY_SURFACES into a fresh array, no shared
+        // mutation; .toSorted() would trip
+        // socket/no-runtime-features-below-engine-floor in cascaded Node-18
+        // repos.
+        // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies
         const surfaces = [...CODIFY_SURFACES].sort().join(', ')
         throw new Error(
           `--surface must be one of ${surfaces}; saw "${value}". Fix: pass the surface codifying-disciplines chose for this gap.`,
@@ -107,7 +111,10 @@ export function parseArgs(argv: readonly string[]): CodifyGapArgs {
     }
   }
   if (!surface) {
-    // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies CODIFY_SURFACES into a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+    // The spread copies CODIFY_SURFACES into a fresh array, no shared mutation;
+    // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+    // cascaded Node-18 repos.
+    // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies
     const surfaces = [...CODIFY_SURFACES].sort().join(', ')
     throw new Error(
       '--surface is required (one of ' +

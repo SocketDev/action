@@ -271,13 +271,16 @@ export function planRepoFix(
 
 // True when `gh` is installed and authenticated — the precondition for the reads.
 function ghAuthed(): boolean {
-  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI check; the auth probe must resolve inline before the sweep.
+  // Main() is a sync CLI check; the auth probe must resolve inline before the
+  // sweep.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI
   return spawnSync('gh', ['auth', 'status'], { encoding: 'utf8' }).status === 0
 }
 
 // Thin sync `gh` shell-out; stdout on success, undefined on any failure.
 function gh(args: readonly string[]): string | undefined {
-  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI check; reads and fixes apply sequentially inline.
+  // Main() is a sync CLI check; reads and fixes apply sequentially inline.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI
   const result = spawnSync('gh', args as string[], { encoding: 'utf8' })
   return result.status === 0 ? String(result.stdout ?? '') : undefined
 }

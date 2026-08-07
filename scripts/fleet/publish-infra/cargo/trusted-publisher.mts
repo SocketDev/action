@@ -448,7 +448,7 @@ export async function createGitHubConfig(
           // crates.io models "no environment gate" as an explicit JSON null;
           // omitting the key is a different request to the registry, whose
           // own schema types this field as string|null.
-          // oxlint-disable-next-line socket/prefer-undefined-over-null -- registry wire schema
+          // oxlint-disable-next-line socket/prefer-undefined-over-null -- wire
           environment: target.environment ?? null,
           repository_name: target.repositoryName,
           repository_owner: target.repositoryOwner,
@@ -851,7 +851,9 @@ export async function main(): Promise<void> {
   // The caller's cwd is the anchor ON PURPOSE here: a relative `--path` means
   // what the operator typed it from, and `resolveInspectedRoot` falls back to
   // this script's own root whenever `--path` is absent.
-  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- resolves the operator-typed relative --path argument from the directory the CLI was invoked in
+  // Resolves the operator-typed relative --path argument from the directory the
+  // CLI was invoked in.
+  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- resolves
   const root = resolveInspectedRoot(args.path, process.cwd())
   const slug = args.repo ?? (await resolveRepoSlug(root))
   const surface = args.workflow

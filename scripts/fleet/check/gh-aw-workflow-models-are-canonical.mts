@@ -14,7 +14,8 @@
  *   least one is stale / unknown.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync check; needs typed string stdout from `git ls-files`, no async.
+// Needs typed string stdout from `git ls-files`, no async.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync check
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { readFileSync } from 'node:fs'
 import process from 'node:process'

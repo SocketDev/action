@@ -24,7 +24,10 @@
  *     vs actual + the path)
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- composite-action helper runs on the raw runner before setup-node; node_modules is unavailable and the download / extract pipeline is naturally sync.
+// Composite-action helper runs on the raw runner before setup-node;
+// node_modules is unavailable and the download / extract pipeline is naturally
+// sync.
+// oxlint-disable-next-line socket/prefer-async-spawn -- composite-action helper
 import { spawnSync } from 'node:child_process'
 import crypto from 'node:crypto'
 import {
@@ -45,7 +48,8 @@ import path from 'node:path'
 // installing it, which defeats the whole point of this being a bootstrap
 // step.
 const logger = {
-  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // Pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node
   fail: msg => console.error(msg),
 }
 
@@ -61,7 +65,9 @@ if (!url || !integrityArg || !destDir) {
 // Parse SRI string `<algo>-<base64>`. Bare 64-char hex is treated as
 // sha256 for backward compat — deprecated, will be removed once all
 // call sites pass SRI directly.
-// oxlint-disable-next-line socket/export-top-level-functions -- composite-action helper runs on the raw runner before setup-node; no node_modules, no module boundary worth exporting across.
+// Composite-action helper runs on the raw runner before setup-node: no
+// node_modules, so no module boundary worth exporting across.
+// oxlint-disable-next-line socket/export-top-level-functions -- raw runner
 function parseIntegrity(s) {
   // Parse an SRI string: (1) the algorithm (sha256/384/512), (2) the base64
   // digest after the dash.
@@ -76,7 +82,8 @@ function parseIntegrity(s) {
       expected: Buffer.from(s, 'hex').toString('base64'),
     }
   }
-  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // Pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node
   console.error(
     `× unrecognized integrity format: ${s}\n  Expected SRI (e.g. sha256-base64=)`,
   )
@@ -102,12 +109,17 @@ if (process.env.GITHUB_TOKEN) {
 // Composite-action helper runs as a standalone node script on the raw runner;
 // the CJS bundle target rejects top-level await, so the download / verify /
 // extract pipeline runs inside an async IIFE.
-// oxlint-disable-next-line socket/export-top-level-functions -- composite-action helper runs on the raw runner before setup-node; no node_modules, no module boundary worth exporting across.
+// Composite-action helper runs on the raw runner before setup-node: no
+// node_modules, so no module boundary worth exporting across.
+// oxlint-disable-next-line socket/export-top-level-functions -- raw runner
 async function main() {
-  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- pre-setup-node action; @socketsecurity/lib-stable not installed yet, only built-in fetch is available.
+  // Pre-setup-node action: @socketsecurity/lib-stable is not installed yet, so
+  // only the built-in fetch is available.
+  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- dep-0
   const res = await fetch(url, { redirect: 'follow', headers })
   if (!res.ok) {
-    // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+    // pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+    // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
     console.error(
       `× download failed: HTTP ${res.status} ${res.statusText} for ${url}`,
     )
@@ -122,13 +134,17 @@ async function main() {
   // comparing so `sha512-...=` and `sha512-...` match.
   const stripPadding = b64 => b64.replace(/=+$/, '')
   if (stripPadding(actual) !== stripPadding(expected)) {
-    // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+    // pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+    // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
     console.error(`× ${algo} integrity mismatch for ${assetName}`)
-    // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; same.
+    // pre-setup-node action; same.
+    // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
     console.error(`  Expected: ${algo}-${expected}`)
-    // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; same.
+    // pre-setup-node action; same.
+    // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
     console.error(`  Actual:   ${algo}-${actual}`)
-    // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; same.
+    // pre-setup-node action; same.
+    // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
     console.error(`  URL:      ${url}`)
     process.exit(2)
   }
@@ -165,11 +181,14 @@ async function main() {
       stdio: 'inherit',
     })
     if (r.status !== 0) {
-      // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+      // pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+      // oxlint-disable-next-line socket/no-console-prefer-logger -- dep-0
       console.error(`× extraction failed: ${extractCmd} exited ${r.status}`)
       process.exit(1)
     }
-    // oxlint-disable-next-line socket/prefer-safe-delete -- dep-0: composite-action helper runs on the raw runner before setup-node; @socketsecurity/lib-stable is not on disk yet.
+    // Composite-action helper runs on the raw runner before setup-node;
+    // @socketsecurity/lib-stable is not on disk yet.
+    // oxlint-disable-next-line socket/prefer-safe-delete -- dep-0
     rmSync(archivePath, { force: true })
   } else if (binName) {
     // Bare-binary asset, no archive. Rename to bin-name and chmod.
@@ -182,7 +201,8 @@ async function main() {
 }
 
 main().catch(e => {
-  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // Pre-setup-node action; @socketsecurity/lib-stable not installed yet.
+  // oxlint-disable-next-line socket/no-console-prefer-logger -- pre-setup-node
   console.error(e)
   process.exit(1)
 })

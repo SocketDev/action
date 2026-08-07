@@ -86,7 +86,9 @@ export interface CatalogPinVerdict {
  * The subset of npm's single-version document this gate reads.
  */
 export interface RawNpmVersionDocument {
-  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
+  // Fleet optional-explicit-undefined convention: the explicit | undefined on
+  // an optional is intentional, not redundant.
+  // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet
   readonly deprecated?: unknown | undefined
 }
 
@@ -239,7 +241,7 @@ export async function probeCatalogPins(
   return verdicts
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   const quiet = process.argv.includes('--quiet')
   const pins = collectCatalogPins([PNPM_WORKSPACE_YAML, FLEET_CATALOG_YAML])
   if (pins.length === 0) {

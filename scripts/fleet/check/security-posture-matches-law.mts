@@ -212,14 +212,17 @@ export function isNoOpFix(plan: SecurityFixPlan): boolean {
 // read below. A missing binary throws ENOENT into `status: null`, which is
 // also not 0, so both offline shapes land in the same clean skip.
 function ghAuthed(): boolean {
-  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI check; the auth probe must resolve inline before the sweep.
+  // Main() is a sync CLI check; the auth probe must resolve inline before the
+  // sweep.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI
   return spawnSync('gh', ['auth', 'status'], { encoding: 'utf8' }).status === 0
 }
 
 // One `gh` call, exit code and both streams preserved. NEVER piped: for
 // vulnerability-alerts and the GHAS 403 the status is the entire answer.
 function gh(args: readonly string[], input?: string | undefined): GhAnswer {
-  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI check; reads and fixes apply sequentially inline.
+  // Main() is a sync CLI check; reads and fixes apply sequentially inline.
+  // oxlint-disable-next-line socket/prefer-async-spawn -- main() is a sync CLI
   const result = spawnSync('gh', args as string[], {
     encoding: 'utf8',
     ...(input === undefined ? {} : { input }),

@@ -188,7 +188,9 @@ export function placeFiles(
         continue
       }
     }
-    // oxlint-disable-next-line socket/prefer-mirror-lock-write -- already inside withMirrorLockLiftedSync's lock-lifted callback, the sanctioned lift-for-copy shape.
+    // Already inside withMirrorLockLiftedSync's lock-lifted callback, the
+    // sanctioned lift-for-copy shape.
+    // oxlint-disable-next-line socket/prefer-mirror-lock-write -- already
     withMirrorLockLiftedSync(dest, () => cpSync(src, dest))
   }
 }

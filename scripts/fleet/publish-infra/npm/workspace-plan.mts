@@ -278,7 +278,13 @@ export function replaceManifestVersion(
   raw: string,
   nextVersion: string,
 ): string {
-  return raw.replace(/("version":\s*")[^"]+(")/, `$1${nextVersion}$2`)
+  // Lookaround, not capture groups: the match is the version VALUE alone, so
+  // the replacer returns `nextVersion` by itself. A replacer FUNCTION's return
+  // value is inserted verbatim, so `$1` / `$2` inside it stay literal text
+  // instead of naming groups — a capture-group form here writes the characters
+  // `$1` and `$2` into the manifest.
+  // `(?<="version":\s*")` the opening quote; `[^"]+` the value; `(?=")` close.
+  return raw.replace(/(?<="version":\s*")[^"]+(?=")/, () => nextVersion)
 }
 
 /**
@@ -303,9 +309,13 @@ export function planLockstepManifestWrites(
         continue
       }
       const escaped = sibling.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // Lookaround for the same reason as replaceManifestVersion: the replacer
+      // is a FUNCTION, so its return value goes in verbatim and `$1` / `$2`
+      // would be written out as literal characters rather than groups. Matching
+      // only the version value means the function returns only `nextVersion`.
       updated = updated.replace(
-        new RegExp(`("${escaped}":\\s*")\\d[^"]*(")`, 'g'),
-        `$1${nextVersion}$2`,
+        new RegExp(`(?<="${escaped}":\\s*")\\d[^"]*(?=")`, 'g'),
+        () => nextVersion,
       )
     }
     if (updated !== input.raw) {

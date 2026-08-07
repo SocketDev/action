@@ -214,12 +214,12 @@ export function migrateReadmeBadge(
 ): string {
   const ref = coverageBadgeRef(slug, svg)
   return readme
-    .replace(SHIELDS_BADGE_RE, ref)
-    .replace(SHIELDS_IMG_BADGE_RE, ref)
-    .replace(LEGACY_ASSET_BADGE_RE, ref)
-    .replace(MARKDOWN_BADGE_RE, ref)
-    .replace(RELATIVE_IMG_BADGE_RE, ref)
-    .replace(ABSOLUTE_IMG_BADGE_RE, ref)
+    .replace(SHIELDS_BADGE_RE, () => ref)
+    .replace(SHIELDS_IMG_BADGE_RE, () => ref)
+    .replace(LEGACY_ASSET_BADGE_RE, () => ref)
+    .replace(MARKDOWN_BADGE_RE, () => ref)
+    .replace(RELATIVE_IMG_BADGE_RE, () => ref)
+    .replace(ABSOLUTE_IMG_BADGE_RE, () => ref)
 }
 
 // Fill color for a coverage percent — the conventional coverage gradient so

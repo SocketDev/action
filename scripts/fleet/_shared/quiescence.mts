@@ -20,7 +20,10 @@
 
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-// oxlint-disable-next-line socket/prefer-async-spawn -- a handful of blocking git probes on one repo path; readQuiescenceSignal is a synchronous snapshot by contract and the awaitQuiescence poll loop is already sequential.
+// A handful of blocking git probes on one repo path; readQuiescenceSignal is a
+// synchronous snapshot by contract and the awaitQuiescence poll loop is already
+// sequential.
+// oxlint-disable-next-line socket/prefer-async-spawn -- a handful of blocking
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 // Poll cadence + ceiling mirror the git-mutex constants so a lander waiting on

@@ -406,7 +406,8 @@ export function composeTarballProviders(
 ): TarballProvider {
   return async (name: string, version: string) => {
     for (let i = 0, { length } = sources; i < length; i += 1) {
-      // eslint-disable-next-line no-await-in-loop -- serial fallback: try each source until one yields bytes.
+      // Try each source until one yields bytes.
+      // eslint-disable-next-line no-await-in-loop -- serial fallback
       const packed = await sources[i]!(name, version)
       if (packed) {
         return packed

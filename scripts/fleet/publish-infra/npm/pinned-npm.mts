@@ -100,7 +100,9 @@ export function resolvePinnedNpm(config: {
   }
   const candidates = pinnedNpmCandidates(pin, cfg.home, cfg.platform)
   for (let i = 0, { length } = candidates; i < length; i += 1) {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- injected seam, not a wrapper: the fnm/nvm/asdf layouts must be probed in tests on a box where none of those managers are installed.
+    // Not a wrapper: the fnm/nvm/asdf layouts must be probed in tests on a box
+    // where none of those managers are installed.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- injected seam
     if (fileExists(candidates[i]!)) {
       return { npmPath: candidates[i]!, pin, refusal: undefined }
     }

@@ -654,7 +654,7 @@ async function main(): Promise<void> {
       }
       planned += 1
       const repinned = repinFrom(ref.raw, plan.newTag, plan.digest)
-      next = next.replace(ref.raw, repinned)
+      next = next.replace(ref.raw, () => repinned)
       const where = path.relative(root, file)
       logger.info(
         `[update-docker] ${where}: ${ref.image}:${ref.tag} -> ${ref.image}:${plan.newTag}@${plan.digest} (soak ${soakDays}d cleared)`,

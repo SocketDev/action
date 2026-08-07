@@ -92,9 +92,9 @@ import type {
 import type { BumpLevel, ConventionalCommit } from './lib/changelog.mts'
 import type { ReleaseDerivation, ReleaseLane } from './lib/release-anchor.mts'
 import { isMainModule } from './_shared/is-main-module.mts'
-import { writeThroughMirrorLock } from './_shared/mirror-lock.mts'
-import { runMain } from './_shared/run-main.mts'
 import type { ScriptMeta } from './_shared/run-main.mts'
+import { runMain } from './_shared/run-main.mts'
+import { writeThroughMirrorLock } from './_shared/mirror-lock.mts'
 
 const logger = getDefaultLogger()
 const rootPath = REPO_ROOT
@@ -251,7 +251,8 @@ export async function collectTouchedFiles(
 ): Promise<Map<string, string[]>> {
   const out = new Map<string, string[]>()
   for (const hash of hashes) {
-    // eslint-disable-next-line no-await-in-loop -- serial per-commit git probe; the candidate list is short
+    // The candidate list is short.
+    // eslint-disable-next-line no-await-in-loop -- serial per-commit git probe
     const r = await runCapture(
       'git',
       ['diff-tree', '--no-commit-id', '--name-only', '-r', hash],
@@ -359,7 +360,7 @@ export async function warnBackupBranchesWithUnreleased(
   }
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   // The CLI preamble — usage, unknown-flag refusal, flag resolution — is
   // resolveBumpInvocation, so those branches are assertable without running
   // a bump. main() only plumbs the decision to output and an exit code.
@@ -883,6 +884,8 @@ const SCRIPT_META: ScriptMeta = {
   help: BUMP_USAGE,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */

@@ -77,7 +77,8 @@ export async function applyLockstepBump(
       `[bump] regenerating platform packages: node ` +
         `${path.relative(layout.rootPath, generatorPath)}`,
     )
-    // eslint-disable-next-line no-await-in-loop -- serial by design: generators rewrite the tree
+    // Generators rewrite the tree.
+    // eslint-disable-next-line no-await-in-loop -- serial by design
     const code = await runInherit(
       process.execPath,
       [generatorPath],

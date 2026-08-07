@@ -179,7 +179,11 @@ export function resolveCurrentNapiTarget(
  * (bare linux belongs to the pack-app BINARY domain, not this one)
  */
 export function parseNapiTargetSegment(name: string): NapiTarget | undefined {
-  // oxlint-disable-next-line unicorn/no-array-sort -- `NAPI_TARGETS` is a shared module-level const, so the spread copies it first; an in-place sort would mutate the constant list every caller shares. .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // `NAPI_TARGETS` is a shared module-level const, so the spread copies it
+  // first; an in-place sort would mutate the constant list every caller shares.
+  // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+  // cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- `NAPI_TARGETS`
   const ordered = [...NAPI_TARGETS].sort((a, b) => b.length - a.length)
   for (let i = 0, { length } = ordered; i < length; i += 1) {
     const target = ordered[i]!

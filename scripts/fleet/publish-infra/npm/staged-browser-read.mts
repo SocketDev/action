@@ -132,7 +132,9 @@ export async function downloadStagedTarballInPage(
   try {
     result = await page.evaluate(
       async ({ fetchUrl, maxBytes }) => {
-        // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- runs in the npm page's MAIN world; only the page session can read the staged tarball.
+        // Runs in the npm page's MAIN world; only the page session can read the
+        // staged tarball.
+        // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- runs
         const r = await fetch(fetchUrl, {
           cache: 'no-store',
           credentials: 'same-origin',

@@ -69,7 +69,9 @@ export function resolveCoverRunner(
     typeof raw === 'string' &&
     (COVER_RUNNERS as readonly string[]).includes(raw)
   ) {
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the includes() check above narrows `raw` to a member of COVER_RUNNERS, which TS cannot track through a readonly-string-array widening.
+    // The includes() check above narrows `raw` to a member of COVER_RUNNERS,
+    // which TS cannot track through a readonly-string-array widening.
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- narrowed
     return { runner: raw as CoverRunnerId }
   }
   return {

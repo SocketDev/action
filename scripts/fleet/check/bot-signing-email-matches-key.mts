@@ -98,14 +98,18 @@ export function classifyBotSigningEmail(
 ): BotSigningEmailVerdict | null {
   const trimmed = body.trim()
   if (!trimmed) {
-    // oxlint-disable-next-line socket/prefer-undefined-over-null -- external API contract: the unit test suite asserts strict equality against this exact `null` return value
+    // External API contract: the unit test suite asserts strict equality
+    // against this exact `null` return value.
+    // oxlint-disable-next-line socket/prefer-undefined-over-null -- external
     return null
   }
   const usesNumericBotEmail = NUMERIC_BOT_EMAIL_RE.test(trimmed)
   // Only the numeric form is a candidate violation — a workflow with no
   // numeric socket-bot email cannot mis-verify, regardless of signing.
   if (!usesNumericBotEmail) {
-    // oxlint-disable-next-line socket/prefer-undefined-over-null -- external API contract: the unit test suite asserts strict equality against this exact `null` return value
+    // External API contract: the unit test suite asserts strict equality
+    // against this exact `null` return value.
+    // oxlint-disable-next-line socket/prefer-undefined-over-null -- external
     return null
   }
   const gpgSigns = GPG_SIGNING_SIGNALS.some(re => re.test(trimmed))
@@ -158,7 +162,7 @@ export async function scanRepo(
   return findings
 }
 
-async function main(): Promise<number> {
+export async function main(): Promise<number> {
   const quiet = process.argv.includes('--quiet')
   const findings = await scanRepo(REPO_ROOT)
   if (!findings.length) {

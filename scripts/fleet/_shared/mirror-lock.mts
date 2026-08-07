@@ -21,7 +21,8 @@ import path from 'node:path'
  * A missing target is a no-op, the seed path.
  */
 export async function liftMirrorLock(targetPath: string): Promise<void> {
-  // oxlint-disable-next-line socket/prefer-exists-sync -- need mode + file-type bits, not existence
+  // Need mode + file-type bits, not existence.
+  // oxlint-disable-next-line socket/prefer-exists-sync -- need mode + file-type
   const stat = await fs.stat(targetPath).catch(() => undefined)
   if (!stat) {
     return
@@ -34,13 +35,15 @@ export async function liftMirrorLock(targetPath: string): Promise<void> {
     recursive: true,
     withFileTypes: true,
   })
-  // oxlint-disable-next-line socket/prefer-all-settled -- fail-fast: a chmod failure during cascade must surface, not be swallowed
+  // A chmod failure during cascade must surface, not be swallowed.
+  // oxlint-disable-next-line socket/prefer-all-settled -- fail-fast
   await Promise.all(
     entries
       .filter(entry => entry.isFile())
       .map(async entry => {
         const filePath = path.join(entry.parentPath, entry.name)
-        // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits, not existence
+        // Need the mode bits, not existence.
+        // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode
         const mode = (await fs.stat(filePath)).mode & 0o777
         await fs.chmod(filePath, mode | 0o200)
       }),
@@ -56,7 +59,8 @@ export async function withMirrorLockLifted<T>(
   filePath: string,
   fn: () => Promise<T>,
 ): Promise<T> {
-  // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits, not existence
+  // Not existence.
+  // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits
   const stat = await fs.stat(filePath).catch(() => undefined)
   const mode = stat ? stat.mode & 0o777 : undefined
   const locked = mode !== undefined && (mode & 0o200) === 0
@@ -82,7 +86,8 @@ export async function withMirrorLockLifted<T>(
 export function liftMirrorLockSync(filePath: string): void {
   let stat
   try {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits, not existence
+    // Not existence.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits
     stat = statSync(filePath)
   } catch {
     return
@@ -107,7 +112,8 @@ export function liftMirrorLockSync(filePath: string): void {
  */
 export function lockFileReadonlySync(filePath: string): void {
   try {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits, not existence
+    // Not existence.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits
     const { mode } = statSync(filePath)
     chmodSync(filePath, (mode & 0o111) === 0 ? 0o444 : 0o555)
   } catch {
@@ -146,7 +152,8 @@ export function writeThroughMirrorLock(
 export function withMirrorLockLiftedSync<T>(filePath: string, fn: () => T): T {
   let stat
   try {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits, not existence
+    // Not existence.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- need the mode bits
     stat = statSync(filePath)
   } catch {
     stat = undefined

@@ -16,7 +16,8 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-// oxlint-disable-next-line socket/prefer-async-spawn -- one blocking rev-parse on the mutex path; the caller is already sequential.
+// One blocking rev-parse on the mutex path; the caller is already sequential.
+// oxlint-disable-next-line socket/prefer-async-spawn -- one blocking rev-parse
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { safeDelete } from '@socketsecurity/lib-stable/fs/safe'
 

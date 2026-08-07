@@ -295,7 +295,8 @@ export async function runChannelDryRun(
   for (let i = 0, { length } = strategy.commands; i < length; i += 1) {
     const command = strategy.commands[i]!
     const args = dryPackArgs(command, strategy, cfg.destDir)
-    // oxlint-disable-next-line no-await-in-loop -- ordered by design: a later command's failure is usually caused by an earlier one
+    // A later command's failure is usually caused by an earlier one.
+    // oxlint-disable-next-line no-await-in-loop -- ordered by design
     const r = await cfg.exec(command.cmd, args, cfg.repoDir)
     if (r.code !== 0) {
       return {

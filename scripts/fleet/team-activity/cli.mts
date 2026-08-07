@@ -16,7 +16,9 @@
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- sequential CLI probe loop; sync keeps the state machine trivial and the process short-lived.
+// Sequential CLI probe loop; sync keeps the state machine trivial and the
+// process short-lived.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sequential CLI probe
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 
 import { refreshGhHeartbeat } from '../gh-heartbeat.mts'

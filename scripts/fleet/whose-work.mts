@@ -310,7 +310,8 @@ export function formatIndexLockReport(cwd: string): string | undefined {
   const lockPath = path.join(cwd, '.git', 'index.lock')
   let stat
   try {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- need mtime for the age readout
+    // Need mtime for the age readout.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- need mtime
     stat = statSync(lockPath)
   } catch {
     return undefined

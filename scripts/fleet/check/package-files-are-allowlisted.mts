@@ -23,7 +23,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-// oxlint-disable-next-line socket/prefer-async-spawn -- sync stdin/stdout + typed string return matches the read-stdout-then-parse-JSON shape; v5 lib spawnSync omits 'encoding' from SpawnSyncOptions and returns string-or-Buffer.
+// Sync stdin/stdout + typed string return matches the
+// read-stdout-then-parse-JSON shape; v5 lib spawnSync omits 'encoding' from
+// SpawnSyncOptions and returns string-or-Buffer.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync stdin/stdout
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 
@@ -383,7 +386,10 @@ export function computeCanonicalFiles(packOut: PackOutput): string[] {
       dirs.add(p.slice(0, slash))
     }
   }
-  // oxlint-disable-next-line unicorn/no-array-sort -- the spread literal already builds a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // The spread literal already builds a fresh array, no shared mutation;
+  // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+  // cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- the spread literal
   return [...dirs, ...topFiles].sort()
 }
 
@@ -479,9 +485,11 @@ const SCRIPT_META: ScriptMeta = {
   --fix  write the derived files: allowlist into each offending package.json`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(
     () => runCheck(REPO_ROOT, process.argv.includes('--fix')),
     SCRIPT_META,
   )
 }
+/* c8 ignore stop */

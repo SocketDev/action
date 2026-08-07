@@ -112,7 +112,9 @@ export function readCoverConfig(repoDir: string): CoverConfig {
     if (!cover || typeof cover !== 'object') {
       return {}
     }
-    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- the parsed JSON is validated as an object above; CoverConfig pins the shape the runner consumes and every unknown key passes through untouched.
+    // The parsed JSON is validated as an object above; CoverConfig pins the
+    // shape the runner consumes and every unknown key passes through untouched.
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- validated
     return cover as CoverConfig
   } catch (e) {
     logger.warn(

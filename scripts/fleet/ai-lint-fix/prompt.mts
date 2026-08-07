@@ -68,7 +68,10 @@ export function renderRuleGuidance(findings: OxlintMessage[]): string {
     }
   }
   const entries = [...seen]
-    // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies `seen` into a fresh array, no shared mutation; .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+    // The spread copies `seen` into a fresh array, no shared mutation;
+    // .toSorted() would trip socket/no-runtime-features-below-engine-floor in
+    // cascaded Node-18 repos.
+    // oxlint-disable-next-line unicorn/no-array-sort -- the spread copies
     .sort()
     .map(id => {
       const guidance = RULE_GUIDANCE[id]
@@ -107,7 +110,9 @@ export function buildPrompt(
   filePath: string,
   findings: OxlintMessage[],
 ): string {
-  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- relative path for prompt display; user invokes `pnpm run fix` from their cwd and expects paths relative to where they ran.
+  // Relative path for prompt display; user invokes `pnpm run fix` from their
+  // cwd and expects paths relative to where they ran.
+  // oxlint-disable-next-line socket/no-process-cwd-in-scripts-hooks -- relative
   const rel = path.relative(process.cwd(), filePath)
   const findingsBlock = renderFindings(findings)
   const rulesBlock = renderRuleGuidance(findings)

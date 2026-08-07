@@ -4,7 +4,7 @@
 // The format exists so a reviewer can triage a comment at a glance: one
 // `<details>` fold-out per major finding, a severity circle with `<abbr>`
 // hover text on every summary, sections sorted most-severe first, numeric
-// references that carry their item's title, `Fix idea 💡:` labels, and no AI
+// references that carry their item's title, `Suggestion 💡:` labels, and no AI
 // attribution. This script checks the MECHANICAL half of the doc; the
 // judgment half (junior-dev comprehension, no bot repetition, duplicate-PR
 // scan, verified-findings-only) stays with the author.
@@ -192,13 +192,13 @@ function lintFixIdeaLabels(lines: string[]): CommentViolation[] {
   const violations: CommentViolation[] = []
   for (let i = 0, { length } = lines; i < length; i += 1) {
     const line = lines[i]!
-    if (/Fix idea\s*:/.test(line) && !/Fix idea 💡:/.test(line)) {
+    if (/Suggestion\s*:/.test(line) && !/Suggestion 💡:/.test(line)) {
       violations.push({
-        fix: 'write it as "Fix idea 💡:"',
+        fix: 'write it as "Suggestion 💡:"',
         line: i + 1,
-        rule: 'fix-idea-bulb',
-        saw: '"Fix idea:" without the bulb',
-        wanted: '"Fix idea 💡:"',
+        rule: 'suggestion-bulb',
+        saw: '"Suggestion:" without the bulb',
+        wanted: '"Suggestion 💡:"',
       })
     }
   }

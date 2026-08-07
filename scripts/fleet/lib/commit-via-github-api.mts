@@ -81,7 +81,9 @@ export async function commitViaGithubApi(
   }> = []
   for (let i = 0, { length } = cfg.files; i < length; i += 1) {
     const file = cfg.files[i]!
-    // oxlint-disable-next-line no-await-in-loop -- blobs must exist before the tree references them; the file count is tiny (a bump touches 1-2 files).
+    // Blobs must exist before the tree references them; the file count is tiny
+    // (a bump touches 1-2 files).
+    // oxlint-disable-next-line no-await-in-loop -- blobs must exist before
     const blob = await post<{ sha: string }>('blobs', {
       content: Buffer.from(file.content, 'utf8').toString('base64'),
       encoding: 'base64',

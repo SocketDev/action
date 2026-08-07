@@ -262,7 +262,10 @@ export function annotateStream(
       0.25 * (item.freshness / 100) +
       0.1 * ((engagementScore ?? 0) / 100)
   }
-  // oxlint-disable-next-line unicorn/no-array-sort -- `items` is a caller-owned parameter, so the spread copies it first; an in-place sort would reorder the caller's array. .toSorted() would trip socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // `items` is a caller-owned parameter, so the spread copies it first; an
+  // in-place sort would reorder the caller's array. .toSorted() would trip
+  // socket/no-runtime-features-below-engine-floor in cascaded Node-18 repos.
+  // oxlint-disable-next-line unicorn/no-array-sort -- `items` is a caller-owned
   return [...items].sort(
     (left, right) => (right.localRankScore ?? 0) - (left.localRankScore ?? 0),
   )

@@ -1,4 +1,7 @@
-/* eslint-disable no-shadow -- nested cached-length for-loops intentionally reuse `i`/`length` names for the fleet-wide cached-loop idiom; renaming would diverge from the codebase pattern. */
+/* eslint-disable no-shadow -- nested cached-length for-loops */
+// Nested cached-length for-loops intentionally reuse `i`/`length` names for the
+// fleet-wide cached-loop idiom; renaming would diverge from the codebase
+// pattern.
 /**
  * @file Pure scope-decision predicates for the fleet test runner
  *   (scripts/fleet/test.mts): whether a changed-file set forces the full suite

@@ -576,8 +576,8 @@ export async function loadVitestConfigTestBlock(
   let loaded: unknown
   try {
     const mod = (await import(pathToFileURL(absolute).href)) as {
-      // oxlint-disable-next-line typescript/no-redundant-type-constituents -- fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
-      default?: unknown | undefined
+      // fleet optional-explicit-undefined convention: the explicit | undefined on an optional is intentional, not redundant.
+      default?: unknown | undefined // oxlint-disable-line typescript/no-redundant-type-constituents -- fleet
     }
     loaded = mod.default
   } catch (e) {

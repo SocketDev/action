@@ -29,7 +29,9 @@ import path from 'node:path'
 import process from 'node:process'
 
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
-// oxlint-disable-next-line socket/prefer-async-spawn -- a sync --version probe in a check; no streaming, just exit status + trimmed stdout.
+// A sync --version probe in a check; no streaming, just exit status + trimmed
+// stdout.
+// oxlint-disable-next-line socket/prefer-async-spawn -- a sync --version probe
 import { spawnSync } from '@socketsecurity/lib-stable/process/spawn/child'
 import { lt } from '@socketsecurity/lib-stable/versions/compare'
 import { coerceVersion } from '@socketsecurity/lib-stable/versions/parse'

@@ -401,7 +401,7 @@ export async function downloadSfwAsset(config: {
   return { binaryPath, downloaded: true }
 }
 
-async function main(): Promise<void> {
+export async function main(): Promise<void> {
   ensureWheelhouseLayout()
 
   const { values } = parseArgs({
@@ -496,7 +496,9 @@ async function main(): Promise<void> {
     linkPath: string,
     type: 'dir' | 'file',
   ): Promise<void> {
-    // oxlint-disable-next-line socket/prefer-exists-sync -- lstat detects a broken symlink that existsSync, follows the link, would miss, leaving it stale.
+    // lstat detects a broken symlink that existsSync, which follows the link,
+    // would miss and leave stale.
+    // oxlint-disable-next-line socket/prefer-exists-sync -- broken symlink
     const linkExists = await fsPromises
       .lstat(linkPath)
       .then(() => true)
@@ -547,6 +549,8 @@ const SCRIPT_META: ScriptMeta = {
   --quiet       suppress the success summary`,
 }
 
+/* c8 ignore start - entrypoint guard; exercised via subprocess */
 if (isMainModule(import.meta.url)) {
   runMain(main, SCRIPT_META)
 }
+/* c8 ignore stop */
