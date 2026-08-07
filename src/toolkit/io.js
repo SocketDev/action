@@ -131,7 +131,8 @@ export function normalizeSeparators(p) {
 export async function tryGetExecutablePath(filePath, extensions) {
   const statOrUndefined = async p => {
     try {
-      // socket-lint: allow stat-for-metadata — needs isFile() + mode bits.
+      // stat gives isFile() + mode bits for executable detection
+      // oxlint-disable-next-line socket/prefer-exists-sync -- stat fields
       return await fs.stat(p)
     } catch {
       return undefined

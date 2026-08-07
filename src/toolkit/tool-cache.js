@@ -72,7 +72,7 @@ export async function cacheDir(sourceDir, tool, version, arch) {
   const archToUse = arch || os.arch()
   core.debug(`Caching tool ${tool} ${cleanVersion} ${archToUse}`)
   core.debug(`source dir: ${sourceDir}`)
-  // socket-lint: allow stat-for-metadata — needs isDirectory(), not existence.
+  // oxlint-disable-next-line socket/prefer-exists-sync -- needs isDirectory()
   if (!statSync(sourceDir).isDirectory()) {
     throw new Error('sourceDir is not a directory')
   }
@@ -107,7 +107,7 @@ export async function cacheFile(sourceFile, targetFile, tool, version, arch) {
   const archToUse = arch || os.arch()
   core.debug(`Caching tool ${tool} ${cleanVersion} ${archToUse}`)
   core.debug(`source file: ${sourceFile}`)
-  // socket-lint: allow stat-for-metadata — needs isFile(), not existence.
+  // oxlint-disable-next-line socket/prefer-exists-sync -- needs isFile()
   if (!statSync(sourceFile).isFile()) {
     throw new Error('sourceFile is not a file')
   }
@@ -323,7 +323,7 @@ export function isRetryableDownloadError(e) {
  *   an explicit semver version.
  */
 export function semverClean(version) {
-  const match = EXPLICIT_VERSION_PATTERN.exec(String(version))
+  const match = EXPLICIT_VERSION_PATTERN.exec(version)
   return match ? match[1] : undefined
 }
 

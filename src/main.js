@@ -48,8 +48,9 @@ export async function run() {
   if (inputs.tokenSocket) {
     // setup socket token as a secret env so sfw can use it — the legacy
     // SOCKET_API_KEY alias stays exported for older sfw releases that still
-    // read it
-    // oxlint-disable-next-line socket/socket-api-token-env -- deliberate legacy-alias export: firewall-version lets users pin an older sfw that still reads SOCKET_API_KEY.
+    // read it; firewall-version lets users pin an older sfw that still reads
+    // SOCKET_API_KEY.
+    // oxlint-disable-next-line socket/socket-api-token-env -- legacy alias
     core.exportVariable('SOCKET_API_KEY', inputs.tokenSocket)
     core.exportVariable('SOCKET_API_TOKEN', inputs.tokenSocket)
     core.setSecret(inputs.tokenSocket)

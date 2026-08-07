@@ -5,6 +5,7 @@ import { toolCache as tool } from '../toolkit/tool-cache.js'
 import crypto from 'node:crypto'
 import path from 'node:path'
 import { existsSync, promises as fs } from 'node:fs'
+import { errorMessage } from '@socketsecurity/lib/errors/message'
 import { safeDelete } from '@socketsecurity/lib-stable/fs/safe'
 
 // supported distributions and their hardcoded SHA256 checksums
@@ -248,7 +249,9 @@ export async function download({ edition = 'free', ...inputs }) {
       // cache it so we dont have to download again next time
       pathCache = await tool.cacheFile(pathDownload, nameExec, ...cacheOptions)
     } catch (error) {
-      throw new Error(`Failed to download Socket Firewall binary: ${error}`)
+      throw new Error(
+        `Failed to download Socket Firewall binary: ${errorMessage(error)}`,
+      )
     }
   }
 
@@ -295,7 +298,7 @@ export async function download({ edition = 'free', ...inputs }) {
  *
  * @param {string} filePath - Path to the file we want to hash.
  *
- * @returns {string} The hex-encoded sha256 hash
+ * @returns {Promise<string>} The hex-encoded sha256 hash
  */
 export async function getFileChecksum(filePath) {
   const fileBuffer = await fs.readFile(filePath)

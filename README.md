@@ -97,10 +97,10 @@ If you prefer to keep using the `sfw` prefix explicitly, you can turn off automa
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     cooldown:
       semver-major-days: 14
       semver-minor-days: 7
@@ -111,13 +111,13 @@ Add a cooldown period if you want an extra buffer before newly published action 
 
 #### Inputs
 
-| Input                 | Description                                                      | Required | Default              |
-| --------------------- | ---------------------------------------------------------------- | -------- | -------------------- |
-| `firewall-version`    | Specify the firewall version number                              | No       | `latest`             |
-| `github-token`        | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
-| `job-summary`         | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
-| `shims`               | Create shims so package managers are routed through sfw          | No       | `true`               |
-| `use-cache`           | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
+| Input              | Description                                                      | Required | Default              |
+| ------------------ | ---------------------------------------------------------------- | -------- | -------------------- |
+| `firewall-version` | Specify the firewall version number                              | No       | `latest`             |
+| `github-token`     | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
+| `job-summary`      | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
+| `shims`            | Create shims so package managers are routed through sfw          | No       | `true`               |
+| `use-cache`        | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
 
 #### Outputs
 
@@ -194,10 +194,10 @@ jobs:
 ```yaml
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
     cooldown:
       semver-major-days: 14
       semver-minor-days: 7
@@ -208,14 +208,14 @@ Add a cooldown period if you want an extra buffer before newly published action 
 
 #### Inputs
 
-| Input                 | Description                                                      | Required | Default              |
-| --------------------- | ---------------------------------------------------------------- | -------- | -------------------- |
-| `firewall-version`    | Specify the firewall version number                              | No       | `latest`             |
-| `github-token`        | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
-| `job-summary`         | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
-| `shims`               | Create shims so package managers are routed through sfw          | No       | `true`               |
-| `socket-token`        | Socket API Token                                                 | **YES**  | `-`                  |
-| `use-cache`           | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
+| Input              | Description                                                      | Required | Default              |
+| ------------------ | ---------------------------------------------------------------- | -------- | -------------------- |
+| `firewall-version` | Specify the firewall version number                              | No       | `latest`             |
+| `github-token`     | GitHub API Token used for downloading binaries                   | No       | `${{ github.token}}` |
+| `job-summary`      | Create a [job summary][job-summary] (`all`, `errors`, or `none`) | No       | `all`                |
+| `shims`            | Create shims so package managers are routed through sfw          | No       | `true`               |
+| `socket-token`     | Socket API Token                                                 | **YES**  | `-`                  |
+| `use-cache`        | Cache the Socket binaries (force download if `false`)            | No       | `true`               |
 
 #### Outputs
 
@@ -232,26 +232,26 @@ When `shims` is `true` (the default), the action creates shims so package manage
 
 Available in both [sfw-free][sfw-free-ecosystems] and [sfw-enterprise][sfw-enterprise-ecosystems]:
 
-| Ecosystem           | Package Manager |
-| ------------------- | --------------- |
-| JavaScript/Node     | `npm`           |
-| JavaScript/Node     | `pnpm`          |
-| JavaScript/Node     | `yarn`          |
-| Python              | `pip`           |
-| Python              | `pip3`          |
-| Python              | `uv`            |
-| Rust                | `cargo`         |
+| Ecosystem       | Package Manager |
+| --------------- | --------------- |
+| JavaScript/Node | `npm`           |
+| JavaScript/Node | `pnpm`          |
+| JavaScript/Node | `yarn`          |
+| Python          | `pip`           |
+| Python          | `pip3`          |
+| Python          | `uv`            |
+| Rust            | `cargo`         |
 
 #### Enterprise only
 
 Additional ecosystems available with [sfw-enterprise][sfw-enterprise-ecosystems]:
 
-| Ecosystem           | Package Manager | Note         |
-| ------------------- | --------------- | ------------ |
-| .NET                | `nuget`         |              |
-| Go                  | `go`            | Linux only   |
-| Ruby                | `bundler`       |              |
-| Ruby                | `gem`           |              |
+| Ecosystem | Package Manager | Note       |
+| --------- | --------------- | ---------- |
+| .NET      | `nuget`         |            |
+| Go        | `go`            | Linux only |
+| Ruby      | `bundler`       |            |
+| Ruby      | `gem`           |            |
 
 [sfw-free-ecosystems]: https://github.com/SocketDev/sfw-free?tab=readme-ov-file#supported-package-managers
 [sfw-enterprise-ecosystems]: https://github.com/SocketDev/firewall-release/wiki#support-matrix

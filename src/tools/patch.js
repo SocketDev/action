@@ -118,7 +118,9 @@ export async function patch(inputs) {
         process.arch,
       )
     } catch (error) {
-      throw new Error(`Failed to download socket-patch binary: ${error}`)
+      throw new Error(
+        `Failed to download socket-patch binary: ${errorMessage(error)}`,
+      )
     }
   }
 
