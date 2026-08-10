@@ -52,10 +52,9 @@ afterAll(async () => {
 })
 
 it('passes a fetch POST with a body through to an allowed loopback host', async () => {
-  // The regression under guard lives in the.
-  // interceptors fetch bypass path; httpRequest goes over node:http and would
-  // never exercise it.
-  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- the
+  // The regression under guard lives in the interceptors fetch bypass path;
+  // httpRequest goes over node:http and would never exercise it.
+  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- fetch path
   const res = await fetch(`${baseUrl}/echo`, {
     body: 'hello from the fleet',
     method: 'POST',
