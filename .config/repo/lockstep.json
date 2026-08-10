@@ -1,0 +1,6 @@
+{
+  "$schema": "../fleet/lockstep.schema.json",
+  "description": "Lock-step manifest. Describe what this repo tracks in lock-step with an upstream or a sibling language port, then fill `upstreams` with each submodule or upstream project and `rows` with a `file-fork`, `version-pin`, `feature-parity`, `spec-conformance`, or `lang-parity` entry per concern. Empty `rows` is a valid end state for a repo that tracks nothing - say so here rather than leaving this text. Row kinds: docs/agents.md/fleet/lockstep.md; schema source: scripts/fleet/lockstep/schema.mts.",
+  "upstreams": {},
+  "rows": []
+}
