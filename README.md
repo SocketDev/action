@@ -1,4 +1,4 @@
-# Socket Security (GitHub Action)
+# <img src="https://raw.githubusercontent.com/SocketDev/action/HEAD/assets/logomark-inverse.svg" width="96" height="96" alt="Socket Security (GitHub Action)"><br>Socket Security (GitHub Action)
 
 A GitHub Action for running [Socket.dev](https://socket.dev)
 
