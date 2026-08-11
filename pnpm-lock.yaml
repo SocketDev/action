@@ -31,8 +31,8 @@ catalogs:
       specifier: 26.1.2
       version: 26.1.2
     '@types/semver':
-      specifier: 7.7.1
-      version: 7.7.1
+      specifier: 7.8.0
+      version: 7.8.0
     '@types/shell-quote':
       specifier: 1.7.5
       version: 1.7.5
@@ -248,7 +248,7 @@ importers:
         version: 26.1.2
       '@types/semver':
         specifier: 'catalog:'
-        version: 7.7.1
+        version: 7.8.0
       '@types/shell-quote':
         specifier: 'catalog:'
         version: 1.7.5
@@ -321,6 +321,9 @@ importers:
       regjsparser:
         specifier: 'catalog:'
         version: 0.13.2
+      rolldown:
+        specifier: 1.2.3
+        version: 1.2.3
       rollup:
         specifier: ^4.52.2
         version: 4.62.3
@@ -690,19 +693,6 @@ importers:
         version: 26.1.2
 
   .claude/hooks/fleet/compound-lessons-nudge:
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.1.2
-
-  .claude/hooks/fleet/concurrent-cargo-build-guard:
-    dependencies:
-      '@socketsecurity/lib-stable':
-        specifier: 'catalog:'
-        version: '@socketsecurity/lib@6.7.0(typescript@7.0.2)'
-      shell-quote:
-        specifier: 'catalog:'
-        version: 1.10.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1453,6 +1443,19 @@ importers:
       '@socketsecurity/lib-stable':
         specifier: 'catalog:'
         version: '@socketsecurity/lib@6.7.0(typescript@7.0.2)'
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.1.2
+
+  .claude/hooks/fleet/no-raw-gh-auth-login-guard:
+    dependencies:
+      '@socketsecurity/lib-stable':
+        specifier: 'catalog:'
+        version: '@socketsecurity/lib@6.7.0(typescript@7.0.2)'
+      shell-quote:
+        specifier: 'catalog:'
+        version: 1.10.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -2514,6 +2517,8 @@ importers:
 
   .config/fleet/oxlint-plugin/fleet/no-deprecation: {}
 
+  .config/fleet/oxlint-plugin/fleet/no-dynamic-import-in-snapshot-hook: {}
+
   .config/fleet/oxlint-plugin/fleet/no-dynamic-import-outside-bundle: {}
 
   .config/fleet/oxlint-plugin/fleet/no-eslint-biome-config-ref: {}
@@ -2531,6 +2536,8 @@ importers:
   .config/fleet/oxlint-plugin/fleet/no-lib-barrel-import: {}
 
   .config/fleet/oxlint-plugin/fleet/no-literal-control-char: {}
+
+  .config/fleet/oxlint-plugin/fleet/no-logger-glyph-prefix: {}
 
   .config/fleet/oxlint-plugin/fleet/no-logger-newline-literal: {}
 
@@ -2623,6 +2630,8 @@ importers:
   .config/fleet/oxlint-plugin/fleet/prefer-async-spawn: {}
 
   .config/fleet/oxlint-plugin/fleet/prefer-cached-for-loop: {}
+
+  .config/fleet/oxlint-plugin/fleet/prefer-crlf-safe-split: {}
 
   .config/fleet/oxlint-plugin/fleet/prefer-ellipsis-char: {}
 
@@ -3619,8 +3628,8 @@ packages:
   '@types/resolve@1.20.2':
     resolution: {integrity: sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q==}
 
-  '@types/semver@7.7.1':
-    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/shell-quote@1.7.5':
     resolution: {integrity: sha512-+UE8GAGRPbJVQDdxi16dgadcBfQ+KG2vgZhV1+3A1XmHbmwcdwhCUwIdy+d3pAGrbvgRoVSjeI9vOWyq376Yzw==}
@@ -6656,7 +6665,7 @@ snapshots:
 
   '@types/resolve@1.20.2': {}
 
-  '@types/semver@7.7.1': {}
+  '@types/semver@7.8.0': {}
 
   '@types/shell-quote@1.7.5': {}
 
