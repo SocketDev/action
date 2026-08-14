@@ -78,10 +78,10 @@
 .github/zizmor.yml linguist-generated=true
 .mcp.json linguist-generated=true
 .npmrc linguist-generated=true
-assets/badge-follow-bluesky.svg linguist-generated=true
-assets/badge-follow-x.svg linguist-generated=true
-assets/socket-combomark-dark.svg linguist-generated=true
-assets/socket-combomark-light.svg linguist-generated=true
+assets/fleet/badge-follow-bluesky.svg linguist-generated=true
+assets/fleet/badge-follow-x.svg linguist-generated=true
+assets/fleet/socket-combomark-dark.svg linguist-generated=true
+assets/fleet/socket-combomark-light.svg linguist-generated=true
 docs/agents.md/fleet linguist-generated=true
 docs/design/fleet/README.md linguist-generated=true
 docs/design/fleet/components.css linguist-generated=true
