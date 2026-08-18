@@ -1,11 +1,53 @@
 import { core } from '../toolkit/core.js'
 import { execCommand } from '../toolkit/exec.js'
 import { toolCache as tool } from '../toolkit/tool-cache.js'
+import crypto from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { errorMessage } from '@socketsecurity/lib/errors/message'
 
 import { resolveReleaseTag } from './github-release.js'
+
+// Download the release's SHA256SUMS file, find the expected hash for the
+// archive, compute the downloaded archive's SHA256, and throw on mismatch.
+// Mirrors the integrity policy firewall.js already enforces for its binary.
+async function verifyChecksum(pathDownload, versionToDownload, archiveName) {
+  const checksumsUrl = `https://github.com/SocketDev/socket-patch/releases/download/${versionToDownload}/SHA256SUMS`
+  let checksumsText
+  try {
+    const pathChecksums = await tool.downloadTool(checksumsUrl)
+    checksumsText = readFileSync(pathChecksums, 'utf8')
+  } catch (error) {
+    throw new Error(
+      `Failed to download SHA256SUMS for socket-patch ${versionToDownload}: ${errorMessage(error)}`,
+    )
+  }
+  // SHA256SUMS line shape: `<hash>  <filename>`
+  const expectedHash = checksumsText
+    .split('\n')
+    .find(line => line.endsWith(archiveName))
+    ?.split(/\s+/)[0]
+  if (!expectedHash) {
+    throw new Error(
+      `No checksum found for ${archiveName} in socket-patch ${versionToDownload} SHA256SUMS`,
+    )
+  }
+  const actualHash = crypto
+    .createHash('sha256')
+    .update(readFileSync(pathDownload))
+    .digest('hex')
+  core.debug(`expected checksum: ${expectedHash}`)
+  core.debug(`actual checksum:   ${actualHash}`)
+  if (actualHash !== expectedHash) {
+    throw new Error(
+      `Checksum mismatch! socket-patch binary may have been tampered with.\n` +
+        `Expected: ${expectedHash}\n` +
+        `Got:      ${actualHash}`,
+    )
+  }
+  core.info('socket-patch checksum validation passed')
+}
 
 // supported distributions map
 const distributions = {
@@ -101,6 +143,9 @@ export async function patch(inputs) {
     try {
       // download it
       const pathDownload = await tool.downloadTool(url)
+
+      // verify the archive checksum against the release's SHA256SUMS
+      await verifyChecksum(pathDownload, versionToDownload, distribution.archive)
 
       // extract it
       let extractedPath
