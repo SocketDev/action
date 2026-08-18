@@ -1,3 +1,5 @@
+import crypto from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { addPath, debug, info, setOutput } from '@actions/core'
@@ -98,6 +100,7 @@ export async function applyPatches(inputs) {
       repo: 'socket-patch',
     })
   } catch (error) {
+    // ok: catch-binding foreign repo convention
     debug(`[${error?.status}] ${error?.response?.url} ${errorMessage(error)}`)
     throw new Error(`failed to check version ${inputs.versionPatch}`)
   }
@@ -123,6 +126,13 @@ export async function applyPatches(inputs) {
       // download it
       const pathDownload = await downloadTool(url)
 
+      // verify the archive checksum against the release's SHA256SUMS
+      await verifyChecksum(
+        pathDownload,
+        versionToDownload,
+        distribution.archive,
+      )
+
       // extract it
       const extractedPath =
         distribution.ext === 'zip'
@@ -137,6 +147,7 @@ export async function applyPatches(inputs) {
         process.arch,
       )
     } catch (error) {
+      // ok: catch-binding foreign repo convention
       throw new Error(
         `Failed to download socket-patch binary: ${errorMessage(error)}`,
       )
@@ -173,4 +184,49 @@ export async function applyPatches(inputs) {
     args.push('--cwd', inputs.patchCwd)
   }
   await exec(pathBinary, args)
+}
+
+// Download the release's SHA256SUMS file, find the expected hash for the
+// archive, compute the downloaded archive's SHA256, and throw on mismatch.
+// Mirrors the integrity policy firewall.js already enforces for its binary.
+export async function verifyChecksum(
+  pathDownload,
+  versionToDownload,
+  archiveName,
+) {
+  const checksumsUrl = `https://github.com/SocketDev/socket-patch/releases/download/${versionToDownload}/SHA256SUMS`
+  let checksumsText
+  try {
+    const pathChecksums = await downloadTool(checksumsUrl)
+    checksumsText = readFileSync(pathChecksums, 'utf8')
+  } catch (error) {
+    // ok: catch-binding foreign repo convention
+    throw new Error(
+      `Failed to download SHA256SUMS for socket-patch ${versionToDownload}: ${errorMessage(error)}`,
+    )
+  }
+  // SHA256SUMS line shape: `<hash>  <filename>`
+  const expectedHash = checksumsText
+    .split('\n')
+    .find(line => line.endsWith(archiveName))
+    ?.split(/\s+/)[0]
+  if (!expectedHash) {
+    throw new Error(
+      `No checksum found for ${archiveName} in socket-patch ${versionToDownload} SHA256SUMS`,
+    )
+  }
+  const actualHash = crypto
+    .createHash('sha256')
+    .update(readFileSync(pathDownload))
+    .digest('hex')
+  debug(`expected checksum: ${expectedHash}`)
+  debug(`actual checksum:   ${actualHash}`)
+  if (actualHash !== expectedHash) {
+    throw new Error(
+      `Checksum mismatch! socket-patch binary may have been tampered with.\n` +
+        `Expected: ${expectedHash}\n` +
+        `Got:      ${actualHash}`,
+    )
+  }
+  info('socket-patch checksum validation passed')
 }
