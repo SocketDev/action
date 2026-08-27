@@ -107,10 +107,8 @@ packages:
   - '.claude/hooks/repo/*'
   - '.config/repo/oxlint-plugin/*'
 autoInstallPeers: true
-managePackageManagerVersions: false
 pmOnFail: 'warn'
 blockExoticSubdeps: true
-confirmModulesPurge: false
 enablePrePostScripts: true
 minimumReleaseAge: 10080
 resolutionMode: 'highest'
