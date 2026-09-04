@@ -166,7 +166,7 @@ export async function maybeNotifyUpdate(): Promise<void> {
       return
     }
     const repo = 'SocketDev/socket-wheelhouse'
-    const newestRef = resolveNewestRef(repo)
+    const newestRef = await resolveNewestRef(repo)
     if (newestRef === undefined || newestRef === cfg.ref) {
       return
     }
