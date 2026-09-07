@@ -102,10 +102,10 @@
     "rolldown": "catalog:",
     "semver": "catalog:",
     "shell-quote": "catalog:",
+    "svgo": "catalog:",
     "taze": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "svgo": "catalog:"
+    "vitest": "catalog:"
   },
   "devEngines": {
     "packageManager": {

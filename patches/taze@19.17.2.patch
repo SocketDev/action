@@ -1,8 +1,8 @@
-diff --git a/dist/types-BDrH6chW.mjs b/dist/types-BDrH6chW.mjs
-index bab11cf4dfa56322c9893c0a446000ee7f5c33ec..ef9cbdf4c0c7e277a4c7d984af66eee56025c090 100644
---- a/dist/types-BDrH6chW.mjs
-+++ b/dist/types-BDrH6chW.mjs
-@@ -1804,7 +1804,7 @@ async function getVersions(spec, options = {}) {
+diff --git a/dist/types-Cun7iVo2.mjs b/dist/types-Cun7iVo2.mjs
+index 7db8544d4d91a91693b9b5c1444e582437791b62..2c2bad4ca0d8a7754de620fcc2d2c024c1e8198c 100644
+--- a/dist/types-Cun7iVo2.mjs
++++ b/dist/types-Cun7iVo2.mjs
+@@ -2723,7 +2723,7 @@ async function getVersions(spec, options = {}) {
  	return getVersionsForContext(context, options);
  }
  function getVersionsForContext(context, options) {

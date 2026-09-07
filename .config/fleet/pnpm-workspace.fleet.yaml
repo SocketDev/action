@@ -23,17 +23,17 @@ catalog:
   'dtu-github-actions': 0.17.1
   '@shadscan/cli': 0.7.0
   '@sinclair/typebox': 0.34.52
-  '@socketregistry/packageurl-js': 1.5.0
-  '@socketsecurity/lib': 6.5.2
+  '@socketregistry/packageurl-js': 1.5.2
+  '@socketsecurity/lib': 6.7.0
   '@socketsecurity/registry': 2.0.5
-  '@socketsecurity/sdk': 4.1.3
-  '@socketregistry/packageurl-js-stable': 'npm:@socketregistry/packageurl-js@1.5.0'
-  '@socketsecurity/lib-stable': 'npm:@socketsecurity/lib@6.5.2'
+  '@socketsecurity/sdk': 4.1.4
+  '@socketregistry/packageurl-js-stable': 'npm:@socketregistry/packageurl-js@1.5.2'
+  '@socketsecurity/lib-stable': 'npm:@socketsecurity/lib@6.7.0'
   '@socketsecurity/registry-stable': 'npm:@socketsecurity/registry@2.0.5'
-  '@socketsecurity/sdk-stable': 'npm:@socketsecurity/sdk@4.1.3'
+  '@socketsecurity/sdk-stable': 'npm:@socketsecurity/sdk@4.1.4'
   '@types/mdast': 4.0.4
-  '@types/node': 26.1.2
-  '@types/semver': 7.7.1
+  '@types/node': 26.4.0
+  '@types/semver': 7.8.0
   '@types/shell-quote': 1.7.5
   # Rust wasm parser artifact (dot-naming: acorn.rs.wasm = acorn, Rust impl,
   # wasm target) — the AST dep of the fleet hooks + the socket/* oxlint plugin.
@@ -46,7 +46,7 @@ catalog:
   # drifted across 5.0.5 / 5.0.6 / 5.0.7 / 5.0.8, so the fleet converges here.
   # Soaked (5.0.8 published 2026-07-23; 5.0.9 published 2026-07-30 is still
   # inside the 7-day cooldown).
-  'brace-expansion': 5.0.8
+  'brace-expansion': 5.0.9
   # istanbul-org converter for raw NODE_V8_COVERAGE output — cover.mts turns
   # spawned-child coverage into the children merge tier with `c8 report`.
   # Soaked (11.0.0 published 2026-02-22).
@@ -56,7 +56,7 @@ catalog:
   # and MV3 extension load+eval (socket-webext). Enabled by default via .mcp.json
   # (`pnpm exec chrome-devtools-mcp`). Soaked (1.5.0 published 2026-07-03; 1.6.0
   # published 2026-07-14 is still inside the 7-day cooldown).
-  'chrome-devtools-mcp': 1.6.0
+  'chrome-devtools-mcp': 1.8.0
   # compromise.js NLP — the judgment-nudge hook's modal-verb (POS) detector.
   # 14.15.1 is the attested re-publish that cleared the 14.15.0
   # trust-downgrade flag.
@@ -65,7 +65,7 @@ catalog:
   # logic; runs standalone in vitest. Soaked (4.9.0 published 2026-07-08). See
   # .claude/skills/fleet/property-and-fuzz-testing.
   'fast-check': 4.9.0
-  'magic-string': 1.1.0
+  'magic-string': 1.2.3
   'markdownlint-cli2': 0.23.2
   'mdast-util-from-markdown': 2.0.3
   'micromark': 4.0.2
@@ -106,13 +106,13 @@ catalog:
   # playwright-core — headless Chromium driver for the rendering-chromium-to-png
   # skill (render a page or a real unpacked MV3 extension popup to PNG so an
   # agent can SEE it). Browser binary via `node_modules/.bin/playwright install chromium`.
-  'playwright-core': 1.62.0
+  'playwright-core': 1.62.1
   # portless — stable HTTPS `.localhost` URLs for local page tests and rendered UI checks.
-  'portless': 0.15.4
+  'portless': 0.15.6
   'regjsparser': 0.13.2
   'semver': 7.8.5
   'shell-quote': 1.10.0
-  'taze': 19.16.0
+  'taze': 19.17.2
   # TypeScript 7 NATIVE (the Go `tsc`). Track the highest available 7.x
   # PRE-RELEASE — the RC line is intentional. npm's `latest` dist-tag points at
   # 6.x stable, so "latest" is a DOWNGRADE off the native compiler: never follow
@@ -120,9 +120,9 @@ catalog:
   # it ships outranks the rc). Pinned-toolchain, excluded from taze
   # (UPDATE_PINNED_TOOLCHAIN) so it is never auto-bumped — always a deliberate bump.
   'typescript': 7.0.2
-  'vitest': 4.1.10
-  '@vitest/coverage-v8': 4.1.10
-  '@vitest/ui': 4.1.10
+  'vitest': 4.1.11
+  '@vitest/coverage-v8': 4.1.11
+  '@vitest/ui': 4.1.11
 
 # Optional fleet catalog — present in repos that use these tools; absent is
 # fine (the cascade never injects these). Read by loadOptionalCatalogEntries()
@@ -137,7 +137,7 @@ catalogOptional:
   # builds the bundle); soak-bypassed at 0.27.14 (build-only dev tool, never
   # shipped to runtime) per RELEASE_AGE_EXCLUDE_ANNOTATIONS.
   'rolldown-plugin-dts': 0.27.14
-  'svgo': 4.0.2
+  'svgo': 4.1.0
   # vitiate — coverage-guided fuzzer (SWC-instrumented, native @vitiate/engine).
   # Optional tier: adopted only in repos that fuzz an input boundary (parsers,
   # decoders, native addons), so its native @swc/core engine never installs
