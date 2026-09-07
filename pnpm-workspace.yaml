@@ -1,4 +1,5 @@
 catalog:
+  'svgo': 4.1.0
   '@actions/cache': 6.2.0
   '@redwoodjs/agent-ci': 0.17.1
   '@shadscan/cli': 0.7.0

@@ -54,7 +54,8 @@
     "get-green": "node scripts/fleet/get-green.mts",
     "socket-wheelhouse:emit-schema": "node scripts/fleet/socket-wheelhouse-emit-schema.mts",
     "weekly-update": "node scripts/fleet/weekly-update.mts",
-    "weekly-update:ci": "gh workflow run weekly-update.lock.yml"
+    "weekly-update:ci": "gh workflow run weekly-update.lock.yml",
+    "gen:glyph": "node scripts/fleet/gen/glyph.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",
@@ -103,7 +104,8 @@
     "shell-quote": "catalog:",
     "taze": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "svgo": "catalog:"
   },
   "devEngines": {
     "packageManager": {
