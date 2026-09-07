@@ -1,5 +1,9 @@
 # Socket Security (GitHub Action)
 
+<div align="center">
+  <img width="160" height="160" alt="action" src="https://raw.githubusercontent.com/SocketDev/action/HEAD/assets/repo/logomark.svg">
+</div>
+
 [![Follow @SocketSecurity](https://img.shields.io/twitter/follow/SocketSecurity?style=social)](https://twitter.com/SocketSecurity)
 [![Follow @socket.dev on Bluesky](https://img.shields.io/badge/Follow-@socket.dev-1DA1F2?style=social&logo=bluesky)](https://bsky.app/profile/socket.dev)
 
