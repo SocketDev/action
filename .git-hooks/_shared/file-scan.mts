@@ -18,10 +18,10 @@ export const shouldSkipFile = (filePath: string): boolean =>
   SKIP_FILE_RE.test(filePath)
 
 /**
- * Source-code extensions. THE canonical definition for the fleet's
- * source-only convention scanners — the commit-time hook and the
- * `private-paths-are-absent` check gate import this one constant so they
- * cannot disagree about what "source code" means.
+ * Source-code extensions. THE canonical definition for the fleet's source-only
+ * convention scanners — the commit-time hook and the
+ * `private-paths-are-absent-at-commit` check gate import this one constant so
+ * they cannot disagree about what "source code" means.
  *
  * Markdown, docs, JSON, and YAML are deliberately out of scope: they reference
  * these patterns legitimately. That divergence was real — the check script

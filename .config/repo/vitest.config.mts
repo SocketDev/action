@@ -15,11 +15,11 @@ import path from 'node:path'
 import process from 'node:process'
 
 import { envAsBoolean } from '@socketsecurity/lib-stable/env/boolean'
-import { getCI } from '@socketsecurity/lib-stable/env/ci'
+import { isCI } from '@socketsecurity/lib-stable/env/ci'
 import { defineConfig } from 'vitest/config'
 
 import { GENERATED_GLOBS } from '../../scripts/fleet/constants/generated-globs.mts'
-import { resolveCoverageConfig } from '../fleet/vitest.coverage.fleet.config.mts'
+import { resolveCoverageConfig } from '../../.config/fleet/vitest.coverage.fleet.config.mts'
 import {
   readConformanceExcludeGlobs,
   readNonIsolatedGlobs,
@@ -28,6 +28,22 @@ import {
   repoNodeTestExcludeGlobs,
   stringArray,
 } from './vitest.settings.mts'
+
+// Pin TZ here, at config-eval time in the MAIN process, so every worker
+// inherits TZ=UTC from its spawn env. This has to happen before a worker
+// starts: under the default `threads` pool a worker cannot change its own
+// timezone afterwards — V8 caches it at the first Date op — so a `test.env.TZ`
+// entry or a setupFiles assignment LOOKS right and does nothing, because both
+// run inside the worker. Measured: `main after set TZ=UTC` reads day 19 while
+// `worker after self-set TZ=UTC` still reads day 18.
+//
+// Why it matters beyond flakiness: an unpinned TZ makes a date-formatting bug
+// invisible to whoever wrote it and reproducible only for readers in another
+// offset. socket-cli's analytics report labeled every row by LOCAL day while
+// the API buckets by UTC day, so the same command emitted different dates
+// west of UTC; its per-package config pinned TZ and hid the bug from the
+// fleet runner. `??=` so an operator probing another zone can still override.
+process.env['TZ'] ??= 'UTC'
 
 // Coverage is on when the COVERAGE env is set (cover.mts) or the `--coverage`
 // flag is passed. Match the FLAG, not any argv containing the substring
@@ -39,7 +55,7 @@ const isCoverageEnabled =
   process.argv.some(arg => arg.startsWith('--coverage'))
 
 // Ceiling on the contention multiplier. A starved spawn is queued, not hung, so
-// it deserves more time — but a genuinely WEDGED test must still fail in
+// it deserves more time — but a genuinely STUCK test must still fail in
 // bounded time instead of hanging the run behind a growing budget.
 const BUDGET_LOAD_CAP = 4
 
@@ -104,7 +120,7 @@ export function resolveTestBudgetMs(
       }
     | undefined,
 ): number {
-  const ci = getCI()
+  const ci = isCI()
   const base =
     ci && isCoverageEnabled
       ? 120_000
@@ -116,11 +132,45 @@ export function resolveTestBudgetMs(
   return Math.round(base * resolveBudgetLoadFactor(options))
 }
 
-export function resolveFallbackMaxWorkers(): number {
-  if (getCI()) {
+// Local ceiling on the core-scaled worker count. Past this the suite stops
+// getting faster and only costs memory: measured on a 14-core box, the
+// integration tier ran 147s at 16 workers, 129s at 24 and 126s at 32 — a 2%
+// gain for a third more Node heaps.
+const LOCAL_MAX_WORKERS_CAP = 24
+const LOCAL_MAX_WORKERS_FLOOR = 8
+// Workers per core. Deliberately oversubscribed: a fleet test mostly WAITS on a
+// spawned script rather than computing, so a blocked worker leaves a core idle
+// and a sibling can use it. Under-subscribing measurably hurt — the same tier
+// took 170s at 6 workers and 169s at 10, slower than the 16-worker default it
+// was meant to improve on.
+const LOCAL_WORKERS_PER_CORE = 2
+
+/**
+ * Worker cap for the pool before any per-repo override, which
+ * {@link capMaxWorkers} floors this against.
+ */
+export function resolveFallbackMaxWorkers(
+  options?:
+    | { cores?: number | undefined; isCI?: boolean | undefined }
+    | undefined,
+): number {
+  const opts = { __proto__: null, ...options } as {
+    cores?: number | undefined
+    isCI?: boolean | undefined
+  }
+  if (opts.isCI ?? isCI()) {
     return 4
   }
-  return isCoverageEnabled ? 8 : 16
+  // Coverage instrumentation is memory-hungry, so it keeps the flat, lower cap
+  // rather than scaling up into a heap-exhaustion failure.
+  if (isCoverageEnabled) {
+    return 8
+  }
+  const cores = Math.max(1, opts.cores ?? os.availableParallelism())
+  return Math.min(
+    LOCAL_MAX_WORKERS_CAP,
+    Math.max(LOCAL_MAX_WORKERS_FLOOR, cores * LOCAL_WORKERS_PER_CORE),
+  )
 }
 export function resolveConfiguredMaxWorkers(): number | undefined {
   const configured = readVitestSettings().maxWorkers
@@ -176,7 +226,7 @@ export function mergeVitestAlias(
   root: string = process.cwd(),
 ): Record<string, string> {
   const entries = (tier: unknown): Array<[string, string]> =>
-    tier && typeof tier === 'object' && !Array.isArray(tier)
+    tier !== null && typeof tier === 'object' && !Array.isArray(tier)
       ? Object.entries(tier).filter(
           (e): e is [string, string] => typeof e[1] === 'string',
         )
@@ -247,6 +297,24 @@ export function laneToTestGlobs(globs: string[]): string[] {
 const conformanceGlobs = readConformanceExcludeGlobs()
 const conformanceTier = process.env['FLEET_TEST_CONFORMANCE'] === '1'
 
+/**
+ * Vitest-runnable property/fuzz harnesses (`*.fuzz.test.mts`). The Tier-2
+ * vitiate form (`*.fuzz.mts`) is already outside the include glob and runs on
+ * its own runner, so it needs no entry here.
+ */
+export const FUZZ_GLOBS: readonly string[] = [
+  '**/test/**/*.fuzz.test.{js,ts,mjs,mts,cjs}',
+]
+// Whether THIS run is the explicit fuzz tier. Set by the weekly fuzz workflow,
+// never by hand.
+//
+// Fuzzing is not a per-commit gate. A randomized harness is budgeted by
+// wall-clock, so a red run depends on machine load and cannot be replayed; a
+// deterministic one replays but costs far more than the signal is worth per
+// commit (the seeded parity harness alone ran 5-20s). Both belong to a
+// scheduled run that can afford the full budget and file what it finds.
+const fuzzTier = process.env['FLEET_TEST_FUZZ'] === '1'
+
 export default defineConfig({
   // Repo-owned resolution from the settings file's `vitest.alias` +
   // `vitest.conditions` — see mergeVitestAlias and resolveVitestConditions.
@@ -298,13 +366,15 @@ export default defineConfig({
     // root, silently missing every sub-package's tests (each scoped `vitest run`
     // returns "No test files found" and a full run "passes" having executed
     // zero of them).
-    include: conformanceTier
-      ? laneToTestGlobs(conformanceGlobs)
-      : laneFilterActive && activeLane === 'mid'
-        ? laneToTestGlobs(midLaneGlobs)
-        : laneFilterActive && activeLane === 'slow'
-          ? laneToTestGlobs(slowLaneGlobs)
-          : ['**/test/**/*.test.{js,ts,mjs,mts,cjs}'],
+    include: fuzzTier
+      ? [...FUZZ_GLOBS]
+      : conformanceTier
+        ? laneToTestGlobs(conformanceGlobs)
+        : laneFilterActive && activeLane === 'mid'
+          ? laneToTestGlobs(midLaneGlobs)
+          : laneFilterActive && activeLane === 'slow'
+            ? laneToTestGlobs(slowLaneGlobs)
+            : ['**/test/**/*.test.{js,ts,mjs,mts,cjs}'],
     // Vitest treats `test/**` as `**/test/**`, so without an explicit
     // exclude it picks up every nested `test/` directory in the repo
     // — including the `.git-hooks/test/`, the oxlint plugin's per-rule
@@ -322,6 +392,10 @@ export default defineConfig({
       // hours, not a unit suite. Lifted only for the explicit conformance run,
       // where the include above targets exactly these globs.
       ...(conformanceTier ? [] : conformanceGlobs),
+      // Property/fuzz harnesses run ONLY in the fuzz tier, never in the
+      // ordinary suite or a pre-commit lane. Lifted only for the explicit fuzz
+      // run, where the include above targets exactly these globs.
+      ...(fuzzTier ? [] : FUZZ_GLOBS),
       // Generated/vendored trees (dist, build, upstream, test/fixtures, …) —
       // shared with lint + format from one source (constants/generated-globs.mts)
       // so the ignore surfaces can't drift. vite's default loader can't
@@ -375,9 +449,14 @@ export default defineConfig({
     // for the conformance tier: that run exists to execute those globs, so
     // discovering none means the tier is misconfigured and a silent pass would
     // report the heavy suites green without running one of them.
+    //
+    // The fuzz tier is deliberately NOT held to that: a repo can fuzz only at
+    // Tier 2 (`*.fuzz.mts`, its own runner), which discovers nothing here and
+    // is not a misconfiguration. Whether a repo fuzzes at all is
+    // fuzz-tiers-are-covered's question, and which legs fire is the workflow's.
     passWithNoTests: !conformanceTier,
     // Reporters left unset so vitest applies its own default:
-    // `[isAgent ? 'minimal' : 'default', ...(GITHUB_ACTIONS ? ['github-actions'] : [])]`
+    // `[isAgent() ? 'minimal' : 'default', ...(GITHUB_ACTIONS ? ['github-actions'] : [])]`
     // (vitest/src/defaults.ts). That yields the token-lean `minimal` reporter
     // inside an AI coding agent (std-env `isAgent`: CLAUDECODE/CURSOR_/…),
     // `default` for humans, and the `github-actions` annotations reporter in CI.
@@ -389,7 +468,7 @@ export default defineConfig({
     // `singleFork` → `fileParallelism: false` (forces maxWorkers to 1);
     // `minThreads` and `useAtomics` were dropped with no replacement.
     // Worker count tuned to physical CPUs: GH Actions ubuntu-latest has
-    // 4 cores, dev laptops typically 8-16. `getCI()` (rewire-aware
+    // 4 cores, dev laptops typically 8-16. `isCI()` (rewire-aware
     // presence check on `CI`) is truthy even for CI="" or CI=0, matching
     // the fleet convention that any CI value means CI.
     //
@@ -445,7 +524,7 @@ export default defineConfig({
     testTimeout: resolveTestBudgetMs(),
     hookTimeout: resolveTestBudgetMs(),
     bail: resolveBail({
-      isCI: getCI(),
+      isCI: isCI(),
       isCoverage: isCoverageEnabled,
     }),
     // Coverage shape comes from the fleet base merged with the repo-owned

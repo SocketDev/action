@@ -8,7 +8,7 @@
 // module stays free of the Node-25 hard-exit gate that helpers.mts carries —
 // a Claude hook importing it must run on the operator's, possibly older, Node.
 function splitLines(text: string): string[] {
-  return text.replace(/\r\n/g, '\n').split('\n')
+  return text.replace(/\r\n/g, '\n').split(/\r?\n/)
 }
 
 //

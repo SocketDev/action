@@ -22,7 +22,7 @@
  *     the canonical shape re-reads a version, legacy shares one. An output
  *     matching BOTH shapes classifies as 5xx: the inline loop's 5xx grep ran
  *     first, so 5xx always outranked the SKU string.
- *   - extended-env gating, disabled-seam-pattern, fleet docs: the optional
+ *   - extended-env gating, gated-extension-point, fleet docs: the optional
  *     SOCKET_TOOL_* provenance exports emit only when EXTENDED_ENV=true; the
  *     load-bearing exports — SFW_BIN, SFW_IS_ENTERPRISE (with its
  *     enterprise-flag derivation), SFW_SILENT, and the SOCKET_API_TOKEN /
@@ -48,10 +48,15 @@
  *   - pnpm-env: EXTENDED_ENV, PNPM_VERSION, PLATFORM, ASSET, INTEGRITY, PNPM_BIN,
  *     PNPM_DIR → 0 or 6 export lines.
  *   - sfw-env: EXTENDED_ENV, SOCKET_API_TOKEN, SFW_BIN, SFW_FLAVOR, SFW_VERSION,
- *     PLATFORM, ASSET, INTEGRITY → 3-10 export lines.
+ *     PLATFORM, ASSET, INTEGRITY → 3-10 export lines. The pnpm BOOTSTRAP path —
+ *     taken only when TOOLS_FILE is absent (a thin member's payload has not
+ *     materialized yet) — is a separate decision core in the co-located
+ *     bootstrap-pnpm.mjs; see that file's header.
  */
 
-// oxlint-disable-next-line socket/prefer-async-spawn -- composite-action helper runs on the raw runner before setup-node; node_modules is unavailable and the jq.mjs probe is naturally sync.
+// composite-action helper runs on the raw runner before setup-node;
+// node_modules is unavailable and the jq.mjs probe is naturally sync.
+// oxlint-disable-next-line socket/prefer-async-spawn -- sync jq probe
 import { spawnSync } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import process from 'node:process'
@@ -116,6 +121,7 @@ export function resolveSfwSelection({ probe, socketApiToken, toolsFile }) {
   const shape = sfwShape(probe(toolsFile, [...nsKeys, 'sfw-free', 'version']))
   const { flavor, repo } = selectSfwFlavor(socketApiToken)
   return {
+    __proto__: null,
     entryPath: sfwEntryPath(shape, flavor),
     flavor,
     ns,
@@ -133,6 +139,7 @@ export function resolveSfwSelection({ probe, socketApiToken, toolsFile }) {
  */
 export function fallbackSfwSelection(shape) {
   return {
+    __proto__: null,
     entryPath: sfwEntryPath(shape, 'free'),
     flavor: 'free',
     repo: 'SocketDev/sfw-free',
@@ -161,7 +168,7 @@ export function classifySfwProbe(probeOutput) {
 }
 
 /**
- * The gated SOCKET_TOOL_CHECKSUMS_FILE pointer (disabled-seam: the staged
+ * The gated SOCKET_TOOL_CHECKSUMS_FILE pointer (gated off: the staged
  * copy at TOOLS_DEST is unconditional; only this env-var pointer — which no
  * load-bearing step reads — is off unless a consumer opts in).
  */
@@ -172,8 +179,8 @@ export function planChecksumsEnvExports({ extendedEnv, toolsDest }) {
 }
 
 /**
- * The gated pnpm provenance exports (disabled-seam: pnpm is already on
- * $GITHUB_PATH — the load-bearing wire-in — so these have no required
+ * The gated pnpm provenance exports (gated off: pnpm is already on
+ * $GITHUB_PATH — the load-bearing export — so these have no required
  * consumer).
  */
 export function planPnpmEnvExports({
@@ -213,8 +220,8 @@ export function planPnpmEnvExports({
  *   after any fallback. SFW_SILENT keeps the firewall's stdout banners out of
  *   every wrapped command — scripts that parse a tool's stdout (pack --json,
  *   the format pipe) would otherwise ingest banner lines as data.
- * - The SOCKET_TOOL_SFW_* provenance has no required consumer;
- *   disabled-seam-gated off unless extended-env opts in.
+ * - The SOCKET_TOOL_SFW_* provenance has no required consumer; gated off unless
+ *   extended-env opts in.
  */
 export function planSfwEnvExports({
   asset,
@@ -346,7 +353,7 @@ function main() {
 }
 
 // Realpath both sides — the naive argv[1] comparison is symlink-fragile, the
-// same pitfall scripts/fleet/_shared/is-main-module.mts documents; that
+// same pitfall scripts/fleet/process/is-main-module.mts documents; that
 // helper is .mts and this script must stay importless-runnable on system
 // Node, so the comparison is inlined.
 function isEntrypoint(invokedPath) {

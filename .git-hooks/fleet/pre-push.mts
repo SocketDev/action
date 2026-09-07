@@ -34,6 +34,7 @@ import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 // version gate in `../_shared/helpers.mts` runs at load — every gate below
 // assumes native .mts type stripping.
 import { splitLines } from '../_shared/helpers.mts'
+import { debugCheck } from '../_shared/check-output.mts'
 import { scanCommitMessages } from '../_shared/push-commit-messages.mts'
 import { scanFilesInRange } from '../_shared/push-file-scan.mts'
 import { computeRange } from '../_shared/push-range.mts'
@@ -45,6 +46,7 @@ import {
   scanTypeCheck,
 } from '../_shared/push-repo-gates.mts'
 import { scanSignedCommits } from '../_shared/push-signatures.mts'
+import { isDurableBackupPush } from '../_shared/push-durable-ref.mts'
 import { isSquashHistoryRepo } from '../_shared/push-squash-history.mts'
 
 const logger = getDefaultLogger()
@@ -60,7 +62,7 @@ const readStdin = (): Promise<string> =>
   })
 
 const main = async (): Promise<number> => {
-  logger.info('Running mandatory pre-push validation…')
+  debugCheck('Running mandatory pre-push validation…')
 
   const submoduleErrors = checkSubmodules()
   if (submoduleErrors > 0) {
@@ -73,13 +75,24 @@ const main = async (): Promise<number> => {
   const stdin = await readStdin()
   let totalErrors = 0
   const refLines = splitLines(stdin.trim()).filter(Boolean)
+  // Every range this push carries, accumulated so the file-oriented gates below
+  // can scope to the pushed commits instead of the working tree.
+  const pushedRanges: string[] = []
+  // Every remote ref this push updates, for the durable-backup verdict below.
+  const pushedRemoteRefs: string[] = []
 
   for (let i = 0, { length } = refLines; i < length; i += 1) {
     const refLine = refLines[i]!
-    const [localRef, localSha, remoteRef, remoteSha] = refLine.split(/\s+/)
+    const {
+      0: localRef,
+      1: localSha,
+      2: remoteRef,
+      3: remoteSha,
+    } = refLine.split(/\s+/)
     if (!localRef || !localSha || !remoteRef || !remoteSha) {
       continue
     }
+    pushedRemoteRefs.push(remoteRef)
     const range = computeRange(remote, localRef, localSha, remoteSha)
     // `computeRange` returns `undefined` for skip cases (tags, deletions, new
     // branches); use loose equality so both `null` and `undefined` skip. A
@@ -104,14 +117,45 @@ const main = async (): Promise<number> => {
     totalErrors += scanCommitMessages(range, remote)
     totalErrors += scanSignedCommits(range, remoteRef)
     totalErrors += scanFilesInRange(range)
+    pushedRanges.push(range)
   }
 
   // File-targeted scans, working-tree state, not per-commit-range.
   totalErrors += scanSoakAnnotations()
 
+  // A durable-backup push carries work OFF THE MACHINE and nothing consumes it.
+  // The safety scans above already ran - a leaked secret or an unsigned commit
+  // is a fact about the bytes, and a backup ref is as public as any other. What
+  // stops here is the QUALITY bar: lint, format, types, dispatch drift.
+  //
+  // Measured: on a shared checkout local main carries every session's commits,
+  // so one session's lint debt gated another session's push and the work sat on
+  // one disk. A deleted checkout then took an afternoon of real commits with it.
+  // A backup that has to be green is a backup nobody can take when it matters.
+  if (isDurableBackupPush(pushedRemoteRefs)) {
+    if (totalErrors > 0) {
+      logger.error('')
+      logger.fail('Backup push blocked by a SAFETY scan.')
+      logger.error(
+        '  A durable ref skips lint, types, and dispatch drift, never a secret or signature finding.',
+      )
+      return 1
+    }
+    logger.warn(
+      `Durable backup (${pushedRemoteRefs.join(', ')}): safety scans only, quality gates skipped.`,
+    )
+    logger.info(
+      '  Untested by contract - rebase or cherry-pick from it, never merge it as-is.',
+    )
+    return 0
+  }
+
   // Fast lint/format gate — the build-independent slice of the quality bar,
-  // run at the push boundary so format/lint drift can't reach main.
-  totalErrors += scanFastChecks()
+  // run at the push boundary so format/lint drift can't reach main. Scoped to
+  // the pushed ranges, NOT the working tree: on a shared checkout the tree also
+  // holds a parallel session's uncommitted and untracked files, and judging
+  // those blocks a push over bytes it does not carry.
+  totalErrors += scanFastChecks(pushedRanges)
 
   // Dispatch-table drift (wheelhouse-only) — a stale/dangling hook dispatch
   // can't reach origin/main and cascade fleet-wide.
@@ -123,7 +167,7 @@ const main = async (): Promise<number> => {
   // origin/main behind CI alone. Runs AFTER the dispatch-drift check so its
   // dispatch-table regen cannot mask a stale on-disk table, and (unlike
   // scanFastChecks) it does not skip under a `.claude/` worktree path.
-  totalErrors += scanTypeCheck()
+  totalErrors += scanTypeCheck(pushedRanges)
 
   if (totalErrors > 0) {
     logger.error('')
@@ -156,7 +200,7 @@ const main = async (): Promise<number> => {
     return 1
   }
 
-  logger.success('All mandatory validation passed!')
+  debugCheck('All mandatory validation passed!')
   return 0
 }
 

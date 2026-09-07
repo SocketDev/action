@@ -30,13 +30,13 @@ export {
 
 // Scanning kernel: line-splitting, marker/doc-context detection, LineHit shape.
 export {
-  aliasMatches,
   isInsideBackticks,
   lineIsSuppressed,
   looksLikeDocumentation,
-  socketLintMarkerFor,
+  suppressionFor,
   splitLines,
   stripTemplateLayer,
+  suppressionCoversLine,
 } from './scan-core.mts'
 export type { LineHit } from './scan-core.mts'
 
@@ -127,6 +127,13 @@ export {
 } from './external-issue-ref.mts'
 export type { ExternalIssueRef } from './external-issue-ref.mts'
 
+// Commit-time backstop for the fleet-fork rule: catches a staged canonical
+// path a Workflow agent() subagent (or any git command) forked outside the
+// cascade, closing the gap where the PreToolUse no-fleet-fork-guard cannot
+// attribute or fire for that subagent's Bash calls.
+export { scanCanonicalForkPaths } from './canonical-fork-scan.mts'
+export type { CanonicalForkFinding } from './canonical-fork-scan.mts'
+
 // Hard-fail if Node is below 25. This runs at module load — every
 // hook invocation imports _shared/helpers.mts before doing anything, so the
 // version check is the first thing that happens.
@@ -141,11 +148,15 @@ if (nodeMajor < NODE_MIN_MAJOR) {
   // status-emoji glyph) so the no-status-emoji lint rule stays clean
   // — the lint rule's recommendation (use logger.fail()) doesn't
   // apply when the entire branch is the logger-unavailable bail.
-  // oxlint-disable-next-line socket/no-module-eval-side-effects -- Node-floor bail before any import resolves; raw stderr is the only channel here.
+  // Node-floor bail, before any import resolves: raw stderr is the only
+  // channel available here.
+  // oxlint-disable-next-line socket/no-module-eval-side-effects -- floor bail
   process.stderr.write(
     `\x1b[0;31mHook requires Node >= ${NODE_MIN_MAJOR}.0.0 (have v${process.versions.node})\x1b[0m\n`,
   )
-  // oxlint-disable-next-line socket/no-module-eval-side-effects -- Node-floor bail before any import resolves; raw stderr is the only channel here.
+  // Node-floor bail, before any import resolves: raw stderr is the only
+  // channel available here.
+  // oxlint-disable-next-line socket/no-module-eval-side-effects -- floor bail
   process.stderr.write(
     'Install Node 24+ — these hooks rely on default-on .mts type stripping.\n',
   )

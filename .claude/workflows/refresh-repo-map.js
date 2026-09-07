@@ -26,7 +26,7 @@ if (typeof input === 'string') {
   }
 }
 const root =
-  input && typeof input === 'object' && typeof input.root === 'string'
+  input !== null && typeof input === 'object' && typeof input.root === 'string'
     ? input.root
     : '.'
 
@@ -55,9 +55,10 @@ const REPORT_SCHEMA = {
 }
 
 phase('Build')
-// socket-lint: allow top-level-await -- Workflow script body executed directly
+// Workflow script body executed directly.
 // by the Claude Code harness (top-level `phase`/`agent`/`return` are harness
 // globals), never bundled to CJS.
+// oxlint-disable-next-line socket/no-top-level-await -- Workflow script body
 const build = await agent(
   [
     'Rebuild the repo-map skeleton cache for this repository.',
@@ -80,13 +81,14 @@ if (!build || build.outcome !== 'built') {
   log(
     `refresh-repo-map: build phase did not complete cleanly (${JSON.stringify(build)}).`,
   )
-  return { build }
+  return { __proto__: null, build }
 }
 
 phase('Report')
-// socket-lint: allow top-level-await -- Workflow script body executed directly
+// Workflow script body executed directly.
 // by the Claude Code harness (top-level `phase`/`agent`/`return` are harness
 // globals), never bundled to CJS.
+// oxlint-disable-next-line socket/no-top-level-await -- Workflow script body
 const report = await agent(
   [
     'Read .repo-map/index.txt (the repo-map cache roll-up just rebuilt).',
@@ -105,4 +107,4 @@ const report = await agent(
 log(
   `refresh-repo-map complete. files=${report?.filesCovered ?? build.filesWritten} saved=${report?.savedPercent ?? build.savedPercent}% — read .repo-map/index.txt to orient, then Read only the span you need.`,
 )
-return { build, report }
+return { __proto__: null, build, report }

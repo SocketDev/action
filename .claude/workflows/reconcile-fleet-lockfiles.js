@@ -56,7 +56,7 @@ function resolveTargets() {
   if (Array.isArray(args) && args.length) {
     return args.filter(r => ROSTER.includes(r))
   }
-  if (args && typeof args === 'object') {
+  if (args !== null && typeof args === 'object') {
     const only = Array.isArray(args.only) ? args.only : undefined
     const skip = Array.isArray(args.skip) ? args.skip : []
     const base = only?.length ? only : ROSTER
@@ -98,9 +98,10 @@ const RESULT_SCHEMA = {
 
 phase('Reconcile')
 
-// socket-lint: allow top-level-await -- Workflow script body executed directly
+// Workflow script body executed directly.
 // by the Claude Code harness (top-level `phase`/`agent`/`return` are harness
 // globals), never bundled to CJS.
+// oxlint-disable-next-line socket/no-top-level-await -- Workflow script body
 const results = await parallel(
   TARGETS.map(repo => () => {
     const skipList = ROSTER.filter(r => r !== repo).join(',')
@@ -155,4 +156,4 @@ const failed = clean
 log(
   `reconciled: pushed=[${pushed.join(', ')}] noop=[${noop.join(', ')}] failed=[${failed.join(', ')}]`,
 )
-return { pushed, noop, failed, all: clean }
+return { __proto__: null, pushed, noop, failed, all: clean }

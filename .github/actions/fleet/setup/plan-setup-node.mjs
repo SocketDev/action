@@ -13,7 +13,7 @@
  *   `//<registry>/:_authToken=${NODE_AUTH_TOKEN}` into the runner .npmrc and
  *   leaves a placeholder NODE_AUTH_TOKEN in every later step's env; fleet npm
  *   publishes authenticate via OIDC trusted publishing and the preflight
- *   refuses any set token (scripts/fleet/publish-infra/npm/auth-posture.mts),
+ *   refuses any set token (scripts/fleet/registry-infra/npm/auth-posture.mts),
  *   so the port removes that credential surface instead of reproducing it.
  *   Pure decision functions are exported for the wheelhouse unit suite; the
  *   thin CLI shell at the bottom reads inputs from env and prints decisions
@@ -65,24 +65,28 @@ export function parseNodeVersionSpec(wanted) {
   // digits or the literal `x` placeholder.
   const m = /^(\d+)(?:\.(\d+|x))?(?:\.(\d+|x))?$/.exec(spec)
   if (!m) {
-    return { kind: 'unsupported' }
+    return { __proto__: null, kind: 'unsupported' }
   }
   const [, major, minor, patch] = m
   const minorIsNumber = minor !== undefined && minor !== 'x'
   const patchIsNumber = patch !== undefined && patch !== 'x'
   if (!minorIsNumber && patchIsNumber) {
     // `X.x.5` — a number below an x placeholder names nothing.
-    return { kind: 'unsupported' }
+    return { __proto__: null, kind: 'unsupported' }
   }
   if (minorIsNumber && patchIsNumber) {
-    return { kind: 'exact', version: `${major}.${minor}.${patch}` }
+    return {
+      __proto__: null,
+      kind: 'exact',
+      version: `${major}.${minor}.${patch}`,
+    }
   }
   if (minorIsNumber) {
     // `X.Y` or `X.Y.x` — resolve the newest patch of that minor.
-    return { kind: 'prefix', prefix: `v${major}.${minor}.` }
+    return { __proto__: null, kind: 'prefix', prefix: `v${major}.${minor}.` }
   }
   // `X`, `X.x`, or `X.x.x` — resolve the newest release of that major.
-  return { kind: 'prefix', prefix: `v${major}.` }
+  return { __proto__: null, kind: 'prefix', prefix: `v${major}.` }
 }
 
 // Numeric [major, minor, patch] of a `vX.Y.Z` index entry, for the
@@ -160,7 +164,7 @@ export function nodeDistAsset(version, platform) {
  * line — the caller fails loud with the URL it read.
  */
 export function sriFromShasums(shasumsText, asset) {
-  const lines = shasumsText.split('\n')
+  const lines = shasumsText.split(/\r?\n/)
   for (let i = 0, { length } = lines; i < length; i += 1) {
     // Digest-line grammar: (1) the 64-hex sha256, whitespace, then (2) the
     // asset filename, with trailing whitespace tolerated.
@@ -175,7 +179,9 @@ export function sriFromShasums(shasumsText, asset) {
 // Fetch a nodejs.org dist resource as text, failing loud with the URL — the
 // two callers (release index, SHASUMS256.txt) share the error shape.
 async function fetchDistText(url) {
-  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- pre-install composite-action helper; @socketsecurity/lib-stable is not on disk yet, only built-in fetch is available.
+  // pre-install composite-action helper; @socketsecurity/lib-stable is not on
+  // disk yet, only built-in fetch is available.
+  // oxlint-disable-next-line socket/no-fetch-prefer-http-request -- fetch only
   const res = await fetch(url, { redirect: 'follow' })
   if (!res.ok) {
     process.stderr.write(
@@ -278,7 +284,7 @@ async function main() {
 }
 
 // Realpath both sides — the naive argv[1] comparison is symlink-fragile, the
-// same pitfall scripts/fleet/_shared/is-main-module.mts documents; that
+// same pitfall scripts/fleet/process/is-main-module.mts documents; that
 // helper is .mts and this script must stay importless-runnable on system
 // Node, so the comparison is inlined.
 function isEntrypoint(invokedPath) {

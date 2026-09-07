@@ -1,23 +1,32 @@
 {
   "mcpServers": {
     "chrome-devtools": {
-      "command": "pnpm",
       "args": [
-        "exec",
-        "chrome-devtools-mcp",
-        "--isolated",
-        "--category-extensions",
-        "--no-category-performance",
-        "--no-category-emulation"
-      ]
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/chrome-devtools/run.mts"
+      ],
+      "command": "sh"
     },
     "fff": {
-      "command": "fff-mcp",
-      "args": []
+      "args": [
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/fff/run.mts"
+      ],
+      "command": "sh"
     },
-    "janus-multi": {
-      "command": "node",
-      "args": ["scripts/fleet/janus-multi-mcp.mts"]
+    "fleet": {
+      "args": [
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/fleet/run.mts"
+      ],
+      "command": "sh"
+    },
+    "janus": {
+      "args": [
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/janus/run.mts"
+      ],
+      "command": "sh"
     },
     "linear": {
       "type": "http",
@@ -27,9 +36,23 @@
       "type": "http",
       "url": "https://mcp.notion.com/mcp"
     },
+    "playwright": {
+      "args": [
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/playwright/run.mts"
+      ],
+      "command": "sh"
+    },
     "refero": {
       "type": "http",
       "url": "https://api.refero.design/mcp"
+    },
+    "slack": {
+      "args": [
+        ".config/fleet/mcp/launch-node.sh",
+        "scripts/fleet/mcp/slack/run.mts"
+      ],
+      "command": "sh"
     }
   }
 }

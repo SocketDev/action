@@ -1,4 +1,4 @@
-name: ✅ Check dist
+name: ✅ Check Dist
 
 # A `github-action` member ships THE REPO ITSELF at a git tag: the runner
 # checks out the tag and executes the committed `dist/` bundle, never `src/`.
@@ -16,8 +16,13 @@ name: ✅ Check dist
 # installs, rebuilds, and fails on a non-empty diff, uploading the expected
 # bundle so the author can see what they should have committed.
 
+# PUSH, never pull_request. The fleet takes no outside contributions and
+# lands on main directly rather than through PRs, so a pull_request trigger
+# adds no coverage a push trigger does not already give — and it is the
+# fragile half: GitHub has narrowed pull_request defaults for security, and a
+# silently non-firing trigger reads as a green repo with no CI at all
+# (observed on sdxgen, 2026-08-06: no run was created for a clean PR).
 on:
-  pull_request: {}
   push: {}
   workflow_dispatch: {}
 
@@ -39,16 +44,38 @@ jobs:
       # sfw and socket-cli read SOCKET_API_KEY from the org-wide secret.
       SOCKET_API_KEY: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
     steps:
-      # First step must be the third-party actions/checkout (GitHub fetches it
-      # independently) to populate the workspace so the LOCAL
-      # ./.github/actions/* composite resolves.
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2 (2026-05-15)
-        with:
-          fetch-depth: 1
-          persist-credentials: false
+      # First step can't call the local ./.github/actions/fleet/checkout
+      # composite (nothing checked out yet); bootstrap the workspace with the
+      # same inline git-fetch shape the other push-triggered workflows use.
+      - name: Bootstrap checkout
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          git init -q
+          git config --local advice.detachedHead false
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "${SERVER_URL}/${REPOSITORY}"
+          FETCH_ARGS=(--no-tags --prune --depth 1 origin "${TRIGGER_REF}")
+          if [ -n "${GITHUB_TOKEN}" ]; then
+            AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+          else
+            git fetch "${FETCH_ARGS[@]}"
+          fi
+          git checkout -q --detach FETCH_HEAD
 
       - name: Setup + install
         uses: ./.github/actions/fleet/setup-and-install
+        with:
+          # Authorizes a thin member's bundle download during install. Both
+          # stay empty on a member with no payload App, which skips the mint.
+          payload-token-client-id: ${{ vars.SOCKET_PAYLOAD_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_PAYLOAD_APP_PRIVATE_KEY }}
 
       - name: Rebuild dist
         run: pnpm run build
@@ -79,7 +106,7 @@ jobs:
       # fixing it is a download rather than a local toolchain reproduction.
       - name: Upload the expected dist
         if: ${{ failure() && steps.diff.conclusion == 'failure' }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1 (2026-08-04)
+        uses: ./.github/actions/fleet/upload-artifact
         with:
           name: expected-dist
           path: dist/

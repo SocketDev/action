@@ -1,8 +1,12 @@
+import {
+  sharedFleetTsconfigCheckJsonPath,
+  sharedTypescriptBinTscPath,
+} from '../../scripts/fleet/paths/util.mts'
 // Pre-push repo-level gates that run against the working-tree state (not a
 // commit range): submodule pristine-ness, soak-bypass date annotations, the
 // fast lint/format gate, and the wheelhouse-only hook-dispatch-table drift check.
 
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, statSync } from 'node:fs'
 
 import path from 'node:path'
 
@@ -15,6 +19,32 @@ import { normalizePath } from '@socketsecurity/lib-stable/paths/normalize'
 import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 
 import { gitLines } from './git.mts'
+import {
+  debugCheck,
+  showCheckOutput,
+  showCheckResult,
+} from './check-output.mts'
+import {
+  dirtyEntry,
+  readTypecheckVerdict,
+  typecheckCacheKey,
+  waitForTypecheckTurn,
+  writeTypecheckVerdict,
+} from './typecheck-cache.mts'
+
+// The repo-wide fixer lock, the same one lint.mts and fix.mts take. Sharing
+// it is deliberate: a push's typecheck should also serialize against a
+// running `pnpm run fix`, since both read the whole working tree.
+import {
+  acquireFixerLock,
+  fixerLockPath,
+} from '../../scripts/fleet/process/fixer-lock.mts'
+// One owner for the path, per `paths-are-constructed-once`: a cascaded file is
+// tracked twice (source + live mirror), so a literal spelled here counts as
+// two construction sites on its own.
+import { TYPECHECK_CACHE_DIR } from '../../scripts/fleet/paths.mts'
+
+import type { TypecheckVerdict } from './typecheck-cache.mts'
 import { scanSoakExcludeDateAnnotations } from './scan-supply-chain.mts'
 
 const logger = getDefaultLogger()
@@ -25,7 +55,7 @@ export const checkSubmodules = (): number => {
   if (!existsSync('.gitmodules')) {
     return 0
   }
-  logger.info('Checking submodules are pristine…')
+  debugCheck('Checking submodules are pristine…')
   let errors = 0
   const status = gitLines('submodule', 'status')
   for (const line of status) {
@@ -51,7 +81,7 @@ export const checkSubmodules = (): number => {
     logger.error('Fix submodules before pushing.')
     return errors
   }
-  logger.success('All submodules pristine')
+  debugCheck('All submodules pristine')
   return 0
 }
 
@@ -93,24 +123,25 @@ export const scanSoakAnnotations = (): number => {
 
 // Fast lint/format gate: catches lint/format drift before push, not just in
 // CI ("green locally, red in CI" traces to nothing running lint at the push
-// boundary). Deliberately the FAST, build-INDEPENDENT slice — oxfmt --check +
-// oxlint over the whole tree, never the full `check --all` (needs a built
-// dist/, too slow for every push).
+// boundary). The FAST, build-INDEPENDENT slice: oxfmt --check + oxlint, never
+// the full `check --all` (needs a built dist/, too slow for every push).
 //
-// MUST invoke the lint script DIRECTLY (`node <lint-script> --all`), NOT via
+// MUST invoke the lint script DIRECTLY (`node <lint-script> …`), NOT via
 // `pnpm run lint`: the `pnpm run` path triggers pnpm's deps-status check,
 // which in a non-TTY context (CI, a linked worktree) tries to purge/reinstall
-// node_modules and aborts (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`) — a
-// false push-block unrelated to lint. `--all` is required: lint.mts defaults
-// to `modified` (git-diff vs HEAD), often empty at push time, which would
-// pass trivially without checking the pushed content.
+// node_modules and aborts (`ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`), a
+// false push-block unrelated to lint.
+//
+// SCOPE: the pushed COMMITS via `--range=`, NEVER the working tree, which on a
+// shared checkout also holds a parallel session's files. Empty `ranges` falls
+// back to `--all`. See docs/fleet/agents.md/push-policy.md.
 //
 // Degrades to a skip (not a block) when there's no lint script, the script
 // isn't a `node <path>` invocation, or there's no oxlint config. Bypass:
-// `git push --no-verify`, `HUSKY=0`, or a redirected `core.hooksPath` — all
+// `git push --no-verify`, `HUSKY=0`, or a redirected `core.hooksPath`, all
 // phrase-gated for Claude by no-revert-guard. Returns 1 on lint failure, 0 on
 // pass/skip.
-export const scanFastChecks = (): number => {
+export const scanFastChecks = (ranges: readonly string[] = []): number => {
   if (!existsSync('package.json')) {
     return 0
   }
@@ -129,7 +160,7 @@ export const scanFastChecks = (): number => {
   }
   // Matches `.claude` as a complete path segment anywhere in `toplevel`, start, middle, or end.
   if (/(?:^|\/)\.claude(?:\/|$)/.test(toplevel)) {
-    logger.info(
+    logger.warn(
       'Fast lint/format check skipped — checkout is under an ignored path (.claude/); CI re-lints from a clean tree.',
     )
     return 0
@@ -152,7 +183,13 @@ export const scanFastChecks = (): number => {
   if (!m || !existsSync(m[1]!)) {
     return 0
   }
-  logger.info('Running fast lint/format check…')
+  const scopeArgs =
+    ranges.length > 0 ? ranges.map(range => `--range=${range}`) : ['--all']
+  debugCheck(
+    ranges.length > 0
+      ? `Running fast lint/format check on the pushed range (${ranges.join(', ')})…`
+      : 'Running fast lint/format check on the whole tree (no pushed range to scope by)…',
+  )
   // `CI=true`: lint.mts shells out to `pnpm exec oxfmt/oxlint`, and pnpm's
   // deps-status check aborts in a non-TTY context (a linked git worktree, a
   // headless run) trying to purge node_modules
@@ -160,10 +197,12 @@ export const scanFastChecks = (): number => {
   // non-interactive — it skips the purge prompt and proceeds — so the gate
   // runs the same everywhere (local TTY, worktree, CI) instead of false-
   // blocking a worktree push.
-  const r = spawnSync(process.execPath, [m[1]!, '--all'], {
+  const r = spawnSync(process.execPath, [m[1]!, ...scopeArgs], {
     env: { ...process.env, CI: 'true' },
-    stdio: 'inherit',
+    maxBuffer: Infinity,
+    stdioString: true,
   })
+  showCheckResult(r)
   if (r.status !== 0) {
     logger.fail(
       'Fast lint/format check failed — fix lint/format before pushing.',
@@ -179,8 +218,8 @@ export const scanFastChecks = (): number => {
 
 // The canonical fleet type gate — the same whole-project check the `type` npm
 // script and CI run.
-const TYPE_CHECK_TSCONFIG = path.join('.config', 'fleet', 'tsconfig.check.json')
-const TSC_BIN = path.join('node_modules', 'typescript', 'bin', 'tsc')
+const TYPE_CHECK_TSCONFIG = sharedFleetTsconfigCheckJsonPath('.config')
+const TSC_BIN = sharedTypescriptBinTscPath('node_modules')
 
 // Regenerate the hook dispatch table so the whole-project type gate can resolve
 // the generated `_shared` modules (`dispatch-table.mts` + variants), which are
@@ -201,10 +240,9 @@ const ensureDispatchTables = (): void => {
 // Fast TYPE gate — the type-check sibling of scanFastChecks. A type error is the
 // OTHER class of breakage that reaches origin/main behind CI alone: oxlint and
 // oxfmt run per-edit, but a type error only surfaces against the whole project,
-// so a push (e.g. after land-work auto-lands to local main) carrying a bad type
-// slipped straight to origin and turned CI red. This runs the canonical fleet
-// type gate — the same `tsc --noEmit -p .config/fleet/tsconfig.check.json` the
-// `type` npm script and CI run — at the push boundary.
+// so a push carrying a bad type slipped straight to origin. Runs the canonical
+// `tsc --noEmit -p .config/fleet/tsconfig.check.json` at the push boundary. A
+// BACKSTOP: this hook is bypassed routinely, so CI's check job runs it too.
 //
 // Unlike scanFastChecks it does NOT skip under a `.claude/` worktree path. That
 // skip exists only because the lint runner's `oxfmt .` resolves `.` to a path
@@ -216,7 +254,172 @@ const ensureDispatchTables = (): void => {
 // verify the push, so it is blocked, not skipped. A repo without the fleet
 // tsconfig, a non-fleet member, has nothing to check here → skip. Returns 1 on a
 // type error, or an unverifiable checkout, 0 on pass/skip.
-export const scanTypeCheck = (): number => {
+// A tsc diagnostic line: `path/to/file.mts(12,7): error TS1234: message`.
+const TS_ERROR_LINE_RE = /^(.+?)\((\d+),(\d+)\): error TS\d+:/mu
+
+/**
+ * The distinct files tsc reported errors in, repo-relative and `/`-normalized.
+ * Pure — exported for tests.
+ */
+export function parseTypeErrorFiles(output: string): string[] {
+  const seen = new Set<string>()
+  const lines = output.split(/\r?\n/)
+  for (let i = 0, { length } = lines; i < length; i += 1) {
+    const match = TS_ERROR_LINE_RE.exec(lines[i]!)
+    if (match?.[1]) {
+      seen.add(normalizePath(match[1].trim()))
+    }
+  }
+  return [...seen].toSorted()
+}
+
+/**
+ * Split reported error files into the ones this push is answerable for and the
+ * ones it is not.
+ *
+ * A DIRTY file's bytes are not in the push. An error located only in such a
+ * file cannot exist at origin once the push lands, so blocking on it is wrong —
+ * and in a shared checkout it is worse than wrong: a co-session's half-finished
+ * edit blocks every unrelated push in the repo until they happen to finish.
+ * Measured here, twice in one session: an untracked module's importer, then an
+ * unused type in a file another session was mid-edit on.
+ *
+ * Everything else blocks. An error in a CLEAN file is committed state that CI
+ * will see, and an error in a dirty file this push also touches is the author's
+ * own. The conservative direction is deliberate: a diagnostic located in a
+ * clean file but caused by a dirty one still blocks, because the location is
+ * all tsc reports and a false block costs a re-push while a false pass reaches
+ * origin.
+ *
+ * Pure over the three sets, so the rule is testable without a git tree.
+ */
+export function splitTypeErrorBlame(
+  errorFiles: readonly string[],
+  dirtyFiles: ReadonlySet<string>,
+  pushedFiles: ReadonlySet<string>,
+): { blocking: string[]; foreign: string[] } {
+  // An EMPTY pushed set means the gate could not read what this push carries (a
+  // new branch, a detached range, a git that would not answer) — not that the
+  // push carries nothing. Attributing against it would call every dirty file
+  // foreign and wave the whole push through, which is backwards: unknown has to
+  // block, or the permissive path is exactly the one that fires when the gate
+  // is least sure.
+  if (pushedFiles.size === 0) {
+    return { blocking: [...errorFiles], foreign: [] }
+  }
+  const blocking: string[] = []
+  const foreign: string[] = []
+  for (let i = 0, { length } = errorFiles; i < length; i += 1) {
+    const file = errorFiles[i]!
+    if (dirtyFiles.has(file) && !pushedFiles.has(file)) {
+      foreign.push(file)
+    } else {
+      blocking.push(file)
+    }
+  }
+  return { blocking, foreign }
+}
+
+/**
+ * Working-tree paths with uncommitted changes, staged or not, including
+ * untracked. `/`-normalized to match {@link parseTypeErrorFiles}.
+ */
+export function readDirtyFiles(): Set<string> {
+  const out = new Set<string>()
+  for (const line of gitLines('status', '--porcelain')) {
+    // Porcelain is `XY <path>`, and a rename is `R  old -> new`.
+    const body = line.slice(3).trim()
+    if (!body) {
+      continue
+    }
+    const arrow = body.lastIndexOf(' -> ')
+    out.add(normalizePath(arrow === -1 ? body : body.slice(arrow + 4)))
+  }
+  return out
+}
+
+/**
+ * `statSync` narrowed to what the cache key needs, with a missing path
+ * reported as undefined rather than thrown.
+ */
+function statOrUndefined(
+  p: string,
+): { mtimeMs: number; size: number } | undefined {
+  try {
+    const s = statSync(p)
+    return { mtimeMs: s.mtimeMs, size: s.size }
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * Run the whole-project typecheck, serialized against peer pushes, and record
+ * the verdict for the tree it describes.
+ *
+ * The lock WAITS rather than failing: 27 concurrent pushes of one tree each
+ * spawned their own tsc and put the machine at load 225. Waiting turns the
+ * other 26 into cache reads. Past the deadline a waiter proceeds anyway, so a
+ * holder that never releases costs concurrency, never a blocked push.
+ */
+function runTypeCheckOnce(cacheKey: string): TypecheckVerdict {
+  const lock = acquireFixerLock(
+    fixerLockPath(process.cwd()),
+    'pre-push type check',
+  )
+  // Hold the ACQUIRED handle, not the first attempt. The retry below returns a
+  // different handle, and keeping only the original dropped its release: a
+  // successful retry then left the lock held forever, so every later push
+  // waited on a holder that had already finished.
+  let held = lock.acquired ? lock : undefined
+  if (held === undefined) {
+    const outcome = waitForTypecheckTurn({
+      cacheHit: () =>
+        readTypecheckVerdict(TYPECHECK_CACHE_DIR, cacheKey) !== undefined,
+      now: () => Date.now(),
+      sleep: ms => {
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms)
+      },
+      tryAcquire: () => {
+        const retry = acquireFixerLock(
+          fixerLockPath(process.cwd()),
+          'pre-push type check',
+        )
+        if (retry.acquired) {
+          held = retry
+        }
+        return retry.acquired
+      },
+    })
+    if (outcome === 'peer-finished') {
+      const peer = readTypecheckVerdict(TYPECHECK_CACHE_DIR, cacheKey)
+      if (peer) {
+        return peer
+      }
+    }
+  }
+  try {
+    debugCheck('Running type check…')
+    // Captured rather than inherited so the diagnostics can be ATTRIBUTED. tsc
+    // reads the working tree, which in a shared checkout holds a co-session's
+    // half-finished edits — errors this push neither caused nor can fix.
+    const r = spawnSync(
+      process.execPath,
+      [TSC_BIN, '--noEmit', '-p', TYPE_CHECK_TSCONFIG],
+      { stdioString: true },
+    )
+    const verdict: TypecheckVerdict = {
+      output: `${String(r.stdout ?? '')}${String(r.stderr ?? '')}`,
+      status: r.status ?? 1,
+    }
+    writeTypecheckVerdict(TYPECHECK_CACHE_DIR, cacheKey, verdict)
+    return verdict
+  } finally {
+    held?.release()
+  }
+}
+
+export const scanTypeCheck = (ranges: readonly string[] = []): number => {
   if (!existsSync('package.json') || !existsSync(TYPE_CHECK_TSCONFIG)) {
     return 0
   }
@@ -232,29 +435,85 @@ export const scanTypeCheck = (): number => {
     return 1
   }
   ensureDispatchTables()
-  logger.info('Running type check…')
-  const r = spawnSync(
-    process.execPath,
-    [TSC_BIN, '--noEmit', '-p', TYPE_CHECK_TSCONFIG],
-    { stdio: 'inherit' },
+  const dirty = readDirtyFiles()
+  const cacheKey = typecheckCacheKey(
+    gitLines('rev-parse', 'HEAD')[0] ?? '',
+    [...dirty].map(p => dirtyEntry(process.cwd(), p, statOrUndefined)),
   )
-  if (r.status !== 0) {
-    logger.fail(
-      'Type check failed — fix the type error(s) above before pushing.',
+  const cached = readTypecheckVerdict(TYPECHECK_CACHE_DIR, cacheKey)
+  const verdict = cached ?? runTypeCheckOnce(cacheKey)
+  if (cached) {
+    debugCheck('Type check: reusing the verdict for this exact tree.')
+  }
+  if (verdict.status === 0) {
+    showCheckOutput(verdict.status, verdict.output)
+    return 0
+  }
+  const { output } = verdict
+  process.stderr.write(output.endsWith('\n') ? output : `${output}\n`)
+  const errorFiles = parseTypeErrorFiles(output)
+  // No parseable diagnostic means tsc failed some other way (a bad tsconfig, a
+  // crash). Attribution cannot apply, so it blocks as before.
+  const { blocking, foreign } =
+    errorFiles.length === 0
+      ? { blocking: errorFiles, foreign: [] }
+      : splitTypeErrorBlame(
+          errorFiles,
+          readDirtyFiles(),
+          new Set(pushedRangeFiles(ranges)),
+        )
+  if (blocking.length === 0 && foreign.length > 0) {
+    logger.warn(
+      `Type check reported ${foreign.length} file(s) with errors, all in uncommitted work this push does not carry — not blocking.`,
     )
     logger.info(
-      '  What: the pushed tree does not type-check.\n' +
-        '  Where: the file(line,col) reported above.\n' +
-        '  Saw: a type error; wanted: `pnpm run type` clean (what CI verifies).\n' +
-        '  Fix: resolve the error(s), commit, then re-push. Bypass once with ' +
-        '`git push --no-verify` (records the skip).',
+      `  Where: ${foreign.join(', ')}\n` +
+        '  Why not blocking: those bytes are not in the push, so they cannot ' +
+        'reach origin. In a shared checkout this is usually a parallel ' +
+        'session mid-edit, and blocking would hold every unrelated push \n' +
+        '  hostage until they finish.\n' +
+        '  Note: CI still type-checks the merged result, and a push that ' +
+        'lands them will be gated then.',
     )
-    return 1
+    return 0
   }
-  return 0
+  logger.fail('Type check failed — fix the type error(s) above before pushing.')
+  logger.info(
+    '  What: the tree does not type-check.\n' +
+      '  Where: the file(line,col) reported above.\n' +
+      '  Saw: a type error; wanted: `pnpm run type` clean (what CI verifies).\n' +
+      '  Fix: resolve the error(s), commit, then re-push. Bypass once with ' +
+      '`git push --no-verify` (records the skip).',
+  )
+  if (foreign.length > 0) {
+    logger.info(
+      `  Note: ${foreign.length} further file(s) with errors are uncommitted ` +
+        'and not carried by this push, so they are not what is blocking you: ' +
+        `${foreign.join(', ')}.`,
+    )
+  }
+  return 1
 }
 
-// Dispatch-table drift — WHEELHOUSE-ONLY (gated on the canonical `template/base`
+/**
+ * The files the pushed commits touch, `/`-normalized. Empty when there is no
+ * range to read, which makes every error blocking — the conservative direction
+ * when the gate cannot tell what is being pushed.
+ */
+export function pushedRangeFiles(ranges: readonly string[]): string[] {
+  const out = new Set<string>()
+  for (let i = 0, { length } = ranges; i < length; i += 1) {
+    for (const line of gitLines('diff', '--name-only', ranges[i]!)) {
+      const file = line.trim()
+      if (file) {
+        out.add(normalizePath(file))
+      }
+    }
+  }
+  return [...out]
+}
+
+// Dispatch-table drift — WHEELHOUSE-ONLY (gated on the canonical `template/base/universal`
 // seed, which only the wheelhouse has). The rolldown bundle's static dispatch
 // table must match a fresh regen of the hooks present; a mismatch means a hook
 // was added/removed without rebuilding, or a byte-cascaded table references an
@@ -264,14 +523,15 @@ export const scanTypeCheck = (): number => {
 // until the cascade regenerates per-tree, so blocking their push would
 // false-fire — they rely on CI's `check --all` for the same check.
 export const scanDispatchDrift = (): number => {
-  if (!existsSync('template/base')) {
+  if (!existsSync('template/base/universal')) {
     return 0
   }
   const r = spawnSync(
-    'node',
+    process.execPath,
     ['scripts/fleet/check/dispatch-table-is-current.mts', '--quiet'],
-    { stdio: 'inherit' },
+    { maxBuffer: Infinity, stdioString: true },
   )
+  showCheckResult(r)
   if (r.status !== 0) {
     logger.fail('Hook dispatch table is stale — rebuild before pushing.')
     logger.info(
