@@ -12,20 +12,25 @@
  *   walks the bundles in order.
  */
 
-import process from 'node:process'
-
-import { errorMessage } from '@socketsecurity/lib-stable/errors/message'
 import { safeDelete } from '@socketsecurity/lib-stable/fs/safe'
-import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 import { build } from 'rolldown'
 
 import { actionBundles } from '../../.config/repo/rolldown.config.mts'
 import { isMainModule } from '../fleet/process/is-main-module.mts'
+import { runMain } from '../fleet/process/run-main.mts'
+import { getScriptLogger } from '../fleet/process/script-output.mts'
 import { ACTION_DIST_DIR } from './paths.mts'
 
-const logger = getDefaultLogger()
+import type { ScriptMeta } from '../fleet/process/run-main.mts'
+
+export const SCRIPT_META: ScriptMeta = {
+  describe: 'Build the committed GitHub Action bundles.',
+  help: 'Usage: pnpm run build [--json]',
+  json: 'result',
+}
 
 export async function main(): Promise<void> {
+  const logger = getScriptLogger()
   await safeDelete(ACTION_DIST_DIR, { recursive: true })
 
   // Sequential on purpose: every bundle writes into the same `dist/` dir.
@@ -38,8 +43,5 @@ export async function main(): Promise<void> {
 }
 
 if (isMainModule(import.meta.url)) {
-  main().catch((e: unknown) => {
-    logger.error(`Build failed: ${errorMessage(e)}`)
-    process.exitCode = 1
-  })
+  runMain(main, SCRIPT_META)
 }

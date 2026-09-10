@@ -11,7 +11,7 @@ A GitHub Action for running [Socket.dev](https://socket.dev)
 ## Install
 
 There is nothing to install. Reference the action from a workflow step and the
-runner fetches it at the ref you pin — the copy-pasteable step, with the `mode`
+runner fetches it at the ref you pin. The workflow step, with the `mode`
 input filled in, is in [Usage](#usage) below. Pin to a commit SHA rather than a
 tag; [Why We Recommend Pinning](#why-we-recommend-pinning) explains the
 trade-off.
@@ -33,6 +33,9 @@ Socket is a security control, so the action that installs it should be pinned, t
 Downloads and installs [Socket Firewall: Free](https://github.com/SocketDev/sfw-free) edition in your GitHub Action job, making it available to use in subsequent steps.
 
 The published action requires an explicit `sfw` prefix, as shown below. Automatic shims and final PATH validation are unreleased features in the current source.
+
+<details>
+<summary>Free edition examples, inputs, and outputs</summary>
 
 #### Most secure: pin to a commit SHA
 
@@ -132,11 +135,16 @@ Add a cooldown period if you want an extra buffer before newly published action 
 | `firewall-path-binary` | Path to the installed binary               |
 | `firewall-path-report` | Path to the generated firewall report JSON |
 
+</details>
+
 ### Socket Firewall: Enterprise
 
 Downloads and installs [Socket Firewall: Enterprise](https://github.com/SocketDev/firewall-release) edition in your GitHub Action job, making it available to use in subsequent steps.
 
 The published action requires the same explicit `sfw` prefix as the free edition.
+
+<details>
+<summary>Enterprise edition examples, inputs, and outputs</summary>
 
 #### Most secure: pin to a commit SHA
 
@@ -227,9 +235,14 @@ Add a cooldown period if you want an extra buffer before newly published action 
 | `firewall-path-binary` | Path to the installed binary               |
 | `firewall-path-report` | Path to the generated firewall report JSON |
 
+</details>
+
 ### Supported Ecosystems
 
 The supported ecosystems depend on the edition. Current unreleased source also routes these commands through automatic shims when `shims` is `true`.
+
+<details>
+<summary>Package managers by edition</summary>
 
 #### Free + Enterprise
 
@@ -259,6 +272,8 @@ Additional ecosystems available with [sfw-enterprise][sfw-enterprise-ecosystems]
 [sfw-free-ecosystems]: https://github.com/SocketDev/sfw-free?tab=readme-ov-file#supported-package-managers
 [sfw-enterprise-ecosystems]: https://github.com/SocketDev/firewall-release/wiki#support-matrix
 
+</details>
+
 ### Setup order for automatic shims
 
 Run runtime and package-manager setup actions before the firewall action. Install dependencies afterward. A later setup step can put its binaries ahead of the firewall shims on `PATH`.
@@ -270,6 +285,9 @@ Run the firewall action again after changing runtimes, or use explicit `sfw` inv
 ### Bypassing shims for publishing
 
 With automatic shims enabled in current source, the action exports `SFW_SHIM_DIR` as an environment variable pointing to the shim directory. If you need to bypass sfw for a specific step (e.g. `npm publish`), you can temporarily disable the shims by renaming them and restore them afterwards:
+
+<details>
+<summary>Disable and restore shims around publishing</summary>
 
 ```yaml
 # disable shims before publishing
@@ -294,6 +312,8 @@ With automatic shims enabled in current source, the action exports `SFW_SHIM_DIR
     fi
 ```
 
+</details>
+
 ### Checksum Validation
 
 Current source validates each downloaded firewall binary against a checksum pinned in the action source.
@@ -311,7 +331,7 @@ pnpm run check --all
 ```
 
 `src/` holds the action sources and `dist/` holds the bundle a workflow runner
-actually executes — a consumer resolves the action at a git tag and runs the
+actually executes. A consumer resolves the action at a git tag and runs the
 committed `dist/main.js` and `dist/post.js`, with no `node_modules` beside
 them. That makes `dist/` part of the source of truth: run `pnpm run build` and
 commit the result in the same change as any `src/` edit, or the next tag ships
