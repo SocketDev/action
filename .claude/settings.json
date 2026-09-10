@@ -93,7 +93,5 @@
     "type": "command",
     "command": "bin=\"$CLAUDE_PROJECT_DIR/.claude/hooks/fleet/_dist/statusline/statusline-render-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/')\" && [ -x \"$bin\" ] && exec \"$bin\" || script=\"$CLAUDE_PROJECT_DIR/scripts/fleet/spend-statusline.mts\" && [ -f \"$script\" ] && node \"$script\" || true"
   },
-  "// </fleet>": "Repository-owned Claude settings belong below this marker.",
-  "// <fleet-canonical>": "Managed by socket-wheelhouse; edit the template, then cascade.",
-  "// </fleet-canonical>": "Repository-owned Claude settings belong below this marker."
+  "// </fleet>": "Repository-owned Claude settings belong below this marker."
 }

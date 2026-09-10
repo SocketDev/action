@@ -2,16 +2,22 @@
   "$schema": "./socket-wheelhouse-schema.json",
   "schemaVersion": 1,
   "bundle": {
-    "ref": "fleet-pack-37cf4233dca3751ce1f9915291c34e1490808d10",
-    "cascadeSha": "37cf4233dca3751ce1f9915291c34e1490808d10"
+    "ref": "fleet-pack-d184c4d9307d8888e85aa75eabaf5ffb78890c0a",
+    "cascadeSha": "d184c4d9307d8888e85aa75eabaf5ffb78890c0a"
   },
   "repoName": "action",
+  "ai": {
+    "localAssist": true
+  },
   "repo": {
     "type": "solo"
   },
   "build": {
     "from": "github-action",
     "type": "js"
+  },
+  "release": {
+    "versionSource": "package.json"
   },
   "fuzz": {
     "exempt": true,

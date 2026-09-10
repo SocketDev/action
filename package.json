@@ -1,5 +1,5 @@
 {
-  "name": "socket-github-action",
+  "name": "action",
   "version": "1.3.2",
   "private": true,
   "description": "GitHub Action for Socket.dev",
@@ -26,8 +26,10 @@
     "cover": "node scripts/fleet/cover.mts",
     "doctor:auth": "node scripts/fleet/check/setup-is-prompt-less.mts",
     "fix": "node scripts/fleet/fix.mts",
+    "fleet:update": "node scripts/repo/bootstrap/fleet.mjs --if-current",
     "format": "node scripts/fleet/format.mts",
     "format:check": "node scripts/fleet/format.mts --check",
+    "integrity-refresh": "node scripts/fleet/external-tools/refresh.mts",
     "lockstep": "node scripts/fleet/lockstep.mts",
     "lockstep:emit-schema": "node scripts/fleet/lockstep-emit-schema.mts",
     "prepare": "node scripts/repo/bootstrap/prepare.mts && node scripts/fleet/install-git-hooks.mts && node scripts/fleet/prepare.mts",
@@ -67,7 +69,6 @@
     "fmt:js": "node scripts/fleet/format.mts",
     "lint:js": "node scripts/fleet/lint.mts",
     "offload:model": "node scripts/fleet/offload-model.mts",
-    "setup:fireconnect": "node scripts/fleet/setup/fireconnect.mts",
     "setup:offload-providers": "node scripts/fleet/setup/offload-providers.mts",
     "gh:auth": "node scripts/fleet/gh-auth.mts",
     "npm:approve": "node scripts/fleet/publish-pipeline.mts --approve",
@@ -83,7 +84,10 @@
     "preflight": "node scripts/fleet/preflight.mts",
     "prune:branch-backups": "node scripts/fleet/backup-branches.mts prune",
     "prune:gha-caches": "node scripts/fleet/prune-actions-caches.mts",
-    "check:test-budget-headroom": "node scripts/fleet/check/test-budget-headroom.mts"
+    "check:test-budget-headroom": "node scripts/fleet/check/test-budget-headroom.mts",
+    "spend-usage": "node scripts/fleet/spend-usage.mts",
+    "test:profile": "node scripts/fleet/test/profile.mts",
+    "update:pnpm": "node scripts/fleet/update/pnpm.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",
@@ -111,6 +115,7 @@
     "@ultrathink/acorn.rs.wasm": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/ui": "catalog:",
+    "ast-v8-to-istanbul": "catalog:",
     "c8": "catalog:",
     "chrome-devtools-mcp": "catalog:",
     "conventional-changelog-conventionalcommits": "9.3.1",
@@ -144,11 +149,18 @@
     "yaml": "catalog:"
   },
   "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": ">=11.0.0 <12.0.0",
-      "onFail": "error"
-    }
+    "packageManager": [
+      {
+        "name": "npm",
+        "version": "^11.19.0 || >=12.0.2",
+        "onFail": "error"
+      },
+      {
+        "name": "pnpm",
+        "version": "^11.25.0 || >=12.3.4",
+        "onFail": "error"
+      }
+    ]
   },
   "engines": {
     "node": ">=24",
