@@ -28,7 +28,7 @@ import path from 'node:path'
 import type { BuildOptions, Plugin } from 'rolldown'
 
 import { ACTION_DIST_DIR, ACTION_SRC_DIR } from '../../scripts/repo/paths.mts'
-import { createBundleStubPlugin } from './rolldown/bundle-stub.mts'
+import { createBundleStubPlugin } from '../fleet/rolldown/bundle-stub.mts'
 
 // Node builtins, with and without the `node:` prefix. Everything else is
 // bundled in.

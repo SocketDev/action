@@ -173,6 +173,10 @@ export async function applyPatches(inputs) {
 
   debug(`binary location: ${pathCache}`)
 
+  await exec(pathBinary, patchCommandArgs(inputs))
+}
+
+export function patchCommandArgs(inputs) {
   const args = ['apply']
   if (inputs.patchEcosystems) {
     args.push('--ecosystems', inputs.patchEcosystems)
@@ -183,7 +187,7 @@ export async function applyPatches(inputs) {
   if (inputs.patchCwd) {
     args.push('--cwd', inputs.patchCwd)
   }
-  await exec(pathBinary, args)
+  return args
 }
 
 // Download the release's SHA256SUMS file, find the expected hash for the
@@ -207,7 +211,7 @@ export async function verifyChecksum(
   }
   // SHA256SUMS line shape: `<hash>  <filename>`
   const expectedHash = checksumsText
-    .split('\n')
+    .split(/\r?\n/)
     .find(line => line.endsWith(archiveName))
     ?.split(/\s+/)[0]
   if (!expectedHash) {

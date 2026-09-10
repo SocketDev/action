@@ -3,16 +3,9 @@ import { readFile } from 'node:fs/promises'
 import { debug, getInput, info, setFailed, summary } from '@actions/core'
 import { PackageURL } from 'packageurl-js'
 
-/**
- * Render the firewall report left behind by the main step as a job summary.
- */
-export async function main() {
-  const mode = getInput('mode', { required: true }).toLowerCase()
-  if (mode === 'patch') {
-    info('patch mode: no post-run actions required')
-    return
-  }
+import { assertFirewallShimPrecedence } from './tools/firewall-shims.js'
 
+export async function writeFirewallSummary() {
   // should show job summary?
   const inputs = {
     jobSummary: getInput('job-summary', { required: false }).toLowerCase(),
@@ -116,6 +109,20 @@ export async function main() {
   }
 
   await summary.write()
+}
+
+/**
+ * Render the firewall report left behind by the main step as a job summary.
+ */
+export async function main() {
+  const mode = getInput('mode', { required: true }).toLowerCase()
+  if (mode === 'patch') {
+    info('patch mode: no post-run actions required')
+    return
+  }
+
+  await assertFirewallShimPrecedence()
+  await writeFirewallSummary()
 }
 
 main().catch(error => {

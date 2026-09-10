@@ -11,11 +11,10 @@ import {
   warning,
 } from '@actions/core'
 import { exec } from '@actions/exec'
-import { which } from '@actions/io'
 import { cacheFile, downloadTool, find } from '@actions/tool-cache'
 
 import { errorMessage } from '@socketsecurity/lib/errors/message'
-import { fromUnixPath } from '@socketsecurity/lib/paths/conversion'
+import { createFirewallShims } from './firewall-shims.js'
 
 /**
  * `<platform>-<arch>` (Node's own spelling) to the suffix of the release asset
@@ -82,100 +81,6 @@ export const FIREWALL_CHECKSUMS = {
 export const FIREWALL_EXEC_NAME = 'sfw'
 
 /**
- * Directory under `RUNNER_TEMP` the generated shims are written to.
- */
-export const FIREWALL_SHIM_DIR_NAME = 'sfw-shim'
-
-/**
- * Write a shim for every package manager sfw fronts and put the shim directory
- * first on PATH, so a workflow runs `npm install` rather than `sfw npm
- * install`. Each shim drops its own directory from PATH before calling sfw, so
- * sfw resolves the real binary instead of re-entering the shim. Windows gets a
- * `.cmd` shim beside the shell one so cmd.exe and PowerShell are covered.
- *
- * @param {string} firewallBinaryPath Full path to the installed sfw binary.
- * @param {string} edition Edition installed, `free` or `enterprise`.
- */
-export async function createFirewallShims(firewallBinaryPath, edition) {
-  // Writing into a stable directory means a second run of the action in the
-  // same job overwrites its own shims rather than stacking a new set.
-  const shimDir = path.join(process.env.RUNNER_TEMP, FIREWALL_SHIM_DIR_NAME)
-  await fs.mkdir(shimDir, { recursive: true })
-
-  // Git Bash on a Windows runner hands out MSYS paths such as
-  // `/c/Users/runner`, which cmd.exe and PowerShell cannot resolve.
-  const firewallPath = fromUnixPath(firewallBinaryPath)
-
-  const shimmed = []
-
-  // `which` reads PATH from the environment, so the shim directory comes off
-  // it for the whole lookup pass. A second run of the action in the same job
-  // inherits the first run's shim directory, and without this the new shims
-  // would point at the old ones instead of at the real binaries.
-  const runnerPath = process.env.PATH
-
-  process.env.PATH = (runnerPath ?? '')
-    .split(path.delimiter)
-    .filter(entry => entry !== shimDir)
-    .join(path.delimiter)
-
-  try {
-    for (const command of firewallShimCommands(edition)) {
-      const found = await which(command, false)
-
-      // not installed on this runner, nothing to front
-      if (!found) {
-        continue
-      }
-
-      const realPath = fromUnixPath(found)
-
-      // The `grep -vxF` line strips the shim directory from PATH, so the sfw
-      // call below resolves the real binary instead of re-entering this shim.
-      const shellShim = [
-        '#!/bin/sh',
-        `export PATH="$(echo "$PATH" | tr ':' '\\n' | grep -vxF '${shimDir}' | paste -sd: -)"`,
-        `exec "${firewallPath}" "${realPath}" "$@"`,
-      ].join('\n')
-
-      await fs.writeFile(path.join(shimDir, command), `${shellShim}\n`, {
-        mode: 0o755,
-      })
-
-      if (process.platform === 'win32') {
-        // cmd.exe has no filter, so the shim directory is cut out of PATH by
-        // padding both ends with a separator and deleting the padded match.
-        const cmdShim = [
-          '@echo off',
-          'set "PATH=;%PATH%;"',
-          `set "PATH=%PATH:;${shimDir};=%"`,
-          'set "PATH=%PATH:~1,-1%"',
-          `"${firewallPath}" "${realPath}" %*`,
-        ].join('\r\n')
-
-        await fs.writeFile(
-          path.join(shimDir, `${command}.cmd`),
-          `${cmdShim}\r\n`,
-        )
-      }
-
-      shimmed.push(command)
-    }
-  } finally {
-    process.env.PATH = runnerPath
-  }
-
-  // PATH is searched left to right, so the shims have to land ahead of the
-  // real binaries.
-  addPath(shimDir)
-
-  // Later steps read SFW_SHIM_DIR to disable the shims for a publish flow.
-  exportVariable('SFW_SHIM_DIR', shimDir)
-
-  info(`created shims for: ${shimmed.join(', ')}`)
-}
-
-/**
  * Downloads firewall binary if not in cache, checks it against the hash pinned
  * for its release, and adds to exec path. Package manager shims are written
  * too unless the `shims` input turns them off.
@@ -210,16 +115,7 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
   // free edition?
   const repo = edition === 'free' ? 'sfw-free' : 'firewall-release'
 
-  let versionToDownload = FIREWALL_VERSION
-
-  // The pinned hashes describe FIREWALL_VERSION alone, so any other version is
-  // a binary this table cannot vouch for.
-  if (inputs.versionFirewall && inputs.versionFirewall !== 'latest') {
-    versionToDownload = `v${inputs.versionFirewall}`
-    warning(
-      `Requested firewall version ${versionToDownload}, but the checksum is pinned to ${FIREWALL_VERSION}. Validation fails if the binary differs.`,
-    )
-  }
+  const versionToDownload = firewallReleaseVersion(inputs.versionFirewall)
 
   // construct the binary name
   let nameDownload = FIREWALL_EXEC_NAME
@@ -319,26 +215,19 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
   }
 }
 
-/**
- * Package manager commands the given edition can front, a fresh list each call
- * so one caller cannot mutate the next caller's set. The free edition covers
- * the npm, Python, and Rust ecosystems; enterprise adds Ruby and .NET
- * everywhere, and Go on Linux.
- *
- * @param {string} edition Edition installed, `free` or `enterprise`.
- *
- * @returns {string[]} Command names to write a shim for.
- */
-export function firewallShimCommands(edition) {
-  const commands = ['cargo', 'npm', 'pip', 'pip3', 'pnpm', 'uv', 'yarn']
-  if (edition !== 'enterprise') {
-    return commands
+export function firewallReleaseVersion(requestedVersion) {
+  let versionToDownload = FIREWALL_VERSION
+
+  // The pinned hashes describe FIREWALL_VERSION alone, so any other version is
+  // a binary this table cannot vouch for.
+  if (requestedVersion && requestedVersion !== 'latest') {
+    versionToDownload = `v${requestedVersion}`
+    warning(
+      `Requested firewall version ${versionToDownload}, but the checksum is pinned to ${FIREWALL_VERSION}. Validation fails if the binary differs.`,
+    )
   }
-  commands.push('bundler', 'gem', 'nuget')
-  if (process.platform === 'linux') {
-    commands.push('go')
-  }
-  return commands
+
+  return versionToDownload
 }
 
 /**

@@ -57,7 +57,7 @@ export async function main() {
     // setup socket token as a secret env. Both names are exported: the
     // canonical SOCKET_API_TOKEN and the legacy SOCKET_API_KEY that older sfw
     // builds still read, so pinning an older firewall version keeps working.
-    // oxlint-disable-next-line socket/socket-api-token-env -- the legacy alias is exported ON PURPOSE, beside the canonical name, for older sfw binaries.
+    // oxlint-disable-next-line socket/socket-api-token-env -- older sfw alias
     exportVariable('SOCKET_API_KEY', inputs.tokenSocket)
     exportVariable('SOCKET_API_TOKEN', inputs.tokenSocket)
     setSecret(inputs.tokenSocket)

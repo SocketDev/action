@@ -20,13 +20,13 @@ import { getDefaultLogger } from '@socketsecurity/lib-stable/logger/default'
 import { build } from 'rolldown'
 
 import { actionBundles } from '../../.config/repo/rolldown.config.mts'
-import { isMainModule } from '../fleet/_shared/is-main-module.mts'
+import { isMainModule } from '../fleet/process/is-main-module.mts'
 import { ACTION_DIST_DIR } from './paths.mts'
 
 const logger = getDefaultLogger()
 
 export async function main(): Promise<void> {
-  await safeDelete(ACTION_DIST_DIR, { force: true, recursive: true })
+  await safeDelete(ACTION_DIST_DIR, { recursive: true })
 
   // Sequential on purpose: every bundle writes into the same `dist/` dir.
   for (const bundle of actionBundles) {

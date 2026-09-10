@@ -2,14 +2,17 @@ import { createRequire } from "node:module";
 import { readFile } from "node:fs/promises";
 import * as os from "os";
 import { EOL } from "os";
+import * as fs from "fs";
 import { constants, promises } from "fs";
+import * as path$1 from "path";
+import path from "node:path";
 
 //#region \0rolldown/runtime.js
 var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
 
 //#endregion
-//#region node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/utils.js
+//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/utils.js
 /**
 * Sanitizes an input into a string so it can be passed into issueCommand safely
 * @param input input to sanitize into a string
@@ -38,7 +41,7 @@ function toCommandProperties(annotationProperties) {
 }
 
 //#endregion
-//#region node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/command.js
+//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/command.js
 /**
 * Issues a command to the GitHub Actions runner
 *
@@ -110,8 +113,8 @@ function escapeProperty(s) {
 }
 
 //#endregion
-//#region node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/summary.js
-var __awaiter$1 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/summary.js
+var __awaiter$3 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
 			resolve(value);
@@ -151,7 +154,7 @@ var Summary = class {
 	* @returns step summary file path
 	*/
 	filePath() {
-		return __awaiter$1(this, void 0, void 0, function* () {
+		return __awaiter$3(this, void 0, void 0, function* () {
 			if (this._filePath) return this._filePath;
 			const pathFromEnv = process.env[SUMMARY_ENV_VAR];
 			if (!pathFromEnv) throw new Error(`Unable to find environment variable for $${SUMMARY_ENV_VAR}. Check if your runtime environment supports job summaries.`);
@@ -186,7 +189,7 @@ var Summary = class {
 	* @returns {Promise<Summary>} summary instance
 	*/
 	write(options) {
-		return __awaiter$1(this, void 0, void 0, function* () {
+		return __awaiter$3(this, void 0, void 0, function* () {
 			const overwrite = !!(options === null || options === void 0 ? void 0 : options.overwrite);
 			const filePath = yield this.filePath();
 			yield (overwrite ? writeFile : appendFile)(filePath, this._buffer, { encoding: "utf8" });
@@ -199,7 +202,7 @@ var Summary = class {
 	* @returns {Summary} summary instance
 	*/
 	clear() {
-		return __awaiter$1(this, void 0, void 0, function* () {
+		return __awaiter$3(this, void 0, void 0, function* () {
 			return this.emptyBuffer().write({ overwrite: true });
 		});
 	}
@@ -395,8 +398,8 @@ const _summary = new Summary();
 const summary = _summary;
 
 //#endregion
-//#region node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/core.js
-var __awaiter = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/core.js
+var __awaiter$2 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
 			resolve(value);
@@ -483,9 +486,18 @@ function error(message, properties = {}) {
 function info(message) {
 	process.stdout.write(message + os.EOL);
 }
+/**
+* Gets the value of an state set by this action's main execution.
+*
+* @param     name     name of the state to get
+* @returns   string
+*/
+function getState(name) {
+	return process.env[`STATE_${name}`] || "";
+}
 
 //#endregion
-//#region node_modules/.pnpm/@socketregistry+packageurl-js@1.5.0/node_modules/@socketregistry/packageurl-js/dist/index.js
+//#region ../../Library/pnpm/store/v11/links/@socketregistry/packageurl-js/1.5.2/65fb900ba4118be8d91d8ee032623946e240d4e60c11bbea2a099b661a81c995/node_modules/@socketregistry/packageurl-js/dist/index.js
 var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
@@ -572,7 +584,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$2.TypeErrorCtor = TypeErrorCtor;
 		exports$2.URIErrorCtor = URIErrorCtor;
 	}));
-	var require_runtime = /* @__PURE__ */ __commonJSMin(((exports$3) => {
+	var require_runtime$1 = /* @__PURE__ */ __commonJSMin(((exports$3) => {
 		Object.defineProperty(exports$3, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Runtime environment detection constants. All checks use only
@@ -600,9 +612,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$3.IS_NODE = IS_NODE;
 		exports$3.IS_WORKER = IS_WORKER;
 	}));
-	var require_module = /* @__PURE__ */ __commonJSMin(((exports$4) => {
+	var require_module$1 = /* @__PURE__ */ __commonJSMin(((exports$4) => {
 		Object.defineProperty(exports$4, Symbol.toStringTag, { value: "Module" });
-		const require_constants_runtime = require_runtime();
+		const require_constants_runtime = require_runtime$1();
 		let module$1 = __require("module");
 		/**
 		* @file Accessors for `node:module` that work across runtimes. Ambient
@@ -712,9 +724,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$4.requireBuiltin = requireBuiltin;
 		exports$4.requireFrom = requireFrom;
 	}));
-	var require_detect = /* @__PURE__ */ __commonJSMin(((exports$5) => {
+	var require_detect$1 = /* @__PURE__ */ __commonJSMin(((exports$5) => {
 		Object.defineProperty(exports$5, Symbol.toStringTag, { value: "Module" });
-		const require_node_module = require_module();
+		const require_node_module = require_module$1();
 		/**
 		* @file Smol detection + lazy-loader for `node:smol-util`. Two
 		*   responsibilities:
@@ -782,7 +794,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$5.getSmolUtil = getSmolUtil;
 		exports$5.isSmol = isSmol;
 	}));
-	var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports$6) => {
+	var require_uncurry$1 = /* @__PURE__ */ __commonJSMin(((exports$6) => {
 		Object.defineProperty(exports$6, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
@@ -795,7 +807,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
 		*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
 		*/
-		const smolUtil = require_detect().getSmolUtil();
+		const smolUtil = require_detect$1().getSmolUtil();
 		const { apply, bind, call } = Function.prototype;
 		const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
 		const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
@@ -827,7 +839,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}));
 	var require_map_set = /* @__PURE__ */ __commonJSMin(((exports$7) => {
 		Object.defineProperty(exports$7, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		const require_primordials_error = require_error();
 		/**
 		* @file Safe references to `Map`, `Set`, `WeakMap`, `WeakSet`, and `WeakRef`.
@@ -944,9 +956,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$7.weakMapGetOrInsertComputedFallback = weakMapGetOrInsertComputedFallback;
 		exports$7.weakMapGetOrInsertFallback = weakMapGetOrInsertFallback;
 	}));
-	var require_regexp = /* @__PURE__ */ __commonJSMin(((exports$8) => {
+	var require_regexp$1 = /* @__PURE__ */ __commonJSMin(((exports$8) => {
 		Object.defineProperty(exports$8, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `RegExp` and its prototype methods. `RegExp.escape`
 		*   is ES2025; the primordial is typed `Function | undefined` so older runtimes
@@ -968,9 +980,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$8.RegExpPrototypeSymbolReplace = RegExpPrototypeSymbolReplace;
 		exports$8.RegExpPrototypeTest = RegExpPrototypeTest;
 	}));
-	var require_primordial = /* @__PURE__ */ __commonJSMin(((exports$9) => {
+	var require_primordial$1 = /* @__PURE__ */ __commonJSMin(((exports$9) => {
 		Object.defineProperty(exports$9, Symbol.toStringTag, { value: "Module" });
-		const require_node_module = require_module();
+		const require_node_module = require_module$1();
 		/**
 		* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
 		*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
@@ -1003,9 +1015,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		exports$9.getSmolPrimordial = getSmolPrimordial;
 	}));
-	var require_string = /* @__PURE__ */ __commonJSMin(((exports$10) => {
+	var require_string$1 = /* @__PURE__ */ __commonJSMin(((exports$10) => {
 		Object.defineProperty(exports$10, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `String` static methods and prototype methods.
 		*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
@@ -1035,7 +1047,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
 		*   canonical design statement.
 		*/
-		const smolPrimordial = require_primordial().getSmolPrimordial();
+		const smolPrimordial = require_primordial$1().getSmolPrimordial();
 		const StringCtor = String;
 		const StringFromCharCode = String.fromCharCode;
 		const StringFromCodePoint = String.fromCodePoint;
@@ -1122,8 +1134,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	var import_purl = require_purl();
 	var import_error = require_error();
 	var import_map_set = require_map_set();
-	var import_regexp = require_regexp();
-	var import_string = require_string();
+	var import_regexp = require_regexp$1();
+	var import_string = require_string$1();
 	let cachedPackageURL$2;
 	/**
 	* @internal Register the `PackageURL` class for string parsing in compare functions.
@@ -1179,12 +1191,14 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}
 	/**
 	* Match a single component value against a pattern. Handles wildcard matching
-	* for individual PURL components.
+	* for individual PURL components. `patternValue` and `actualValue` are both
+	* required — pass `''` for an absent component (the function treats an empty
+	* string as "no value", same as the underlying PURL component itself).
 	*/
 	function matchComponent(patternValue, actualValue, matcher) {
 		if (patternValue === "**") return true;
-		if (patternValue === null || patternValue === void 0 || patternValue === "") return actualValue === null || actualValue === void 0 || actualValue === "";
-		if (actualValue === null || actualValue === void 0 || actualValue === "") return false;
+		if (patternValue === "") return actualValue === "";
+		if (actualValue === "") return false;
 		if (matcher) return matcher(actualValue);
 		if ((0, import_string.StringPrototypeIncludes)(patternValue, "*") || (0, import_string.StringPrototypeIncludes)(patternValue, "?")) return matchWildcard(patternValue, actualValue);
 		return patternValue === actualValue;
@@ -1321,7 +1335,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const parsed = parsePattern(pattern);
 		if (!parsed) return false;
 		const { typePattern, namespacePattern, namePattern, versionPattern } = parsed;
-		return matchComponent(typePattern, purl.type) && matchComponent(namespacePattern, purl.namespace) && matchComponent(namePattern, purl.name) && matchComponent(versionPattern, purl.version);
+		return matchComponent(typePattern, purl.type ?? "") && matchComponent(namespacePattern ?? "", purl.namespace ?? "") && matchComponent(namePattern, purl.name ?? "") && matchComponent(versionPattern ?? "", purl.version ?? "");
 	}
 	/**
 	* Create a reusable matcher function from a pattern. More efficient for testing
@@ -1349,19 +1363,19 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const nameMatcher = namePattern && ((0, import_string.StringPrototypeIncludes)(namePattern, "*") || (0, import_string.StringPrototypeIncludes)(namePattern, "?")) ? (value) => matchWildcard(namePattern, value) : void 0;
 		const versionMatcher = versionPattern && ((0, import_string.StringPrototypeIncludes)(versionPattern, "*") || (0, import_string.StringPrototypeIncludes)(versionPattern, "?")) && versionPattern ? (value) => matchWildcard(versionPattern, value) : void 0;
 		return (_purl) => {
-			return matchComponent(typePattern, _purl.type, typeMatcher) && matchComponent(namespacePattern, _purl.namespace, namespaceMatcher) && matchComponent(namePattern, _purl.name, nameMatcher) && matchComponent(versionPattern, _purl.version, versionMatcher);
+			return matchComponent(typePattern, _purl.type ?? "", typeMatcher) && matchComponent(namespacePattern ?? "", _purl.namespace ?? "", namespaceMatcher) && matchComponent(namePattern, _purl.name ?? "", nameMatcher) && matchComponent(versionPattern ?? "", _purl.version ?? "", versionMatcher);
 		};
 	}
 	var require_array = /* @__PURE__ */ __commonJSMin(((exports$11) => {
 		Object.defineProperty(exports$11, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `Array`, typed-array, `ArrayBuffer`, `DataView`,
 		*   `Atomics`, and shared iterator-prototype primordials. `Array.fromAsync` and
 		*   `Array.prototype.with` are ES2024 / ES2023; the primordial captures the
 		*   live reference at module load so consumers never see a tampered global.
 		*/
-		const smolPrimordial = require_primordial().getSmolPrimordial();
+		const smolPrimordial = require_primordial$1().getSmolPrimordial();
 		const ArrayCtor = Array;
 		const ArrayBufferCtor = ArrayBuffer;
 		const DataViewCtor = DataView;
@@ -1491,7 +1505,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}));
 	var require_object = /* @__PURE__ */ __commonJSMin(((exports$12) => {
 		Object.defineProperty(exports$12, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `Object` static methods and prototype methods. Annex
 		*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
@@ -1653,9 +1667,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return value_;
 	}
-	var require_url = /* @__PURE__ */ __commonJSMin(((exports$14) => {
+	var require_url$1 = /* @__PURE__ */ __commonJSMin(((exports$14) => {
 		Object.defineProperty(exports$14, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `URL`, `URLSearchParams`, and the
 		*   `URLSearchParams.prototype` methods.
@@ -1699,14 +1713,14 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	}));
 	var require_number = /* @__PURE__ */ __commonJSMin(((exports$15) => {
 		Object.defineProperty(exports$15, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to `Number`, its constants, predicates, and parse
 		*   helpers. Predicates prefer the smol fast-path (`node:smol-primordial`);
 		*   static `parseFloat` / `parseInt` use the FastOneByteString-typed bindings
 		*   for ASCII inputs and fall back to stock `Number.parse*` otherwise.
 		*/
-		const smolPrimordial = require_primordial().getSmolPrimordial();
+		const smolPrimordial = require_primordial$1().getSmolPrimordial();
 		const NumberCtor = Number;
 		const NumberEPSILON = Number.EPSILON;
 		const NumberMAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
@@ -1749,7 +1763,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$15.NumberPrototypeToString = NumberPrototypeToString;
 		exports$15.NumberPrototypeValueOf = NumberPrototypeValueOf;
 	}));
-	var import_url = require_url();
+	var import_url = require_url$1();
 	var import_number = require_number();
 	/**
 	* Check if string contains only whitespace characters.
@@ -2699,7 +2713,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   stock `Math.X` since they are pre-computed scalar values with no fast-path
 		*   benefit.
 		*/
-		const smolPrimordial = require_primordial().getSmolPrimordial();
+		const smolPrimordial = require_primordial$1().getSmolPrimordial();
 		const MathE = Math.E;
 		const MathLN2 = Math.LN2;
 		const MathLN10 = Math.LN10;
@@ -2789,9 +2803,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		exports$18.MathTanh = MathTanh;
 		exports$18.MathTrunc = MathTrunc;
 	}));
-	var require_buffer = /* @__PURE__ */ __commonJSMin(((exports$19) => {
+	var require_buffer$1 = /* @__PURE__ */ __commonJSMin(((exports$19) => {
 		Object.defineProperty(exports$19, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_uncurry = require_uncurry$1();
 		/**
 		* @file Safe references to Node's `Buffer` global. `Buffer` is a Node-only
 		*   global; in browsers and in Deno without a compatibility shim the captured
@@ -3098,31 +3112,26 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*
 	* ## Provenance — this is official Go, not Artifactory-specific
 	*
-	* Defined in the official Go module proxy protocol (Go Modules Reference,
-	* "Module proxies", and `go help goproxy`), which states that to avoid
-	* ambiguity when serving from case-insensitive file systems, the $module and
-	* $version elements are case-encoded by replacing every uppercase letter with
-	* an exclamation mark followed by the corresponding lower-case letter.
+	* The Go module proxy protocol (Go Modules Reference "Module proxies", and
+	* `go help goproxy`) defines it: to avoid ambiguity on case-insensitive file
+	* systems, $module and $version case-encode each uppercase letter as `!` plus
+	* its lowercase form. The Go toolchain implements it in
+	* `golang.org/x/mod/module` `escapeString` (via `EscapePath`/`EscapeVersion`),
+	* whose rationale is verbatim: "we cannot rely on the file system to keep
+	* rsc.io/QUOTE and rsc.io/quote separate. Windows and macOS don't…"
 	*
-	* Implemented in the Go toolchain itself — `golang.org/x/mod/module`, function
-	* `escapeString` (called by `EscapePath` / `EscapeVersion`). Rationale,
-	* verbatim: "we cannot rely on the file system to keep rsc.io/QUOTE and
-	* rsc.io/quote separate. Windows and macOS don't… The safe escaped form is to
-	* replace every uppercase letter with an exclamation mark followed by the
-	* letter's lowercase equivalent."
+	* Every conformant proxy (proxy.golang.org, Athens, Nexus, Artifactory) must
+	* implement it, and the Go client emits `!`-encoded URLs whichever proxy it
+	* talks to. Artifactory merely conforms — it historically had a bug failing to,
+	* and a Go maintainer on golang/go#34084 answered "This is correct as
+	* documented in `go help goproxy`… Please file a bug against Artifactory"
+	* (JFrog RTFACT-20227).
 	*
-	* All conformant proxies (proxy.golang.org, Athens, Nexus, Artifactory) must
-	* implement it; the Go client emits these `!`-encoded URLs regardless of which
-	* proxy it talks to. Artifactory merely conforms (and historically had a bug
-	* failing to: a Go maintainer on golang/go#34084 told an Artifactory user "This
-	* is correct as documented in `go help goproxy`… Please file a bug against
-	* Artifactory" -> JFrog ticket RTFACT-20227).
-	*
-	* Ecosystem note: among the purl libraries, only `packageurl-python` ships this
-	* escape (`contrib/purl2url.py` `escape_golang_path`, the same purl->URL role
-	* as our url-converter), and it cites the same Go proxy protocol. packageurl-go
-	* / java / php / ruby / upstream-js do NOT implement it — purl->proxy-URL is an
-	* optional convenience, not core purl parsing, so most libraries skip it.
+	* Ecosystem note: only `packageurl-python` ships this escape among the purl
+	* libraries (`contrib/purl2url.py` `escape_golang_path`, the same purl->URL
+	* role as our url-converter), citing the same protocol. packageurl-go / java /
+	* php / ruby / upstream-js do NOT — purl->proxy-URL is an optional
+	* convenience rather than core purl parsing, so most libraries skip it.
 	*
 	* @see https://go.dev/ref/mod#goproxy-protocol
 	* @see https://github.com/golang/mod/blob/v0.36.0/module/module.go#L707 (escapeString)
@@ -8322,7 +8331,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			}
 		}
 	};
-	var import_buffer = require_buffer();
+	var import_buffer = require_buffer$1();
 	/**
 	* @file URL decoding functionality for PURL components. Provides proper error
 	*   handling for invalid encoded strings.
@@ -8509,7 +8518,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*/
 	function fromJSON(json) {
 		if (typeof json !== "string") throw new import_error.ErrorCtor("JSON string argument is required.");
-		const MAX_JSON_SIZE = 1024 * 1024;
+		const MAX_JSON_SIZE = 1048576;
 		if ((0, import_buffer.BufferByteLength)(json, "utf8") > MAX_JSON_SIZE) throw new import_error.ErrorCtor(`JSON string exceeds maximum size limit of ${MAX_JSON_SIZE} bytes`);
 		let parsed;
 		try {
@@ -9406,6 +9415,46 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		};
 	}
 	/**
+	* @file Whether a purl's version slot names a version a registry could actually
+	*   resolve.
+	*   Deliberately separate from `validateVersion`. That one is a SAFETY gate —
+	*   command-injection characters and a length cap — and a purl carrying
+	*   `@^1.2.3` is perfectly valid per the purl spec, which treats the version as
+	*   an opaque string. Folding resolvability into validation would start
+	*   rejecting spec-valid purls.
+	*   This is the separate question a resolver needs answered: can this string
+	*   name one concrete published release? A range, a wildcard, a dist tag, or a
+	*   dependency-specifier tail that leaked into the slot all parse fine and are
+	*   all useless to look up. Callers decide what to do — reject the input, or
+	*   resolve the range first and re-ask.
+	*   Pure; no registry access.
+	*/
+	const REQUIREMENT_TAIL_RE = /[\s;]/;
+	const RANGE_OPERATOR_RE = /^[=^~<>]/;
+	const WILDCARD_RE = /^\*$|\.[*x]$/i;
+	const DIST_TAG_RE = /^(?:alpha|beta|canary|dev|edge|latest|next|nightly|rc|stable)$/i;
+	/**
+	* Why `version` cannot name a concrete release, or undefined when it can.
+	*
+	* The message names the specific pattern rather than listing every disallowed
+	* shape, so a caller can tell the user what to fix instead of what the rule is.
+	*/
+	function describeUnresolvableVersion(version) {
+		if (REQUIREMENT_TAIL_RE.test(version)) return `version '${version}' contains whitespace or ';', which looks like a dependency-specifier tail (a PEP 508 marker, or a hyphenated range) leaking into the version slot — pass just the version`;
+		if (RANGE_OPERATOR_RE.test(version)) return `version '${version}' opens with a range operator, so it is an unresolved requirement rather than a release — pass the exact resolved version`;
+		if (WILDCARD_RE.test(version)) return `version '${version}' is a wildcard, which matches many releases and names none — pass the exact resolved version`;
+		if (DIST_TAG_RE.test(version)) return `version '${version}' is a dist tag, not a version; it moves over time and is not what was installed — pass the version the tag pointed at`;
+	}
+	/**
+	* True when `version` could name one concrete published release.
+	*
+	* An empty string is unresolvable: a purl with no version names a package, not
+	* a release, and a resolver asking about it has already lost what it needs.
+	*/
+	function isResolvableVersion(version) {
+		return version !== "" && describeUnresolvableVersion(version) === void 0;
+	}
+	/**
 	* @file Semver types and utilities used by the VERS range implementation.
 	*   Provides parsing, comparison, and constraint parsing for semver-based
 	*   VERS schemes.
@@ -9803,10 +9852,12 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.comparePurls = comparePurls;
 	exports.containsInjectionCharacters = containsInjectionCharacters;
 	exports.createMatcher = createMatcher;
+	exports.describeUnresolvableVersion = describeUnresolvableVersion;
 	exports.equalsPurls = equalsPurls;
 	exports.err = err;
 	exports.findInjectionCharCode = findInjectionCharCode;
 	exports.formatInjectionChar = formatInjectionChar;
+	exports.isResolvableVersion = isResolvableVersion;
 	exports.matchesPurl = matchesPurl;
 	exports.ok = ok;
 	exports.parseNpmSpecifier = parseNpmSpecifier;
@@ -9816,16 +9867,1774 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region src/post.js
+//#region ../../Library/pnpm/store/v11/links/@actions/io/3.0.2/564f840cef261819a39f27cdda9b4dc797b0f5947814754284b203f0535c12f6/node_modules/@actions/io/lib/io-util.js
 var import_dist = require_dist();
-/**
-* Render the firewall report left behind by the main step as a job summary.
-*/
-async function main() {
-	if (getInput("mode", { required: true }).toLowerCase() === "patch") {
-		info("patch mode: no post-run actions required");
-		return;
+var __awaiter$1 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
 	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+const { chmod, copyFile, lstat, mkdir, open, readdir, rename, rm, rmdir, stat, symlink, unlink } = fs.promises;
+const IS_WINDOWS = process.platform === "win32";
+const READONLY = fs.constants.O_RDONLY;
+/**
+* On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+* \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+*/
+function isRooted(p) {
+	p = normalizeSeparators(p);
+	if (!p) throw new Error("isRooted() parameter \"p\" cannot be empty");
+	if (IS_WINDOWS) return p.startsWith("\\") || /^[A-Z]:/i.test(p);
+	return p.startsWith("/");
+}
+/**
+* Best effort attempt to determine whether a file exists and is executable.
+* @param filePath    file path to check
+* @param extensions  additional file extensions to try
+* @return if file exists and is executable, returns the file path. otherwise empty string.
+*/
+function tryGetExecutablePath(filePath, extensions) {
+	return __awaiter$1(this, void 0, void 0, function* () {
+		let stats = void 0;
+		try {
+			stats = yield stat(filePath);
+		} catch (err) {
+			if (err.code !== "ENOENT") console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+		}
+		if (stats && stats.isFile()) {
+			if (IS_WINDOWS) {
+				const upperExt = path$1.extname(filePath).toUpperCase();
+				if (extensions.some((validExt) => validExt.toUpperCase() === upperExt)) return filePath;
+			} else if (isUnixExecutable(stats)) return filePath;
+		}
+		const originalFilePath = filePath;
+		for (const extension of extensions) {
+			filePath = originalFilePath + extension;
+			stats = void 0;
+			try {
+				stats = yield stat(filePath);
+			} catch (err) {
+				if (err.code !== "ENOENT") console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+			}
+			if (stats && stats.isFile()) {
+				if (IS_WINDOWS) {
+					try {
+						const directory = path$1.dirname(filePath);
+						const upperName = path$1.basename(filePath).toUpperCase();
+						for (const actualName of yield readdir(directory)) if (upperName === actualName.toUpperCase()) {
+							filePath = path$1.join(directory, actualName);
+							break;
+						}
+					} catch (err) {
+						console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+					}
+					return filePath;
+				} else if (isUnixExecutable(stats)) return filePath;
+			}
+		}
+		return "";
+	});
+}
+function normalizeSeparators(p) {
+	p = p || "";
+	if (IS_WINDOWS) {
+		p = p.replace(/\//g, "\\");
+		return p.replace(/\\\\+/g, "\\");
+	}
+	return p.replace(/\/\/+/g, "/");
+}
+function isUnixExecutable(stats) {
+	return (stats.mode & 1) > 0 || (stats.mode & 8) > 0 && process.getgid !== void 0 && stats.gid === process.getgid() || (stats.mode & 64) > 0 && process.getuid !== void 0 && stats.uid === process.getuid();
+}
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@actions/io/3.0.2/564f840cef261819a39f27cdda9b4dc797b0f5947814754284b203f0535c12f6/node_modules/@actions/io/lib/io.js
+var __awaiter = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
+	function adopt(value) {
+		return value instanceof P ? value : new P(function(resolve) {
+			resolve(value);
+		});
+	}
+	return new (P || (P = Promise))(function(resolve, reject) {
+		function fulfilled(value) {
+			try {
+				step(generator.next(value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function rejected(value) {
+			try {
+				step(generator["throw"](value));
+			} catch (e) {
+				reject(e);
+			}
+		}
+		function step(result) {
+			result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+		}
+		step((generator = generator.apply(thisArg, _arguments || [])).next());
+	});
+};
+/**
+* Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+* If you check and the tool does not exist, it will throw.
+*
+* @param     tool              name of the tool
+* @param     check             whether to check if tool exists
+* @returns   Promise<string>   path to tool
+*/
+function which(tool, check) {
+	return __awaiter(this, void 0, void 0, function* () {
+		if (!tool) throw new Error("parameter 'tool' is required");
+		if (check) {
+			const result = yield which(tool, false);
+			if (!result) {
+				if (IS_WINDOWS) throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+				else throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+			}
+			return result;
+		}
+		const matches = yield findInPath(tool);
+		if (matches && matches.length > 0) return matches[0];
+		return "";
+	});
+}
+/**
+* Returns a list of all occurrences of the given tool on the system path.
+*
+* @returns   Promise<string[]>  the paths of the tool
+*/
+function findInPath(tool) {
+	return __awaiter(this, void 0, void 0, function* () {
+		if (!tool) throw new Error("parameter 'tool' is required");
+		const extensions = [];
+		if (IS_WINDOWS && process.env["PATHEXT"]) {
+			for (const extension of process.env["PATHEXT"].split(path$1.delimiter)) if (extension) extensions.push(extension);
+		}
+		if (isRooted(tool)) {
+			const filePath = yield tryGetExecutablePath(tool, extensions);
+			if (filePath) return [filePath];
+			return [];
+		}
+		if (tool.includes(path$1.sep)) return [];
+		const directories = [];
+		if (process.env.PATH) {
+			for (const p of process.env.PATH.split(path$1.delimiter)) if (p) directories.push(p);
+		}
+		const matches = [];
+		for (const directory of directories) {
+			const filePath = yield tryGetExecutablePath(path$1.join(directory, tool), extensions);
+			if (filePath) matches.push(filePath);
+		}
+		return matches;
+	});
+}
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/runtime.js
+var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Runtime environment detection constants. All checks use only
+	*   `typeof`-safe global probes so this module is safe to import in browser,
+	*   Node.js, Deno, Bun, and bundled contexts alike.
+	*/
+	/**
+	* True when running inside a Node.js process. Detected via
+	* `process.versions.node` — present in Node, absent in browsers and Deno/Bun
+	* which expose a different `process.versions` shape (or no `process` at all).
+	*/
+	const IS_NODE = typeof process !== "undefined" && typeof process.versions !== "undefined" && typeof process.versions.node === "string";
+	/**
+	* True when running in a browser context (window + document both defined).
+	* Note: Chrome extensions have `window` in popup contexts but not in service
+	* workers — check `IS_SERVICE_WORKER` for that case.
+	*/
+	const IS_BROWSER = typeof globalThis !== "undefined" && "window" in globalThis && typeof globalThis.window !== "undefined" && "document" in globalThis && typeof globalThis.document !== "undefined";
+	/**
+	* True when running inside a Web Worker / Chrome MV3 service worker. `self` is
+	* defined without `window` in worker contexts.
+	*/
+	const IS_WORKER = "self" in globalThis && typeof globalThis.self !== "undefined" && !("window" in globalThis) && !("document" in globalThis);
+	exports.IS_BROWSER = IS_BROWSER;
+	exports.IS_NODE = IS_NODE;
+	exports.IS_WORKER = IS_WORKER;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/os.js
+var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const nodeOs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("os") : void 0;
+	function getNodeOs() {
+		return nodeOs;
+	}
+	const osArch = nodeOs?.arch;
+	const osHomedir = nodeOs?.homedir;
+	const osPlatform = nodeOs?.platform;
+	const osTmpdir = nodeOs?.tmpdir;
+	exports.getNodeOs = getNodeOs;
+	exports.osArch = osArch;
+	exports.osHomedir = osHomedir;
+	exports.osPlatform = osPlatform;
+	exports.osTmpdir = osTmpdir;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/platform.js
+var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_os = require_os();
+	let node_fs = __require("node:fs");
+	/**
+	* @file Platform detection and OS-specific constants.
+	*/
+	let memoizedArch;
+	/**
+	* Get the current CPU architecture (memoized), e.g. `x64`, `arm64`.
+	*/
+	function getArch() {
+		if (memoizedArch === void 0) memoizedArch = require_node_os.getNodeOs().arch();
+		return memoizedArch;
+	}
+	const MUSL_LINKERS = [
+		"/lib/ld-musl-x86_64.so.1",
+		"/lib/ld-musl-aarch64.so.1",
+		"/usr/lib/ld-musl-x86_64.so.1",
+		"/usr/lib/ld-musl-aarch64.so.1"
+	];
+	let memoizedLibc;
+	let memoizedLibcProbed = false;
+	/**
+	* Get the host libc variant (memoized): `'musl'` on Alpine-and-similar,
+	* `'glibc'` on other Linux, `undefined` off-Linux. Detected by probing for the
+	* musl dynamic linker. The single source of truth for libc detection —
+	* tool-specific resolvers (`getPythonArch`, `getJreArch`) call this rather than
+	* re-probing.
+	*/
+	function getLibc() {
+		if (!memoizedLibcProbed) {
+			memoizedLibcProbed = true;
+			/* c8 ignore start - Linux-only filesystem probe. */
+			if (getOs() !== "linux") memoizedLibc = void 0;
+			else {
+				memoizedLibc = "glibc";
+				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if ((0, node_fs.existsSync)(MUSL_LINKERS[i])) {
+					memoizedLibc = "musl";
+					break;
+				}
+			}
+		}
+		return memoizedLibc;
+	}
+	let memoizedOs;
+	/**
+	* Get the current OS (memoized), e.g. `darwin`, `linux`, `win32` — the raw
+	* `process.platform` value.
+	*/
+	function getOs() {
+		if (memoizedOs === void 0) memoizedOs = require_node_os.getNodeOs().platform();
+		return memoizedOs;
+	}
+	let memoizedTarget;
+	/**
+	* Get the current host **target** in the pnpm `pack-app` vocabulary (memoized):
+	* `<os>-<arch>[-<libc>]`, e.g. `darwin-arm64`, `linux-x64`, `win32-x64`,
+	* `linux-x64-musl`. Raw Node `process.platform`/`process.arch` joined with `-`,
+	* plus a `-musl` suffix on Alpine. This is the Socket-wide naming for
+	* non-python / non-JRE tools (matches pnpm's release assets,
+	* `pnpm-<os>-<arch>[-<libc>].{tar.gz,zip}`). Tool-specific resolvers that need
+	* a different vocabulary own their own helper — see `getPythonArch` for
+	* python-build-standalone and `getJreArch` for Adoptium.
+	*/
+	function getTarget() {
+		if (memoizedTarget === void 0) {
+			const libcSuffix = getLibc() === "musl" ? "-musl" : "";
+			memoizedTarget = `${getOs()}-${getArch()}${libcSuffix}`;
+		}
+		return memoizedTarget;
+	}
+	const DARWIN = getOs() === "darwin";
+	const WIN32 = getOs() === "win32";
+	/**
+	* Returns whether the current platform is macOS. Callable predicate backed
+	* by the module-load memo, so tests can mock the module.
+	*
+	* @returns `true` on darwin, `false` otherwise
+	*/
+	function isDarwin() {
+		return DARWIN;
+	}
+	/**
+	* Returns whether the current platform is POSIX (anything but Windows).
+	* Callable predicate backed by the module-load memo, so tests can mock the
+	* module.
+	*
+	* @returns `true` on darwin/linux, `false` on win32
+	*/
+	function isPosix() {
+		return !WIN32;
+	}
+	/**
+	* Returns whether the current platform is Windows. Callable predicate backed
+	* by the module-load memo, so tests can mock the module.
+	*
+	* @returns `true` on win32, `false` otherwise
+	*/
+	function isWin32() {
+		return WIN32;
+	}
+	/**
+	* True when this process was launched as a Chrome or Chromium native
+	* messaging host. Chrome passes the extension origin URL
+	* (`chrome-extension://<id>/`) as `process.argv[2]`; no other invocation shape
+	* produces that prefix.
+	*/
+	const NATIVE_MESSAGING_HOST = typeof process !== "undefined" && typeof process.argv[2] === "string" && process.argv[2].startsWith("chrome-extension://");
+	const S_IXUSR = 64;
+	const S_IXGRP = 8;
+	const S_IXOTH = 1;
+	exports.NATIVE_MESSAGING_HOST = NATIVE_MESSAGING_HOST;
+	exports.S_IXGRP = S_IXGRP;
+	exports.S_IXOTH = S_IXOTH;
+	exports.S_IXUSR = S_IXUSR;
+	exports.getArch = getArch;
+	exports.getLibc = getLibc;
+	exports.getOs = getOs;
+	exports.getTarget = getTarget;
+	exports.isDarwin = isDarwin;
+	exports.isPosix = isPosix;
+	exports.isWin32 = isWin32;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/module.js
+var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_runtime = require_runtime();
+	let module$1 = __require("module");
+	/**
+	* @file Accessors for `node:module` that work across runtimes. Ambient
+	*   `require` is bound in CommonJS but unbound in ESM and inside
+	*   ahead-of-time-compiled package modules (e.g. Perry), where reading it
+	*   throws. And Perry's `require('module')` value omits `isBuiltin`. So instead
+	*   of the ambient `require('module')` lazy-loader, `isBuiltin`/`createRequire`
+	*   are imported as named values from the bare `module` specifier — which
+	*   resolves on Node and Perry, and which browser bundlers can stub via
+	*   resolve.fallback (a `node:` prefix would throw UnhandledSchemeError
+	*   there).
+	*   `require` is DIRECTORY-SPECIFIC: `createRequire(base)` resolves relative
+	*   specifiers (`./x`, `../y`) from `base`'s directory. For builtins and bare
+	*   packages that's irrelevant since they resolve the same anywhere, so the
+	*   cached `getRequire` / `requireBuiltin` bind to THIS file. A RELATIVE
+	*   specifier must resolve from the CALLER's directory, so use `requireFrom`
+	*   with the caller's `import.meta.url` — binding such a load to this file
+	*   would resolve it against `src/node/` instead. Bundled, every module
+	*   collapses to one base and either works; unbundled (e.g. AOT-compiled from
+	*   source), each module sits at its own nested path and the base matters.
+	*/
+	let cachedModule;
+	let cachedRequire;
+	/**
+	* Bind a working `require`. Ambient `require` exists in CommonJS; in ESM and
+	* ahead-of-time-compiled package modules it is unbound (reading it throws or
+	* yields undefined), so fall back to `createRequire`. Returns undefined off
+	* Node and in browsers, where neither is available.
+	*
+	* `fromUrl` sets the resolution base — pass a caller's `import.meta.url` to
+	* resolve that caller's RELATIVE specifiers. When omitted, the base is this
+	* file, which is correct only for builtins / bare packages (dir-independent).
+	* With `fromUrl` the ambient `require` is skipped: it is bound to THIS file, so
+	* it would resolve a relative specifier from the wrong directory.
+	*/
+	function bindRequire(fromUrl) {
+		if (!require_constants_runtime.IS_NODE) return;
+		if (!fromUrl && typeof __require === "function") return __require;
+		if (typeof module$1.createRequire === "function") try {
+			return (0, module$1.createRequire)(fromUrl ?? __require("url").pathToFileURL(__filename).href);
+		} catch {
+			return;
+		}
+	}
+	/**
+	* Returns `node:module` loaded through the bound `require`, or undefined off
+	* Node. Cached across calls.
+	*/
+	function getNodeModule() {
+		return cachedModule ??= requireBuiltin("module");
+	}
+	/**
+	* Returns a working `require` bound to THIS file, binding one on first call
+	* (see bindRequire). Cached across calls; undefined off Node / in browsers.
+	*
+	* For builtins and bare packages only — the resolution base is this file, so a
+	* relative specifier would resolve from `src/node/`. Use `requireFrom` for
+	* relative loads.
+	*/
+	function getRequire() {
+		if (cachedRequire === void 0) cachedRequire = bindRequire();
+		return cachedRequire;
+	}
+	/**
+	* Is `name` a Node built-in module? Resolved from the statically-imported
+	* `isBuiltin`, so it works on Node and on ahead-of-time-compiled binaries
+	* (Perry), where ambient `require('module')` would lack `isBuiltin`. Returns
+	* false in browsers, where the bare `module` import is stubbed away.
+	*
+	* Single source of truth for "is this a Node builtin?" probes across socket-lib
+	* (used by the smol-binding loaders to gate their `node:smol-*` loads).
+	*/
+	function isNodeBuiltin(name) {
+		if (!require_constants_runtime.IS_NODE || typeof module$1.isBuiltin !== "function") return false;
+		return (0, module$1.isBuiltin)(name);
+	}
+	/**
+	* Load a built-in module by *computed* specifier through the bound `require`
+	* (see getRequire). The specifier is a parameter — never a literal at the call
+	* site — so browser bundlers neither walk nor bundle it. Returns undefined
+	* where no `require` can be bound.
+	*
+	* Builtins / bare packages only (dir-independent); for a relative specifier use
+	* `requireFrom`. Used by `getNodeModule` for `node:module`, and by the
+	* smol-binding loaders for the optional `node:smol-*` native bindings (gated
+	* behind `isNodeBuiltin`, true only on socket-btm's smol Node binary).
+	*/
+	function requireBuiltin(specifier) {
+		const req = getRequire();
+		if (req) return req(specifier);
+	}
+	/**
+	* Load a module by specifier from a CALLER-supplied base (its
+	* `import.meta.url`). Use this for RELATIVE specifiers (`./x`, `../y`), whose
+	* resolution depends on the caller's directory — `requireBuiltin` binds to this
+	* file and would resolve them from `src/node/`. Not cached: the binding is
+	* per-caller. Returns undefined where no `require` can be bound.
+	*/
+	function requireFrom(fromUrl, specifier) {
+		const req = bindRequire(fromUrl);
+		if (req) return req(specifier);
+	}
+	exports.bindRequire = bindRequire;
+	exports.getNodeModule = getNodeModule;
+	exports.getRequire = getRequire;
+	exports.isNodeBuiltin = isNodeBuiltin;
+	exports.requireBuiltin = requireBuiltin;
+	exports.requireFrom = requireFrom;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/exe/smol/detect.js
+var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_module = require_module();
+	/**
+	* @file Smol detection + lazy-loader for `node:smol-util`. Two
+	*   responsibilities:
+	*
+	*   1. `isSmol()` — memoized boolean detector for socket-btm's smol Node binary.
+	*      Mirrors `isSeaBinary()` from `src/sea.ts`. Probes via
+	*      `node:module.isBuiltin('node:smol-util')` since only the smol binary
+	*      registers any `node:smol-*` builtins.
+	*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
+	*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
+	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
+	*      + `Function.prototype.call` trampoline that the JS form
+	*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
+	*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
+	*      + non-Node runtimes. Result is cached across calls; the lazy-loader
+	*      follows the same shape as `src/node/fs.ts` etc.
+	*
+	* @see https://github.com/SocketDev/socket-btm — socket-btm builds
+	*   the smol binary that exposes the `node:smol-util` binding.
+	*/
+	/**
+	* Cached smol-binary detection result.
+	*/
+	let isSmolCache;
+	/**
+	* Cached `node:smol-util` binding. `null` = probed and unavailable; `undefined`
+	* = not yet probed. JS truthiness collapses both to "no binding" at the call
+	* site.
+	*/
+	let smolUtilCache;
+	let smolUtilProbed = false;
+	/**
+	* Returns `node:smol-util` when running on the smol Node binary, otherwise
+	* `undefined`. Result is cached across calls.
+	*/
+	function getSmolUtil() {
+		if (!smolUtilProbed) {
+			smolUtilProbed = true;
+			/* c8 ignore start - smol Node binary only. */
+			if (require_node_module.isNodeBuiltin("node:smol-util")) smolUtilCache = require_node_module.requireBuiltin("node:smol-util");
+		}
+		return smolUtilCache;
+	}
+	/**
+	* Detect if the current process is running on socket-btm's smol Node binary.
+	* Memoized on first call.
+	*
+	* Defensive across runtimes: returns `false` on stock Node, browsers (no
+	* `node:module`), Deno and Bun, whose module resolution differs, and worker
+	* threads, each of which has its own builtin table.
+	*
+	* @example
+	*   ;```ts
+	*   import { isSmol } from '@socketsecurity/lib/exe/smol/detect'
+	*
+	*   if (isSmol()) {
+	*     // running on the smol binary; native fast paths available
+	*   }
+	*   ```
+	*/
+	function isSmol() {
+		if (isSmolCache === void 0) isSmolCache = require_node_module.isNodeBuiltin("node:smol-util");
+		return isSmolCache;
+	}
+	exports.getSmolUtil = getSmolUtil;
+	exports.isSmol = isSmol;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/uncurry.js
+var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
+	*   Node.js's internal/per_context/primordials.js. Every other primordials leaf
+	*   depends on `uncurryThis` to expose prototype-method primordials, so this
+	*   file must be import-safe before any of them. Smol fast paths
+	*   (`node:smol-util`) replace the JS forms when running on socket-btm's smol
+	*   Node binary; stock Node and other runtimes fall back to the standard
+	*   `bind.bind(call)` shape. **IMPORTANT**: do not destructure on `globalThis`
+	*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
+	*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
+	*/
+	const smolUtil = require_detect().getSmolUtil();
+	const { apply, bind, call } = Function.prototype;
+	const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
+	const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
+	const applyBoundForSafe = applyBind;
+	const applySafe = smolUtil?.applySafe ?? ((fn) => {
+		const apply2 = applyBoundForSafe(fn);
+		return (self, args) => {
+			try {
+				return apply2(self, args);
+			} catch {
+				return;
+			}
+		};
+	});
+	const bindCallFallback = ((fn, thisArg, ...presetArgs) => Function.prototype.bind.apply(fn, [thisArg, ...presetArgs]));
+	const bindCall = smolUtil?.bindCall ?? bindCallFallback;
+	const weakRefSafe = smolUtil?.weakRefSafe ?? ((target) => {
+		try {
+			return new WeakRef(target);
+		} catch {
+			return;
+		}
+	});
+	exports.applyBind = applyBind;
+	exports.applySafe = applySafe;
+	exports.bindCall = bindCall;
+	exports.uncurryThis = uncurryThis;
+	exports.weakRefSafe = weakRefSafe;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/exe/smol/primordial.js
+var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_node_module = require_module();
+	/**
+	* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
+	*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
+	*   and Number.is* primordials, registered with `CFunction::Make()` so TurboFan
+	*   inlines them directly into JIT- compiled JS callers. Bypasses the
+	*   FunctionCallbackInfo trampoline entirely — ~30-50% gain on hot loops where
+	*   V8 doesn't already auto-inline. Returns `undefined` on stock Node +
+	*   non-Node runtimes. Result is cached across calls.
+	*
+	* @internal — used by `src/primordials.ts` to resolve smol-aware
+	*   Math.* / Number.is* fast paths. Most callers should use the
+	*   standard `primordials` exports, which already route through this
+	*   when smol is present.
+	*
+	* @see https://v8.dev/blog/v8-release-99 — V8 Fast API Calls overview
+	*/
+	let smolPrimordial;
+	let smolPrimordialProbed = false;
+	/**
+	* Returns `node:smol-primordial` when running on the smol Node binary,
+	* otherwise `undefined`. Result is cached across calls.
+	*/
+	function getSmolPrimordial() {
+		if (!smolPrimordialProbed) {
+			smolPrimordialProbed = true;
+			/* c8 ignore start - smol Node binary only. */
+			if (require_node_module.isNodeBuiltin("node:smol-primordial")) smolPrimordial = require_node_module.requireBuiltin("node:smol-primordial");
+		}
+		return smolPrimordial;
+	}
+	exports.getSmolPrimordial = getSmolPrimordial;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/string.js
+var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to `String` static methods and prototype methods.
+	*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
+	*   inputs, which reduces to a single byte load, and translates the `-1` Fast
+	*   API sentinel back to `NaN` to preserve spec parity. Two-byte strings fall
+	*   back to the uncurried `String.prototype.charCodeAt`.
+	*
+	*   ## Fast API surface — and why it's small
+	*
+	*   Mirrors the design rationale from socket-btm's `primordial_binding.cc`
+	*   (lines 41-72). The smol Fast API exposes exactly one string op
+	*   (`stringCharCodeAt`) because that's the one shape where the C++ trampoline
+	*   genuinely beats V8's existing hot path: a single ASCII byte load, no
+	*   encoding dispatch, no HandleScope, returns a primitive. String **searches**
+	*   (`startsWith` / `endsWith` / `includes` / `indexOf` / `lastIndexOf`) are
+	*   intentionally NOT exposed. V8's existing hot path dispatches on encoding
+	*   and runs native SIMD memcmp — a Fast API binding would add overhead without
+	*   winning. Same for `Map.has` / `Set.has` / `Array.includes`. Fast API also
+	*   has a hard constraint: a fast-path function cannot return a new V8 object —
+	*   only primitives, Local<Value/Object/Array>, or FastOneByteString. That
+	*   rules out anything that produces a new string (`slice`, `substring`,
+	*   `toUpperCase`, `concat`, `repeat`, `padStart`/`padEnd`, formatted-number)
+	*   from ever being a Fast API win on the return path. Net: the current surface
+	*   is approximately the ceiling. Adding more Fast API string ops without a
+	*   flamegraph showing the cost is a regression risk, not a perf win. See
+	*   `socket-btm/packages/node-smol-builder/additions/source-patched/`
+	*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
+	*   canonical design statement.
+	*/
+	const smolPrimordial = require_primordial().getSmolPrimordial();
+	const StringCtor = String;
+	const StringFromCharCode = String.fromCharCode;
+	const StringFromCodePoint = String.fromCodePoint;
+	const StringRaw = String.raw;
+	const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
+	const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
+	const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
+	/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
+	const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
+		const code = smolCharCodeAt(s, i);
+		return code === -1 ? NaN : code;
+	} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
+	/* c8 ignore stop */
+	const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
+	const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
+	const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
+	const StringPrototypeIncludes = require_primordials_uncurry.uncurryThis(String.prototype.includes);
+	const StringPrototypeIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.indexOf);
+	const StringPrototypeIsWellFormed = smolPrimordial?.stringIsWellFormed ?? require_primordials_uncurry.uncurryThis(String.prototype.isWellFormed);
+	const StringPrototypeLastIndexOf = require_primordials_uncurry.uncurryThis(String.prototype.lastIndexOf);
+	const StringPrototypeLocaleCompare = require_primordials_uncurry.uncurryThis(String.prototype.localeCompare);
+	const StringPrototypeMatch = require_primordials_uncurry.uncurryThis(String.prototype.match);
+	const StringPrototypeMatchAll = require_primordials_uncurry.uncurryThis(String.prototype.matchAll);
+	const StringPrototypeNormalize = require_primordials_uncurry.uncurryThis(String.prototype.normalize);
+	const StringPrototypePadEnd = require_primordials_uncurry.uncurryThis(String.prototype.padEnd);
+	const StringPrototypePadStart = require_primordials_uncurry.uncurryThis(String.prototype.padStart);
+	const StringPrototypeRepeat = require_primordials_uncurry.uncurryThis(String.prototype.repeat);
+	const StringPrototypeReplace = require_primordials_uncurry.uncurryThis(String.prototype.replace);
+	const StringPrototypeReplaceAll = require_primordials_uncurry.uncurryThis(String.prototype.replaceAll);
+	const StringPrototypeSearch = require_primordials_uncurry.uncurryThis(String.prototype.search);
+	const StringPrototypeSlice = require_primordials_uncurry.uncurryThis(String.prototype.slice);
+	const StringPrototypeSplit = require_primordials_uncurry.uncurryThis(String.prototype.split);
+	const StringPrototypeStartsWith = require_primordials_uncurry.uncurryThis(String.prototype.startsWith);
+	const StringPrototypeSubstring = require_primordials_uncurry.uncurryThis(String.prototype.substring);
+	const StringPrototypeToLocaleLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleLowerCase);
+	const StringPrototypeToLocaleUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toLocaleUpperCase);
+	const StringPrototypeToLowerCase = require_primordials_uncurry.uncurryThis(String.prototype.toLowerCase);
+	const StringPrototypeToString = require_primordials_uncurry.uncurryThis(String.prototype.toString);
+	const StringPrototypeToUpperCase = require_primordials_uncurry.uncurryThis(String.prototype.toUpperCase);
+	const StringPrototypeToWellFormed = require_primordials_uncurry.uncurryThis(String.prototype.toWellFormed);
+	const StringPrototypeTrim = require_primordials_uncurry.uncurryThis(String.prototype.trim);
+	const StringPrototypeTrimEnd = require_primordials_uncurry.uncurryThis(String.prototype.trimEnd);
+	const StringPrototypeTrimStart = require_primordials_uncurry.uncurryThis(String.prototype.trimStart);
+	const StringPrototypeValueOf = require_primordials_uncurry.uncurryThis(String.prototype.valueOf);
+	exports.StringCtor = StringCtor;
+	exports.StringFromCharCode = StringFromCharCode;
+	exports.StringFromCodePoint = StringFromCodePoint;
+	exports.StringPrototypeAt = StringPrototypeAt;
+	exports.StringPrototypeCharAt = StringPrototypeCharAt;
+	exports.StringPrototypeCharCodeAt = StringPrototypeCharCodeAt;
+	exports.StringPrototypeCodePointAt = StringPrototypeCodePointAt;
+	exports.StringPrototypeConcat = StringPrototypeConcat;
+	exports.StringPrototypeEndsWith = StringPrototypeEndsWith;
+	exports.StringPrototypeIncludes = StringPrototypeIncludes;
+	exports.StringPrototypeIndexOf = StringPrototypeIndexOf;
+	exports.StringPrototypeIsWellFormed = StringPrototypeIsWellFormed;
+	exports.StringPrototypeLastIndexOf = StringPrototypeLastIndexOf;
+	exports.StringPrototypeLocaleCompare = StringPrototypeLocaleCompare;
+	exports.StringPrototypeMatch = StringPrototypeMatch;
+	exports.StringPrototypeMatchAll = StringPrototypeMatchAll;
+	exports.StringPrototypeNormalize = StringPrototypeNormalize;
+	exports.StringPrototypePadEnd = StringPrototypePadEnd;
+	exports.StringPrototypePadStart = StringPrototypePadStart;
+	exports.StringPrototypeRepeat = StringPrototypeRepeat;
+	exports.StringPrototypeReplace = StringPrototypeReplace;
+	exports.StringPrototypeReplaceAll = StringPrototypeReplaceAll;
+	exports.StringPrototypeSearch = StringPrototypeSearch;
+	exports.StringPrototypeSlice = StringPrototypeSlice;
+	exports.StringPrototypeSplit = StringPrototypeSplit;
+	exports.StringPrototypeStartsWith = StringPrototypeStartsWith;
+	exports.StringPrototypeSubstring = StringPrototypeSubstring;
+	exports.StringPrototypeToLocaleLowerCase = StringPrototypeToLocaleLowerCase;
+	exports.StringPrototypeToLocaleUpperCase = StringPrototypeToLocaleUpperCase;
+	exports.StringPrototypeToLowerCase = StringPrototypeToLowerCase;
+	exports.StringPrototypeToString = StringPrototypeToString;
+	exports.StringPrototypeToUpperCase = StringPrototypeToUpperCase;
+	exports.StringPrototypeToWellFormed = StringPrototypeToWellFormed;
+	exports.StringPrototypeTrim = StringPrototypeTrim;
+	exports.StringPrototypeTrimEnd = StringPrototypeTrimEnd;
+	exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
+	exports.StringPrototypeValueOf = StringPrototypeValueOf;
+	exports.StringRaw = StringRaw;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/url.js
+var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_runtime = require_runtime();
+	let cachedUrl;
+	/**
+	* @unused No internal or Socket consumers; exercised only by its unit tests.
+	*/
+	function getNodeUrl() {
+		if (!require_constants_runtime.IS_NODE) return;
+		return cachedUrl ??= /*@__PURE__*/ __require("url");
+	}
+	exports.getNodeUrl = getNodeUrl;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/buffer.js
+var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to Node's `Buffer` global. `Buffer` is a Node-only
+	*   global; in browsers and in Deno without a compatibility shim the captured
+	*   references are `undefined`. Cross- env consumers must null-check before
+	*   calling.
+	*/
+	const BufferCtor = globalThis.Buffer;
+	const BufferAlloc = BufferCtor?.alloc;
+	const BufferAllocUnsafe = BufferCtor?.allocUnsafe;
+	const BufferAllocUnsafeSlow = BufferCtor?.allocUnsafeSlow;
+	const BufferByteLength = BufferCtor?.byteLength;
+	const BufferConcat = BufferCtor?.concat;
+	const BufferFrom = BufferCtor?.from;
+	const BufferIsBuffer = BufferCtor?.isBuffer;
+	const BufferIsEncoding = BufferCtor?.isEncoding;
+	/* c8 ignore start */
+	const BufferPrototypeSlice = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.slice) : void 0;
+	const BufferPrototypeToString = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.toString) : void 0;
+	/* c8 ignore stop */
+	exports.BufferAlloc = BufferAlloc;
+	exports.BufferAllocUnsafe = BufferAllocUnsafe;
+	exports.BufferAllocUnsafeSlow = BufferAllocUnsafeSlow;
+	exports.BufferByteLength = BufferByteLength;
+	exports.BufferConcat = BufferConcat;
+	exports.BufferCtor = BufferCtor;
+	exports.BufferFrom = BufferFrom;
+	exports.BufferIsBuffer = BufferIsBuffer;
+	exports.BufferIsEncoding = BufferIsEncoding;
+	exports.BufferPrototypeSlice = BufferPrototypeSlice;
+	exports.BufferPrototypeToString = BufferPrototypeToString;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/encoding.js
+var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	/**
+	* @file Character encoding and character code constants. Exports the default
+	*   UTF-8 encoding name and numeric char codes for common ASCII characters used
+	*   by path and parsing utilities.
+	*/
+	const UTF8 = "utf8";
+	const CHAR_BACKWARD_SLASH = 92;
+	const CHAR_COLON = 58;
+	const CHAR_FORWARD_SLASH = 47;
+	const CHAR_LOWERCASE_A = 97;
+	const CHAR_LOWERCASE_Z = 122;
+	const CHAR_UPPERCASE_A = 65;
+	const CHAR_UPPERCASE_Z = 90;
+	exports.CHAR_BACKWARD_SLASH = CHAR_BACKWARD_SLASH;
+	exports.CHAR_COLON = CHAR_COLON;
+	exports.CHAR_FORWARD_SLASH = CHAR_FORWARD_SLASH;
+	exports.CHAR_LOWERCASE_A = CHAR_LOWERCASE_A;
+	exports.CHAR_LOWERCASE_Z = CHAR_LOWERCASE_Z;
+	exports.CHAR_UPPERCASE_A = CHAR_UPPERCASE_A;
+	exports.CHAR_UPPERCASE_Z = CHAR_UPPERCASE_Z;
+	exports.UTF8 = UTF8;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/shared.js
+var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_platform = require_platform();
+	const require_node_url = require_url();
+	const require_primordials_buffer = require_buffer();
+	const require_primordials_string = require_string();
+	const require_constants_encoding = require_encoding();
+	/**
+	* @file Shared internals for the `paths/` module — the leaf-level primitives
+	*   every other path leaf depends on. Kept as a single file so `normalize`,
+	*   `predicates`, `conversion`, and `resolve` can layer above it without
+	*   circular imports.
+	*
+	*   - char-code constants + shared regexps
+	*   - `pathLikeToString` — `string | Buffer | URL` → `string`
+	*   - `normalizePath` and its `msysDriveToNative` / `foldPathForCompare` helpers
+	*     — they live at the leaf because `conversion` and `resolve` call
+	*     `normalizePath` and `predicates` calls `foldPathForCompare`. Hosting them
+	*     one layer up made `paths/normalize` import its own importers, and the
+	*     built CJS barrel then snapshotted those re-exports as `undefined`.
+	*     Nothing here may import a sibling `paths/*` leaf. That is the invariant
+	*     `scripts/repo/check/reexports-have-no-import-cycles.mts` enforces.
+	*/
+	const DRIVE_LETTER_REGEXP = /^[A-Za-z]:$/;
+	const msysDriveRegExp = /^\/([a-zA-Z])($|\/)/;
+	const nodeModulesPathRegExp = /(?:[/\\]|^)node_modules(?:$|[/\\])/;
+	const slashRegExp = /[/\\]/;
+	/**
+	* Normalize a path for equality comparison — forward slashes, no trailing
+	* separator, lowercased on Windows.
+	*
+	* @example
+	*   ;```typescript
+	*   foldPathForCompare('C:\\Program Files\\') // 'c:/program files'
+	*   ```
+	*/
+	function foldPathForCompare(pathLike) {
+		let normalized = normalizePath(pathLike);
+		if (normalized.length > 1 && normalized.endsWith("/")) normalized = normalized.slice(0, -1);
+		return require_constants_platform.isWin32() ? normalized.toLowerCase() : normalized;
+	}
+	/**
+	* Find the next path separator at or after an index.
+	*
+	* Scans char codes for `/` (47) and `\` (92) — the same two characters
+	* `slashRegExp` matches — and allocates nothing. Reaching the same answer
+	* through `search` costs a substring, an options bag, and a regex match per
+	* lookup, which a segment walk pays once per segment.
+	*
+	* @example
+	*   ;```typescript
+	*   indexOfPathSeparator('a/b', 0) // 1
+	*   indexOfPathSeparator('a/b', 2) // -1
+	*   indexOfPathSeparator('a\\b', 0) // 1
+	*   ```
+	*
+	* @param {string} filepath - The path to scan.
+	* @param {number} fromIndex - The index to start scanning at.
+	*
+	* @returns {number} The index of the first separator at or after `fromIndex`,
+	*   or -1 when there is none.
+	*/
+	function indexOfPathSeparator(filepath, fromIndex) {
+		const { length } = filepath;
+		for (let i = fromIndex; i < length; i += 1) {
+			const code = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
+			if (code === 47 || code === 92) return i;
+		}
+		return -1;
+	}
+	function msysDriveToNative(normalized) {
+		/* c8 ignore start - Windows-only branch. */
+		if (require_constants_platform.isWin32()) return normalized.replace(msysDriveRegExp, (_, letter, sep) => `${letter.toUpperCase()}:${sep || "/"}`);
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Normalize a path by converting backslashes to forward slashes and collapsing
+	* segments.
+	*
+	* - Converts all backslashes (`\`) to forward slashes (`/`)
+	* - Collapses repeated slashes
+	* - Resolves `.` and `..` segments
+	* - Preserves UNC path prefixes (`//server/share`)
+	* - Preserves Windows namespace prefixes (`//./`, `//?/`)
+	* - Returns `.` for empty or collapsed paths
+	* - On Windows: MSYS drive letters `/c/path` become `C:/path`
+	*
+	* @example
+	*   ;```typescript
+	*   normalizePath('foo/bar//baz') // 'foo/bar/baz'
+	*   normalizePath('foo/./bar') // 'foo/bar'
+	*   normalizePath('foo/bar/../baz') // 'foo/baz'
+	*   normalizePath('C:\\Users\\u\\file.txt') // 'C:/Users/u/file.txt'
+	*   normalizePath('\\\\server\\share\\file') // '//server/share/file'
+	*   normalizePath('') // '.'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to normalize.
+	*
+	* @returns {string} The normalized path
+	*
+	* @security
+	* **WARNING**: This function resolves `..` patterns as part of normalization, which means
+	* paths like `/../etc/passwd` become `/etc/passwd`. When processing untrusted user input
+	* (HTTP requests, file uploads, URL parameters), you MUST validate for path traversal
+	* attacks BEFORE calling this function.
+	*/
+	function normalizePath(pathLike) {
+		const filepath = pathLikeToString(pathLike);
+		const { length } = filepath;
+		if (length === 0) return ".";
+		if (length < 2) return length === 1 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
+		let code = 0;
+		let start = 0;
+		let prefix = "";
+		if (length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92) {
+			const code2 = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
+			if ((code2 === 63 || code2 === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) {
+				start = 2;
+				prefix = "//";
+			}
+		}
+		if (start === 0) {
+			/* c8 ignore start - UNC path detection (\\server\share). Rare
+			input; not exercised by typical test fixtures. */
+			if (length > 2 && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 92 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 47)) {
+				let firstSegmentEnd = -1;
+				let hasSecondSegment = false;
+				let i = 2;
+				while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
+				while (i < length) {
+					const char = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
+					if (char === 47 || char === 92) {
+						firstSegmentEnd = i;
+						break;
+					}
+					i++;
+				}
+				if (firstSegmentEnd > 2) {
+					i = firstSegmentEnd;
+					while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
+					if (i < length) hasSecondSegment = true;
+				}
+				if (firstSegmentEnd > 2 && hasSecondSegment) {
+					start = 2;
+					prefix = "//";
+				} else {
+					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+					while (code === 47 || code === 92) {
+						start += 1;
+						code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+					}
+					if (start) prefix = "/";
+				}
+			} else {
+				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+				while (code === 47 || code === 92) {
+					start += 1;
+					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+				}
+				if (start) prefix = "/";
+			}
+		}
+		let nextIndex = indexOfPathSeparator(filepath, start);
+		/* c8 ignore start */
+		if (nextIndex === -1) {
+			const segment = filepath.slice(start);
+			if (segment === "." || segment.length === 0) return prefix || ".";
+			if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
+			return msysDriveToNative(prefix + segment);
+		}
+		/* c8 ignore stop */
+		/* c8 ignore start */
+		let collapsed = "";
+		let segmentCount = 0;
+		let leadingDotDots = 0;
+		while (nextIndex !== -1) {
+			const segment = filepath.slice(start, nextIndex);
+			if (segment.length > 0 && segment !== ".") {
+				if (segment === "..") {
+					if (segmentCount > 0) {
+						const lastSeparatorIndex = collapsed.lastIndexOf("/");
+						if (lastSeparatorIndex === -1) {
+							collapsed = "";
+							segmentCount = 0;
+							if (leadingDotDots > 0 && !prefix) {
+								collapsed = "..";
+								leadingDotDots = 1;
+							}
+						} else {
+							const lastSegmentStart = lastSeparatorIndex + 1;
+							if (collapsed.slice(lastSegmentStart) === "..") {
+								collapsed = `${collapsed}/${segment}`;
+								leadingDotDots += 1;
+							} else {
+								collapsed = collapsed.slice(0, lastSeparatorIndex);
+								segmentCount -= 1;
+							}
+						}
+					} else if (!prefix) {
+						collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
+						leadingDotDots += 1;
+					}
+				} else {
+					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
+					segmentCount += 1;
+				}
+			}
+			start = nextIndex + 1;
+			code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			while (code === 47 || code === 92) {
+				start += 1;
+				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
+			}
+			nextIndex = indexOfPathSeparator(filepath, start);
+		}
+		const lastSegment = filepath.slice(start);
+		if (lastSegment.length > 0 && lastSegment !== ".") {
+			if (lastSegment === "..") {
+				if (segmentCount > 0) {
+					const lastSeparatorIndex = collapsed.lastIndexOf("/");
+					if (lastSeparatorIndex === -1) {
+						collapsed = "";
+						segmentCount = 0;
+						if (leadingDotDots > 0 && !prefix) {
+							collapsed = "..";
+							leadingDotDots = 1;
+						}
+					} else {
+						const lastSegmentStart = lastSeparatorIndex + 1;
+						if (collapsed.slice(lastSegmentStart) === "..") {
+							collapsed = `${collapsed}/${lastSegment}`;
+							leadingDotDots += 1;
+						} else {
+							collapsed = collapsed.slice(0, lastSeparatorIndex);
+							segmentCount -= 1;
+						}
+					}
+				} else if (!prefix) {
+					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
+					leadingDotDots += 1;
+				}
+			} else {
+				collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
+				segmentCount += 1;
+			}
+		}
+		/* c8 ignore stop */
+		if (collapsed.length === 0) return prefix || ".";
+		if (DRIVE_LETTER_REGEXP.test(collapsed) && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 92)) return msysDriveToNative(`${prefix}${collapsed}/`);
+		return msysDriveToNative(prefix + collapsed);
+	}
+	/**
+	* Convert a path-like value to a string.
+	*
+	* Converts various path-like types (string, Buffer, URL) into a normalized
+	* string representation. Handles different input formats and provides
+	* consistent string output for path operations.
+	*
+	* @example
+	*   ;```typescript
+	*   pathLikeToString('/home/user') // '/home/user'
+	*   pathLikeToString(Buffer.from('/tmp/file')) // '/tmp/file'
+	*   pathLikeToString(new URL('file:///home/user')) // '/home/user'
+	*   pathLikeToString(null) // ''
+	*   ```
+	*
+	* @param {string | Buffer | URL | null | undefined} pathLike - The value to
+	*   convert.
+	*
+	* @returns {string} The string representation, or empty string for
+	*   null/undefined.
+	*/
+	function pathLikeToString(pathLike) {
+		if (pathLike === null || pathLike === void 0) return "";
+		if (typeof pathLike === "string") return pathLike;
+		if (require_primordials_buffer.BufferIsBuffer(pathLike)) return pathLike.toString("utf8");
+		const url = require_node_url.getNodeUrl();
+		if (pathLike instanceof URL) try {
+			return url.fileURLToPath(pathLike);
+		} catch {
+			const pathname = pathLike.pathname;
+			const decodedPathname = decodeURIComponent(pathname);
+			/* c8 ignore start - Windows-only URL drive-letter handling. */
+			if (require_constants_platform.isWin32() && require_primordials_string.StringPrototypeStartsWith(decodedPathname, "/")) {
+				const letter = require_primordials_string.StringPrototypeCharCodeAt(decodedPathname, 1) | 32;
+				if (!(decodedPathname.length >= 3 && letter >= 97 && letter <= 122 && require_primordials_string.StringPrototypeCharAt(decodedPathname, 2) === ":")) return decodedPathname;
+			}
+			/* c8 ignore stop */
+			return decodedPathname;
+		}
+		return String(pathLike);
+	}
+	exports.CHAR_BACKWARD_SLASH = require_constants_encoding.CHAR_BACKWARD_SLASH;
+	exports.CHAR_COLON = require_constants_encoding.CHAR_COLON;
+	exports.CHAR_FORWARD_SLASH = require_constants_encoding.CHAR_FORWARD_SLASH;
+	exports.CHAR_LOWERCASE_A = require_constants_encoding.CHAR_LOWERCASE_A;
+	exports.CHAR_LOWERCASE_Z = require_constants_encoding.CHAR_LOWERCASE_Z;
+	exports.CHAR_UPPERCASE_A = require_constants_encoding.CHAR_UPPERCASE_A;
+	exports.CHAR_UPPERCASE_Z = require_constants_encoding.CHAR_UPPERCASE_Z;
+	exports.foldPathForCompare = foldPathForCompare;
+	exports.indexOfPathSeparator = indexOfPathSeparator;
+	exports.msysDriveRegExp = msysDriveRegExp;
+	exports.msysDriveToNative = msysDriveToNative;
+	exports.nodeModulesPathRegExp = nodeModulesPathRegExp;
+	exports.normalizePath = normalizePath;
+	exports.pathLikeToString = pathLikeToString;
+	exports.slashRegExp = slashRegExp;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/conversion.js
+var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_platform = require_platform();
+	const require_primordials_string = require_string();
+	const require_paths_shared = require_shared();
+	/**
+	* @file Path conversion utilities — MSYS↔native bridging and string-shape
+	*   helpers. Split out of `paths/normalize.ts` for size hygiene.
+	*
+	*   - `fromUnixPath` / `toUnixPath` — MSYS↔native conversion
+	*   - `splitPath` — segment-array view of a path
+	*   - `trimLeadingDotSlash` — strip a single `./` / `.\` prefix
+	*/
+	/**
+	* Convert Unix-style POSIX paths to native Windows paths.
+	*
+	* This is the inverse of {@link toUnixPath}. On Windows, MSYS-style paths use
+	* `/c/` notation for drive letters and forward slashes, which PowerShell and
+	* cmd.exe cannot resolve. This function converts them to native Windows format
+	* with backslashes and proper drive letters.
+	*
+	* @example
+	*   ;```typescript
+	*   fromUnixPath('/c/projects/app/file.txt') // 'C:\\projects\\app\\file.txt' on Windows
+	*   fromUnixPath('/tmp/build/output') // '/tmp/build/output'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The MSYS/Unix-style path to
+	*   convert.
+	*
+	* @returns {string} Native Windows path or normalized Unix path
+	*/
+	function fromUnixPath(pathLike) {
+		const normalized = require_paths_shared.normalizePath(pathLike);
+		/* c8 ignore start */
+		if (require_constants_platform.isWin32()) return normalized.replace(/\//g, "\\");
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Split a path into an array of segments.
+	*
+	* Divides a path into individual components by splitting on both forward-slash
+	* and backslash path separators.
+	*
+	* @example
+	*   ;```typescript
+	*   splitPath('/home/user/file.txt') // ['', 'home', 'user', 'file.txt']
+	*   splitPath('C:\\Users\\John') // ['C:', 'Users', 'John']
+	*   splitPath('') // []
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to split.
+	*
+	* @returns {string[]} Array of path segments, or empty array for empty paths
+	*/
+	function splitPath(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		if (filepath === "") return [];
+		return filepath.split(require_paths_shared.slashRegExp);
+	}
+	/**
+	* Convert Windows paths to MSYS/Unix-style POSIX paths for Git Bash tools.
+	*
+	* Git for Windows and MSYS2 tools expect POSIX-style paths with forward slashes
+	* and Unix drive letter notation (`/c/` instead of `C:\`).
+	*
+	* This is the inverse of {@link fromUnixPath}.
+	*
+	* @example
+	*   ;```typescript
+	*   toUnixPath('C:\\path\\to\\file.txt') // '/c/path/to/file.txt' on Windows
+	*   toUnixPath('/home/user/file') // '/home/user/file'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to convert.
+	*
+	* @returns {string} Unix-style POSIX path
+	*/
+	function toUnixPath(pathLike) {
+		const normalized = require_paths_shared.normalizePath(pathLike);
+		/* c8 ignore start */
+		if (require_constants_platform.isWin32()) return normalized.replace(/^([A-Z]):/i, (_, letter) => `/${letter.toLowerCase()}`);
+		/* c8 ignore stop */
+		return normalized;
+	}
+	/**
+	* Remove a leading `./` or `.\` prefix from a path.
+	*
+	* Only removes a single leading `./` or `.\`. Does not touch `../` prefixes.
+	*
+	* @example
+	*   ;```typescript
+	*   trimLeadingDotSlash('./src/index.js') // 'src/index.js'
+	*   trimLeadingDotSlash('../lib/util.js') // '../lib/util.js'
+	*   trimLeadingDotSlash('/absolute/path') // '/absolute/path'
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to process.
+	*
+	* @returns {string} The path without leading `./` / `.\`, or unchanged
+	*/
+	function trimLeadingDotSlash(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		if (require_primordials_string.StringPrototypeStartsWith(filepath, "./") || require_primordials_string.StringPrototypeStartsWith(filepath, ".\\")) return filepath.slice(2);
+		return filepath;
+	}
+	exports.fromUnixPath = fromUnixPath;
+	exports.splitPath = splitPath;
+	exports.toUnixPath = toUnixPath;
+	exports.trimLeadingDotSlash = trimLeadingDotSlash;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/regexp.js
+var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_primordials_uncurry = require_uncurry();
+	/**
+	* @file Safe references to `RegExp` and its prototype methods. `RegExp.escape`
+	*   is ES2025; the primordial is typed `Function | undefined` so older runtimes
+	*   still load. The Symbol-keyed `[Symbol.match]` / `[Symbol.replace]` slots
+	*   are exposed alongside the named methods because some callers use them via
+	*   dynamic dispatch (e.g. `String.prototype.match` invokes
+	*   `RegExp.prototype[Symbol.match]` internally).
+	*/
+	const RegExpCtor = RegExp;
+	const RegExpEscape = RegExp.escape;
+	const RegExpPrototypeExec = require_primordials_uncurry.uncurryThis(RegExp.prototype.exec);
+	const RegExpPrototypeTest = require_primordials_uncurry.uncurryThis(RegExp.prototype.test);
+	const RegExpPrototypeSymbolMatch = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.match]);
+	const RegExpPrototypeSymbolReplace = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.replace]);
+	exports.RegExpCtor = RegExpCtor;
+	exports.RegExpEscape = RegExpEscape;
+	exports.RegExpPrototypeExec = RegExpPrototypeExec;
+	exports.RegExpPrototypeSymbolMatch = RegExpPrototypeSymbolMatch;
+	exports.RegExpPrototypeSymbolReplace = RegExpPrototypeSymbolReplace;
+	exports.RegExpPrototypeTest = RegExpPrototypeTest;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/predicates.js
+var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_platform = require_platform();
+	const require_primordials_string = require_string();
+	require_encoding();
+	const require_paths_shared = require_shared();
+	const require_primordials_regexp = require_regexp();
+	/**
+	* @file Path predicates — `is*` checks for path shape and kind. Split out of
+	*   `paths/normalize.ts` for file-size hygiene. Pure boolean predicates over
+	*   paths and character codes.
+	*
+	*   - `isAbsolute`, `isRelative` — root-anchoring shape
+	*   - `isPath` — file-path vs package-spec vs URL discriminator
+	*   - `isNodeModules`, `isUnixPath` — content-pattern checks
+	*   - `isPathSeparator`, `isWindowsDeviceRoot` — char-code primitives
+	*   - `isPathWithinRoot` — realpath containment check
+	*/
+	/**
+	* Check if a path is absolute.
+	*
+	* Handles both POSIX (`/...`) and Windows (drive-letter, UNC, device) absolute
+	* path shapes.
+	*
+	* @example
+	*   ;```typescript
+	*   isAbsolute('/home/user') // true
+	*   isAbsolute('C:\\Windows') // true on Windows
+	*   isAbsolute('../relative') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if absolute, `false` otherwise
+	*/
+	function isAbsolute(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		const { length } = filepath;
+		if (length === 0) return false;
+		const code = require_primordials_string.StringPrototypeCharCodeAt(filepath, 0);
+		if (code === 47) return true;
+		if (code === 92) return true;
+		/* c8 ignore start - Windows drive-letter detection. */
+		if (require_constants_platform.isWin32() && length > 2) {
+			if (isWindowsDeviceRoot(code) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 58 && isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(filepath, 2))) return true;
+		}
+		/* c8 ignore stop */
+		return false;
+	}
+	/**
+	* Check if a path contains a `node_modules` directory segment.
+	*
+	* Matches `node_modules` only as a complete path segment.
+	*
+	* @example
+	*   ;```typescript
+	*   isNodeModules('/project/node_modules/package') // true
+	*   isNodeModules('/src/my_node_modules_backup') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path contains `node_modules`
+	*/
+	function isNodeModules(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		return require_primordials_regexp.RegExpPrototypeTest(require_paths_shared.nodeModulesPathRegExp, filepath);
+	}
+	/**
+	* Check if a value is a valid absolute or relative file path.
+	*
+	* Distinguishes between file paths and other string formats like package names,
+	* URLs, or bare module specifiers.
+	*
+	* @example
+	*   ;```typescript
+	*   isPath('/absolute/path') // true
+	*   isPath('./relative/path') // true
+	*   isPath('@scope/name/subpath') // true
+	*   isPath('lodash') // false
+	*   isPath('http://example.com') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The value to check.
+	*
+	* @returns {boolean} `true` if the value is a valid file path
+	*/
+	function isPath(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		if (typeof filepath !== "string" || filepath.length === 0) return false;
+		if (/^[a-z][a-z0-9+.-]+:/i.test(filepath)) return false;
+		if (filepath === "." || filepath === "..") return true;
+		if (isAbsolute(filepath)) return true;
+		if (filepath.includes("/") || filepath.includes("\\")) {
+			if (require_primordials_string.StringPrototypeStartsWith(filepath, "@") && !require_primordials_string.StringPrototypeStartsWith(filepath, "@/")) {
+				const parts = filepath.split("/");
+				if (parts.length <= 2 && !parts[1]?.includes("\\")) return false;
+			}
+			return true;
+		}
+		return false;
+	}
+	/**
+	* Check if a character code is a path separator (`/` or `\`).
+	*
+	* @example
+	*   ;```typescript
+	*   isPathSeparator(47) // true — '/'
+	*   isPathSeparator(92) // true — '\'
+	*   isPathSeparator(65) // false — 'A'
+	*   ```
+	*
+	* @param {number} code - The character code to check.
+	*
+	* @returns {boolean} `true` if separator
+	*/
+	function isPathSeparator(code) {
+		return code === 47 || code === 92;
+	}
+	/**
+	* Report whether a path sits at or under a root. Both sides must already be
+	* realpath'd.
+	*
+	* @example
+	*   ;```typescript
+	*   isPathWithinRoot('/repo/bin/git', '/repo') // true
+	*   isPathWithinRoot('/usr/bin/git', '/repo') // false
+	*   ```
+	*/
+	function isPathWithinRoot(candidate, root) {
+		const left = require_paths_shared.foldPathForCompare(candidate);
+		const right = require_paths_shared.foldPathForCompare(root);
+		return left === right || left.startsWith(`${right}/`);
+	}
+	/**
+	* Check if a path is relative (i.e., not absolute).
+	*
+	* Empty strings are treated as relative.
+	*
+	* @example
+	*   ;```typescript
+	*   isRelative('./src/index.js') // true
+	*   isRelative('src/file.js') // true
+	*   isRelative('/home/user') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path is relative
+	*/
+	function isRelative(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		/* c8 ignore start */
+		if (typeof filepath !== "string") return false;
+		/* c8 ignore stop */
+		if (filepath.length === 0) return true;
+		return !isAbsolute(filepath);
+	}
+	/**
+	* Check if a value is wrapped in path separators on BOTH ends — the
+	* `/wrapped/` sigil some list formats use to mark a substring (not exact)
+	* entry. Either separator direction counts on either end, so a stray
+	* backslash-wrapped entry is still read as the sigil rather than silently
+	* treated as an exact path.
+	*
+	* @example
+	*   ;```typescript
+	*   isSeparatorWrapped('/rendering-chromium-to-png/') // true
+	*   isSeparatorWrapped('\\rendering-chromium-to-png\\') // true
+	*   isSeparatorWrapped('scripts/fleet/acquire.mts') // false
+	*   isSeparatorWrapped('//') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The value to check.
+	*
+	* @returns {boolean} `true` if both ends are path separators with content
+	*   between.
+	*/
+	function isSeparatorWrapped(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		const { length } = filepath;
+		if (length < 3) return false;
+		return isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(filepath, 0)) && isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(filepath, length - 1));
+	}
+	/**
+	* Check if a path uses MSYS/Git Bash Unix-style drive letter notation.
+	*
+	* Detects paths in the format `/c/...` where a single letter after the leading
+	* slash represents a Windows drive letter.
+	*
+	* @example
+	*   ;```typescript
+	*   isUnixPath('/c/tools/bin') // true
+	*   isUnixPath('/tmp/build') // false
+	*   isUnixPath('C:/Windows') // false
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The path to check.
+	*
+	* @returns {boolean} `true` if the path uses MSYS drive letter notation
+	*/
+	function isUnixPath(pathLike) {
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		return typeof filepath === "string" && require_primordials_regexp.RegExpPrototypeTest(require_paths_shared.msysDriveRegExp, filepath);
+	}
+	/**
+	* Check if a character code is a Windows device root letter (A-Z / a-z).
+	*
+	* @example
+	*   ;```typescript
+	*   isWindowsDeviceRoot(67) // true  — 'C'
+	*   isWindowsDeviceRoot(99) // true  — 'c'
+	*   isWindowsDeviceRoot(58) // false — ':'
+	*   ```
+	*
+	* @param {number} code - The character code to check.
+	*
+	* @returns {boolean} `true` if valid drive-letter code
+	*/
+	/* c8 ignore start - Only called from Windows-only branches. */
+	function isWindowsDeviceRoot(code) {
+		return code >= 65 && code <= 90 || code >= 97 && code <= 122;
+	}
+	/* c8 ignore stop */
+	/**
+	* The forward-slash substring form of a separator-wrapped entry, or
+	* undefined when the value is not wrapped. The inner segment's backslashes
+	* become forward slashes so the needle matches against normalized paths.
+	*
+	* @example
+	*   ;```typescript
+	*   separatorWrappedSubstring('/rendering-chromium-to-png/') // '/rendering-chromium-to-png/'
+	*   separatorWrappedSubstring('\\rendering-chromium-to-png\\') // '/rendering-chromium-to-png/'
+	*   separatorWrappedSubstring('scripts/fleet/acquire.mts') // undefined
+	*   ```
+	*
+	* @param {string | Buffer | URL} pathLike - The value to convert.
+	*
+	* @returns {string | undefined} The `/inner/` substring form, or undefined
+	*/
+	function separatorWrappedSubstring(pathLike) {
+		if (!isSeparatorWrapped(pathLike)) return;
+		const filepath = require_paths_shared.pathLikeToString(pathLike);
+		return `/${require_primordials_string.StringPrototypeSlice(filepath, 1, -1).replaceAll("\\", "/")}/`;
+	}
+	exports.isAbsolute = isAbsolute;
+	exports.isNodeModules = isNodeModules;
+	exports.isPath = isPath;
+	exports.isPathSeparator = isPathSeparator;
+	exports.isPathWithinRoot = isPathWithinRoot;
+	exports.isRelative = isRelative;
+	exports.isSeparatorWrapped = isSeparatorWrapped;
+	exports.isUnixPath = isUnixPath;
+	exports.isWindowsDeviceRoot = isWindowsDeviceRoot;
+	exports.separatorWrappedSubstring = separatorWrappedSubstring;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/resolve.js
+var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_constants_platform = require_platform();
+	const require_primordials_string = require_string();
+	require_encoding();
+	const require_paths_shared = require_shared();
+	const require_paths_predicates = require_predicates();
+	/**
+	* @file Path resolution utilities — `resolve`, `relative`, `relativeResolve`.
+	*   Split out of `paths/normalize.ts` for size hygiene.
+	*
+	*   - `resolve` — Node-style `path.resolve()` over absolute-path semantics
+	*   - `relative` — relative path from one absolute to another
+	*   - `relativeResolve` — `relative` + `normalizePath` convenience wrapper
+	*/
+	/**
+	* Calculate the relative path from one path to another.
+	*
+	* Both inputs are resolved to absolute paths first, then compared to find the
+	* longest common base, and finally a relative path is constructed using `../`
+	* for parent-directory traversal.
+	*
+	* Windows file systems are case-insensitive; the comparison reflects that.
+	*
+	* @example
+	*   ;```typescript
+	*   relative('/foo/bar', '/foo/baz') // '../baz'
+	*   relative('/foo/bar/baz', '/foo') // '../..'
+	*   relative('/foo', '/foo/bar') // 'bar'
+	*   relative('/foo/bar', '/foo/bar') // ''
+	*   ```
+	*
+	* @param {string} from - Source path.
+	* @param {string} to - Destination path.
+	*
+	* @returns {string} Relative path from `from` to `to`, or empty string if equal
+	*/
+	function relative(from, to) {
+		if (from === to) return "";
+		const actualFrom = resolve(from);
+		const actualTo = resolve(to);
+		if (actualFrom === actualTo) return "";
+		/* c8 ignore start - Windows-only case-insensitive comparison. */
+		if (require_constants_platform.isWin32()) {
+			if (actualFrom.toLowerCase() === actualTo.toLowerCase()) return "";
+		}
+		/* c8 ignore stop */
+		const fromStart = 1;
+		const fromEnd = actualFrom.length;
+		const fromLen = fromEnd - fromStart;
+		const toStart = 1;
+		const toLen = actualTo.length - toStart;
+		const length = fromLen < toLen ? fromLen : toLen;
+		let lastCommonSep = -1;
+		let i = 0;
+		for (; i < length; i += 1) {
+			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i);
+			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i);
+			/* c8 ignore start - Windows-only case folding. */
+			if (require_constants_platform.isWin32()) {
+				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
+				if (toCode >= 65 && toCode <= 90) toCode += 32;
+			}
+			/* c8 ignore stop */
+			if (fromCode !== toCode) break;
+			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i))) lastCommonSep = i;
+		}
+		/* c8 ignore start */
+		if (i === length) {
+			if (toLen > length) {
+				const toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i);
+				if (require_paths_predicates.isPathSeparator(toCode)) return actualTo.slice(toStart + i + 1);
+				if (i === 0) return actualTo.slice(toStart + i);
+			} else if (fromLen > length) {
+				const fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i);
+				if (require_paths_predicates.isPathSeparator(fromCode)) lastCommonSep = i;
+				else if (i === 0) lastCommonSep = 0;
+			}
+		}
+		/* c8 ignore stop */
+		let out = "";
+		for (i = fromStart + lastCommonSep + 1; i <= fromEnd; i += 1) {
+			const code = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, i);
+			if (i === fromEnd || require_paths_predicates.isPathSeparator(code)) out += out.length === 0 ? ".." : "/..";
+		}
+		return out + actualTo.slice(toStart + lastCommonSep);
+	}
+	/**
+	* Get the normalized relative path from one path to another.
+	*
+	* Computes the relative path using `relative()` then runs the result through
+	* `normalizePath()`. An empty string, meaning the same path, is preserved
+	* verbatim rather than collapsed to `.`.
+	*
+	* @example
+	*   ;```typescript
+	*   relativeResolve('/foo/bar', '/foo/baz') // '../baz'
+	*   relativeResolve('/foo/bar', '/foo/bar') // ''
+	*   relativeResolve('/foo/./bar', '/foo/baz') // '../baz'
+	*   ```
+	*
+	* @param {string} from - Source path.
+	* @param {string} to - Destination path.
+	*
+	* @returns {string} Normalized relative path, or empty string if equal
+	*/
+	function relativeResolve(from, to) {
+		const rel = relative(from, to);
+		if (rel === "") return "";
+		return require_paths_shared.normalizePath(rel);
+	}
+	/**
+	* Resolve an absolute path from path segments.
+	*
+	* Mimics Node.js `path.resolve()`: processes segments right-to-left, stops at
+	* the first absolute segment, and prepends the cwd if no absolute segment is
+	* found. The final path is normalized.
+	*
+	* @example
+	*   ;```typescript
+	*   resolve('foo', 'bar', 'baz') // '/cwd/foo/bar/baz'
+	*   resolve('/foo', 'bar', 'baz') // '/foo/bar/baz'
+	*   resolve('foo', '/bar', 'baz') // '/bar/baz'
+	*   resolve() // '/cwd'
+	*   ```
+	*
+	* @param {...string} segments - Path segments to resolve.
+	*
+	* @returns {string} The resolved absolute path
+	*/
+	function resolve(...segments) {
+		let resolvedPath = "";
+		let resolvedAbsolute = false;
+		for (let i = segments.length - 1; i >= 0 && !resolvedAbsolute; i -= 1) {
+			const segment = segments[i];
+			/* c8 ignore start */
+			if (typeof segment !== "string" || segment.length === 0) continue;
+			resolvedPath = segment + (resolvedPath.length === 0 ? "" : `/${resolvedPath}`);
+			resolvedAbsolute = require_paths_predicates.isAbsolute(segment);
+		}
+		if (!resolvedAbsolute) resolvedPath = /* @__PURE__ */ __require("node:process").cwd() + (resolvedPath.length === 0 ? "" : `/${resolvedPath}`);
+		/* c8 ignore stop */
+		return require_paths_shared.normalizePath(resolvedPath);
+	}
+	exports.relative = relative;
+	exports.relativeResolve = relativeResolve;
+	exports.resolve = resolve;
+}));
+
+//#endregion
+//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/normalize.js
+var require_normalize = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const require_paths_shared = require_shared();
+	const require_paths_conversion = require_conversion();
+	const require_paths_predicates = require_predicates();
+	const require_paths_resolve = require_resolve();
+	exports.foldPathForCompare = require_paths_shared.foldPathForCompare;
+	exports.fromUnixPath = require_paths_conversion.fromUnixPath;
+	exports.isAbsolute = require_paths_predicates.isAbsolute;
+	exports.isNodeModules = require_paths_predicates.isNodeModules;
+	exports.isPath = require_paths_predicates.isPath;
+	exports.isPathSeparator = require_paths_predicates.isPathSeparator;
+	exports.isRelative = require_paths_predicates.isRelative;
+	exports.isSeparatorWrapped = require_paths_predicates.isSeparatorWrapped;
+	exports.isUnixPath = require_paths_predicates.isUnixPath;
+	exports.isWindowsDeviceRoot = require_paths_predicates.isWindowsDeviceRoot;
+	exports.msysDriveToNative = require_paths_shared.msysDriveToNative;
+	exports.normalizePath = require_paths_shared.normalizePath;
+	exports.pathLikeToString = require_paths_shared.pathLikeToString;
+	exports.relative = require_paths_resolve.relative;
+	exports.relativeResolve = require_paths_resolve.relativeResolve;
+	exports.resolve = require_paths_resolve.resolve;
+	exports.separatorWrappedSubstring = require_paths_predicates.separatorWrappedSubstring;
+	exports.splitPath = require_paths_conversion.splitPath;
+	exports.toUnixPath = require_paths_conversion.toUnixPath;
+	exports.trimLeadingDotSlash = require_paths_conversion.trimLeadingDotSlash;
+}));
+
+//#endregion
+//#region src/tools/firewall-shims.js
+var import_conversion = require_conversion();
+var import_normalize = require_normalize();
+const FIREWALL_SHIM_STATE_KEY = "firewall-shims";
+async function assertFirewallShimPrecedence() {
+	const saved = getState(FIREWALL_SHIM_STATE_KEY);
+	if (!saved) return;
+	const state = parseFirewallShimState(saved);
+	const shadowed = [];
+	for (const command of state.commands) {
+		const actual = await which(command, false);
+		if (!actual) continue;
+		const expected = path.join(state.directory, process.platform === "win32" ? `${command}.cmd` : command);
+		if (firewallCommandPath(actual) !== firewallCommandPath(expected)) shadowed.push(command);
+	}
+	if (shadowed.length) throw Object.assign(/* @__PURE__ */ new Error(`Firewall command precedence changed during the job: ${shadowed.join(", ")} resolve outside the expected firewall shim directory. Run runtime and package-manager setup before this action, or invoke sfw explicitly. This final check cannot protect earlier installs.`), { code: "SFW_SHIM_SHADOWED" });
+}
+function firewallCommandPath(filename) {
+	const normalized = (0, import_normalize.normalizePath)(path.resolve((0, import_conversion.fromUnixPath)(filename)));
+	return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+}
+function invalidFirewallShimState() {
+	return Object.assign(/* @__PURE__ */ new Error("Cannot validate firewall command precedence: saved action state is invalid. Expected a shim directory and command list. Run the firewall action again."), { code: "SFW_SHIM_STATE_INVALID" });
+}
+function parseFirewallShimState(saved) {
+	let state;
+	try {
+		state = JSON.parse(saved);
+	} catch {
+		throw invalidFirewallShimState();
+	}
+	if (!state || typeof state !== "object" || typeof state.directory !== "string" || !path.isAbsolute(state.directory) || !Array.isArray(state.commands) || state.commands.length === 0 || !state.commands.every((command) => typeof command === "string" && /^[a-z][a-z0-9]*$/.test(command))) throw invalidFirewallShimState();
+	return state;
+}
+
+//#endregion
+//#region src/post.js
+async function writeFirewallSummary() {
 	const inputs = { jobSummary: getInput("job-summary", { required: false }).toLowerCase() };
 	if (inputs.jobSummary === "true") inputs.jobSummary = "all";
 	if (inputs.jobSummary === "false") inputs.jobSummary = "none";
@@ -9903,10 +11712,21 @@ async function main() {
 	}
 	await summary.write();
 }
+/**
+* Render the firewall report left behind by the main step as a job summary.
+*/
+async function main() {
+	if (getInput("mode", { required: true }).toLowerCase() === "patch") {
+		info("patch mode: no post-run actions required");
+		return;
+	}
+	await assertFirewallShimPrecedence();
+	await writeFirewallSummary();
+}
 main().catch((error) => {
 	setFailed(`${error?.message ?? String(error)}`);
 	process.exit(1);
 });
 
 //#endregion
-export { main };
+export { main, writeFirewallSummary };

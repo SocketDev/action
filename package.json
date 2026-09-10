@@ -82,7 +82,8 @@
     "npm:trust": "node scripts/fleet/registry-infra/npm/trust.mts",
     "preflight": "node scripts/fleet/preflight.mts",
     "prune:branch-backups": "node scripts/fleet/backup-branches.mts prune",
-    "prune:gha-caches": "node scripts/fleet/prune-actions-caches.mts"
+    "prune:gha-caches": "node scripts/fleet/prune-actions-caches.mts",
+    "check:test-budget-headroom": "node scripts/fleet/check/test-budget-headroom.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",

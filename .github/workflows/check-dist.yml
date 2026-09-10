@@ -1,4 +1,5 @@
-name: ✅ Check Dist
+name: 🔍 Check dist
+run-name: Check dist
 
 # A `github-action` member ships THE REPO ITSELF at a git tag: the runner
 # checks out the tag and executes the committed `dist/` bundle, never `src/`.
@@ -37,6 +38,7 @@ concurrency:
 
 jobs:
   check-dist:
+    name: Check distribution
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -53,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SERVER_URL: ${{ github.server_url }}
           REPOSITORY: ${{ github.repository }}
-          TRIGGER_REF: ${{ github.ref }}
+          TRIGGER_REF: ${{ github.sha }}
         run: |
           set -euo pipefail
           git init -q
@@ -69,13 +71,14 @@ jobs:
           fi
           git checkout -q --detach FETCH_HEAD
 
-      - name: Setup + install
+      - name: Set up and install
         uses: ./.github/actions/fleet/setup-and-install
         with:
-          # Authorizes a thin member's bundle download during install. Both
-          # stay empty on a member with no payload App, which skips the mint.
-          payload-token-client-id: ${{ vars.SOCKET_PAYLOAD_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PAYLOAD_APP_PRIVATE_KEY }}
+          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Both credentials enable the private release fallback. Without the
+          # key, hydration still pulls public GHCR anonymously.
+          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
 
       - name: Rebuild dist
         run: pnpm run build

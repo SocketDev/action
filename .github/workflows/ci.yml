@@ -3,7 +3,8 @@
 # under .github/actions/fleet/ (cascade-updated), referenced by ./ path — no
 # cross-repo reusable workflow, no first-party `uses:@sha`. Add repo-specific
 # jobs anywhere under `jobs:`.
-name: ⚡ CI
+name: 🧪 CI
+run-name: CI
 
 on:
   push:
@@ -18,38 +19,30 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
-# Fleet no-phone-home posture: CI runners don't source the shell-rc that dev
-# machines get from setup-security-tools, so set every FLEET_ENV knob
-# workflow-level or the telemetry-env-is-disabled +
-# package-manager-auto-update-is-disabled gates (under `check --all`) fail.
-# Lockstep source: .claude/hooks/fleet/_shared/fleet-env.mts (FLEET_ENV) —
-# the telemetry-env-is-disabled check asserts each knob at CI runtime.
-env:
-  CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1'
-  COREPACK_ENABLE_PROJECT_SPEC: '0'
-  DISABLE_TELEMETRY: '1'
-  DO_NOT_TRACK: '1'
-  # Markdown conformance gate (markdownlint-cli2 + the socket-* GFM rules)
-  # runs inside `pnpm run lint` when set. Flipped on 2026-07-12 after the
-  # fleet-wide burn-down took every member to zero findings.
-  LINT_MARKDOWN: '1'
-  NO_UPDATE_NOTIFIER: '1'
-  OTEL_SDK_DISABLED: 'true'
-
+# Fleet no-phone-home posture: NOT set here. The shared setup action's first
+# step emits every FLEET_ENV knob into $GITHUB_ENV, derived from
+# .github/actions/fleet/setup/fleet-env.json, so each job inherits the full set
+# by running setup. Hand-copying them workflow-level is what let
+# OTEL_SDK_DISABLED reach one workflow and miss another; the gates
+# telemetry-env-is-disabled + package-manager-auto-update-is-disabled-at-commit read the
+# runtime env, which the action has already populated.
 jobs:
   # First step of every job is an inline git-fetch bootstrap (no third-party
   # actions/checkout) — a job's FIRST step can't call the local
   # `./.github/actions/fleet/checkout` composite, since nothing is checked out
   # yet for GitHub to resolve `./.github/actions/*` from. It shallow-fetches the
   # workspace so those composites resolve; setup-and-install then re-runs the
-  # checkout composite at its deeper default (fetch-depth 25 — covers CI's git
-  # operations) and runs the zizmor Actions audit (its own
+  # checkout composite — full history (fetch-depth 0) in the check job, since
+  # the commit-history checks it runs (AI-attribution, release-boundary) read
+  # the default branch's history and refuse a shallow clone rather than
+  # false-green; the test matrix stays at the default depth (25 — covers CI's
+  # other git operations) and runs the zizmor Actions audit (its own
   # `strategy.job-total < 2` skip runs it in the non-matrix check job, skips it
   # in the test matrix).
   check:
-    name: 🔎 Check
+    name: Check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -62,7 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SERVER_URL: ${{ github.server_url }}
           REPOSITORY: ${{ github.repository }}
-          TRIGGER_REF: ${{ github.ref }}
+          TRIGGER_REF: ${{ github.sha }}
         run: |
           set -euo pipefail
           git init -q
@@ -77,23 +70,41 @@ jobs:
             git fetch "${FETCH_ARGS[@]}"
           fi
           git checkout -q --detach FETCH_HEAD
-      - uses: ./.github/actions/fleet/setup-and-install
+      - name: 'Set up and install'
+        uses: ./.github/actions/fleet/setup-and-install
         with:
+          # Full history: the commit-history checks (AI-attribution,
+          # release-boundary) read the default branch's history and refuse a
+          # shallow clone rather than false-green.
+          checkout-fetch-depth: '0'
           socket-api-token: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
-          # Thin-distribution CI auth: mint a contents:read-only token so the
-          # bootstrap fetch (fired by `prepare` during install) can download the
-          # fleet release bundle from the private wheelhouse. Both refs are
-          # empty on a non-thin member (var/secret unset) — the mint is skipped
-          # and the fetch no-ops. A thin member sets a dedicated read-only App's
-          # SOCKET_PAYLOAD_CLIENT_ID var + SOCKET_PAYLOAD_APP_PRIVATE_KEY secret.
-          payload-token-client-id: ${{ vars.SOCKET_PAYLOAD_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PAYLOAD_APP_PRIVATE_KEY }}
-      - uses: ./.github/actions/fleet/run-script
+          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Both credentials enable the private release fallback. Without the
+          # key, hydration still pulls public GHCR anonymously.
+          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
+      - name: Prepare hook snapshot validation
+        uses: ./.github/actions/fleet/run-script
+        with:
+          main-script: node scripts/fleet/setup/hook-snapshot.mts --no-wire
+      - name: 'Check'
+        uses: ./.github/actions/fleet/run-script
         with:
           main-script: pnpm run check --all
+      # The type pass runs HERE, not only in the pre-push hook. A type error is
+      # the one class of breakage that surfaces against the whole project rather
+      # than per-edit, so nothing before this catches it — and the local hook is
+      # routinely bypassed, because the wheelhouse tree is dirty at a push by
+      # construction (the live /fleet/ mirrors wait for a cascade commit) and the
+      # push guidance says to force through. Without this, a --no-verify push
+      # lands an unverified type on the default branch.
+      - name: 'Check types'
+        uses: ./.github/actions/fleet/run-script
+        with:
+          main-script: pnpm run type
 
   test:
-    name: 🧪 Test
+    name: 'Test (${{ matrix.os }})'
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -111,7 +122,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           SERVER_URL: ${{ github.server_url }}
           REPOSITORY: ${{ github.repository }}
-          TRIGGER_REF: ${{ github.ref }}
+          TRIGGER_REF: ${{ github.sha }}
         run: |
           set -euo pipefail
           git init -q
@@ -126,23 +137,21 @@ jobs:
             git fetch "${FETCH_ARGS[@]}"
           fi
           git checkout -q --detach FETCH_HEAD
-      - uses: ./.github/actions/fleet/setup-and-install
+      - name: 'Set up and install'
+        uses: ./.github/actions/fleet/setup-and-install
         with:
           socket-api-token: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
-          # Thin-distribution CI auth: mint a contents:read-only token so the
-          # bootstrap fetch (fired by `prepare` during install) can download the
-          # fleet release bundle from the private wheelhouse. Both refs are
-          # empty on a non-thin member (var/secret unset) — the mint is skipped
-          # and the fetch no-ops. A thin member sets a dedicated read-only App's
-          # SOCKET_PAYLOAD_CLIENT_ID var + SOCKET_PAYLOAD_APP_PRIVATE_KEY secret.
-          payload-token-client-id: ${{ vars.SOCKET_PAYLOAD_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PAYLOAD_APP_PRIVATE_KEY }}
+          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Both credentials enable the private release fallback. Without the
+          # key, hydration still pulls public GHCR anonymously.
+          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
       # The SFW proxy interposes crates.io at the system level. Other tools
       # receive its CA via NODE_EXTRA_CA_CERTS; cargo needs CARGO_HTTP_CAINFO
       # explicitly, and on Windows schannel additionally demands revocation
       # status the proxy-minted certs cannot publish. A no-op for repos (and
       # steps) that never invoke cargo.
-      - name: Trust the firewall CA in cargo
+      - name: 'Trust the firewall CA in Cargo'
         # CARGO_HTTP_CAINFO REPLACES cargo's trust store. The fleet bypass
         # list routes the registry hosts (index.crates.io, static.crates.io,
         # crates.io) DIRECT past the proxy, so the CA file must merge the
@@ -158,7 +167,8 @@ jobs:
           if [ "$RUNNER_OS" = "Windows" ]; then
             echo "CARGO_HTTP_CHECK_REVOKE=false" >> "$GITHUB_ENV"
           fi
-      - uses: ./.github/actions/fleet/run-script
+      - name: 'Run tests'
+        uses: ./.github/actions/fleet/run-script
         env:
           # Authenticate build-time GitHub API reads (release listings,
           # prebuilt-artifact downloads). Unauthenticated calls share the
