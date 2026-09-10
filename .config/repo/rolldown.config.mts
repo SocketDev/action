@@ -84,6 +84,7 @@ function coreStubPlugins(): Plugin[] {
 
 function entryConfig(name: string): BuildOptions {
   return {
+    experimental: { attachDebugInfo: 'none' },
     external: externals,
     input: { [name]: path.join(ACTION_SRC_DIR, `${name}.js`) },
     output: {

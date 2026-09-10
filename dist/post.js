@@ -7,12 +7,9 @@ import { constants, promises } from "fs";
 import * as path$1 from "path";
 import path from "node:path";
 
-//#region \0rolldown/runtime.js
 var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/utils.js
 /**
 * Sanitizes an input into a string so it can be passed into issueCommand safely
 * @param input input to sanitize into a string
@@ -40,8 +37,6 @@ function toCommandProperties(annotationProperties) {
 	};
 }
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/command.js
 /**
 * Issues a command to the GitHub Actions runner
 *
@@ -112,8 +107,6 @@ function escapeProperty(s) {
 	return toCommandValue(s).replace(/%/g, "%25").replace(/\r/g, "%0D").replace(/\n/g, "%0A").replace(/:/g, "%3A").replace(/,/g, "%2C");
 }
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/summary.js
 var __awaiter$3 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
@@ -397,8 +390,6 @@ var Summary = class {
 const _summary = new Summary();
 const summary = _summary;
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/core/3.0.1/93d6d922996e2ce08c78825d6b5de5ce07b1755d55f89f608ff0cca979e2576c/node_modules/@actions/core/lib/core.js
 var __awaiter$2 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
@@ -496,8 +487,6 @@ function getState(name) {
 	return process.env[`STATE_${name}`] || "";
 }
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketregistry/packageurl-js/1.5.2/65fb900ba4118be8d91d8ee032623946e240d4e60c11bbea2a099b661a81c995/node_modules/@socketregistry/packageurl-js/dist/index.js
 var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
@@ -9866,8 +9855,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.stringifySpec = stringifySpec;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/io/3.0.2/564f840cef261819a39f27cdda9b4dc797b0f5947814754284b203f0535c12f6/node_modules/@actions/io/lib/io-util.js
 var import_dist = require_dist();
 var __awaiter$1 = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
@@ -9969,8 +9956,6 @@ function isUnixExecutable(stats) {
 	return (stats.mode & 1) > 0 || (stats.mode & 8) > 0 && process.getgid !== void 0 && stats.gid === process.getgid() || (stats.mode & 64) > 0 && process.getuid !== void 0 && stats.uid === process.getuid();
 }
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@actions/io/3.0.2/564f840cef261819a39f27cdda9b4dc797b0f5947814754284b203f0535c12f6/node_modules/@actions/io/lib/io.js
 var __awaiter = void 0 && (void 0).__awaiter || function(thisArg, _arguments, P, generator) {
 	function adopt(value) {
 		return value instanceof P ? value : new P(function(resolve) {
@@ -10053,8 +10038,6 @@ function findInPath(tool) {
 	});
 }
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/runtime.js
 var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
@@ -10084,8 +10067,6 @@ var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.IS_WORKER = IS_WORKER;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/os.js
 var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const nodeOs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("os") : void 0;
@@ -10103,8 +10084,6 @@ var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.osTmpdir = osTmpdir;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/platform.js
 var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_os = require_os();
@@ -10230,8 +10209,6 @@ var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isWin32 = isWin32;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/module.js
 var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_runtime = require_runtime();
@@ -10345,8 +10322,6 @@ var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.requireFrom = requireFrom;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/exe/smol/detect.js
 var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_module = require_module();
@@ -10418,8 +10393,6 @@ var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isSmol = isSmol;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/uncurry.js
 var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
@@ -10464,8 +10437,6 @@ var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.weakRefSafe = weakRefSafe;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/exe/smol/primordial.js
 var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_module = require_module();
@@ -10502,8 +10473,6 @@ var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getSmolPrimordial = getSmolPrimordial;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/string.js
 var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_primordials_uncurry = require_uncurry();
@@ -10621,8 +10590,6 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.StringRaw = StringRaw;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/node/url.js
 var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_runtime = require_runtime();
@@ -10637,8 +10604,6 @@ var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getNodeUrl = getNodeUrl;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/buffer.js
 var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_primordials_uncurry = require_uncurry();
@@ -10674,8 +10639,6 @@ var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.BufferPrototypeToString = BufferPrototypeToString;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/constants/encoding.js
 var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
@@ -10701,8 +10664,6 @@ var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.UTF8 = UTF8;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/shared.js
 var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
@@ -11014,8 +10975,6 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.slashRegExp = slashRegExp;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/conversion.js
 var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
@@ -11129,8 +11088,6 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.trimLeadingDotSlash = trimLeadingDotSlash;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/primordials/regexp.js
 var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_primordials_uncurry = require_uncurry();
@@ -11156,8 +11113,6 @@ var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.RegExpPrototypeTest = RegExpPrototypeTest;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/predicates.js
 var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
@@ -11415,8 +11370,6 @@ var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.separatorWrappedSubstring = separatorWrappedSubstring;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/resolve.js
 var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
@@ -11566,8 +11519,6 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.resolve = resolve;
 }));
 
-//#endregion
-//#region ../../Library/pnpm/store/v11/links/@socketsecurity/lib/7.0.1/997226c136ca6d241df4db4e2e2fa062901244dd6c03e0100768d04e9a207270/node_modules/@socketsecurity/lib/dist/paths/normalize.js
 var require_normalize = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_paths_shared = require_shared();
@@ -11596,8 +11547,6 @@ var require_normalize = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.trimLeadingDotSlash = require_paths_conversion.trimLeadingDotSlash;
 }));
 
-//#endregion
-//#region src/tools/firewall-shims.js
 var import_conversion = require_conversion();
 var import_normalize = require_normalize();
 const FIREWALL_SHIM_STATE_KEY = "firewall-shims";
@@ -11632,8 +11581,6 @@ function parseFirewallShimState(saved) {
 	return state;
 }
 
-//#endregion
-//#region src/post.js
 async function writeFirewallSummary() {
 	const inputs = { jobSummary: getInput("job-summary", { required: false }).toLowerCase() };
 	if (inputs.jobSummary === "true") inputs.jobSummary = "all";
@@ -11728,5 +11675,4 @@ main().catch((error) => {
 	process.exit(1);
 });
 
-//#endregion
 export { main, writeFirewallSummary };
