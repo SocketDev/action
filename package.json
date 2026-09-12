@@ -26,7 +26,7 @@
     "cover": "node scripts/fleet/cover.mts",
     "doctor:auth": "node scripts/fleet/check/setup-is-prompt-less.mts",
     "fix": "node scripts/fleet/fix.mts",
-    "fleet:update": "node scripts/repo/bootstrap/fleet.mjs --if-current",
+    "fleet:update": "node scripts/repo/bootstrap/fleet.mjs",
     "format": "node scripts/fleet/format.mts",
     "format:check": "node scripts/fleet/format.mts --check",
     "integrity-refresh": "node scripts/fleet/external-tools/refresh.mts",
@@ -81,7 +81,7 @@
     "ruleset:bypass": "node scripts/fleet/grant-ruleset-bypass.mts",
     "soak:bypass": "node scripts/fleet/soak-bypass.mts",
     "npm:trust": "node scripts/fleet/registry-infra/npm/settings/trust.mts",
-    "preflight": "node scripts/fleet/preflight.mts",
+    "preflight": "node scripts/repo/bootstrap/fleet.mjs --quiet && node scripts/fleet/preflight.mts",
     "prune:branch-backups": "node scripts/fleet/backup-branches.mts prune",
     "prune:gha-caches": "node scripts/fleet/prune-actions-caches.mts",
     "check:test-budget-headroom": "node scripts/fleet/check/test-budget-headroom.mts",
@@ -114,7 +114,11 @@
     "npm:inventory": "node scripts/fleet/registry-infra/npm/account-inventory-read.mts",
     "soak:check": "node scripts/fleet/check/soak-time-is-consistent.mts",
     "sweep:worktrees": "node scripts/fleet/worktree-sweep.mts",
-    "sweep:worktrees:visit": "node scripts/fleet/worktree/sweep/run.mts"
+    "sweep:worktrees:visit": "node scripts/fleet/worktree/sweep/run.mts",
+    "lockstep:assist": "node scripts/fleet/lockstep/assist/run.mts",
+    "mcp:1password": "node scripts/fleet/mcp/1password/run.mts",
+    "remote:github:release": "node scripts/fleet/release/github/remote.mts",
+    "worktree:create": "node scripts/fleet/worktree/create/run.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",
