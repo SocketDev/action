@@ -176,4 +176,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         with:
           setup-script: pnpm run build
-          main-script: pnpm run test --all
+          main-script: pnpm run test --ci
