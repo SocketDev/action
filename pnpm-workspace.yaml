@@ -261,14 +261,6 @@ minimumReleaseAgeExclude:
   - 'sfw'
   - 'socket'
   - 'sockeye'
-  # published: 2026-09-01 | removable: 2026-09-08
-  - 'oxfmt@0.66.0'
-  # published: 2026-09-01 | removable: 2026-09-08
-  - 'oxlint@1.81.0'
-  # published: 2026-09-02 | removable: 2026-09-09
-  - 'rolldown@1.2.7'
-  # published: 2026-09-03 | removable: 2026-09-10
-  - 'vitest@5.0.0'
 
 allowBuilds:
   # The CLI's postinstall is its own installer bootstrap; unneeded as a dep.
