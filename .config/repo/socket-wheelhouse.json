@@ -2,8 +2,8 @@
   "$schema": "./socket-wheelhouse-schema.json",
   "schemaVersion": 1,
   "bundle": {
-    "ref": "fleet-pack-d184c4d9307d8888e85aa75eabaf5ffb78890c0a",
-    "cascadeSha": "d184c4d9307d8888e85aa75eabaf5ffb78890c0a"
+    "ref": "fleet-pack-e670893ac860d1aa90bcd8994759534ffc503adb",
+    "cascadeSha": "e670893ac860d1aa90bcd8994759534ffc503adb"
   },
   "repoName": "action",
   "ai": {

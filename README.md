@@ -1,4 +1,4 @@
-# <picture><img width="32" height="32" alt="action" src="https://raw.githubusercontent.com/SocketDev/action/HEAD/assets/repo/logomark.svg"></picture> Socket Security (GitHub Action)
+# <picture><img width="32" height="32" alt="undefined" src="https://raw.githubusercontent.com/SocketDev/action/HEAD/assets/repo/logomark.svg"></picture> Socket Security (GitHub Action)
 
 [![Follow @SocketSecurity](https://img.shields.io/twitter/follow/SocketSecurity?style=social)](https://twitter.com/SocketSecurity)
 [![Follow @socket.dev on Bluesky](https://img.shields.io/badge/Follow-@socket.dev-1DA1F2?style=social&logo=bluesky)](https://bsky.app/profile/socket.dev)
