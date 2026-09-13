@@ -154,7 +154,7 @@
 - 🚨 GitHub CLI tokens: keychain only; `workflow` scope off by default; 8-hour age cap. [`gh-token-hygiene`](docs/fleet/agents.md/gh-token-hygiene.md)
 - 🚨 Commits on `main`/`master` must be signed. [`commit-signing`](docs/fleet/agents.md/commit-signing.md) [`git-config-write-guard`](docs/fleet/agents.md/git-config-write-guard.md) [`security-stack`](docs/fleet/agents.md/security-stack.md)
 - Keep AI logic canonical; generate client aliases during setup, never commit them. [`release-vs-cascade`](docs/fleet/agents.md/release-vs-cascade.md)
-- Skills/commands/agent-instruction docs are THIN wrappers. [`agents-and-skills`](docs/fleet/agents.md/agents-and-skills.md) [`agent-delegation`](docs/fleet/agents.md/agent-delegation.md) [`security-stack`](docs/fleet/agents.md/security-stack.md)
+- Skills, commands, and agent instructions are thin wrappers. [`agents-and-skills`](docs/fleet/agents.md/agents-and-skills.md)
 - Fleet/repo segmentation on every surface; a `-guard` BLOCKS, a `-nudge` NUDGES. [`hook-registry`](docs/fleet/agents.md/hook-registry.md)
 - Guard output is pithy: silent on pass, one line to nudge, ≤3 lines to block. (`scripts/fleet/check/guard-blocks-are-pithy.mts`, `socket/no-error-message-assertions`) [`quiet-guards`](docs/fleet/agents.md/quiet-guards.md)
 - npm-run-all2 is REMOVED. [`script-aggregation`](docs/fleet/agents.md/script-aggregation.md) <!-- enforcement: off-machine - wheelhouse commit-cascade package-scripts check -->
