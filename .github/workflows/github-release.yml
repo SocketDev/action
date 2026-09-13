@@ -225,7 +225,7 @@ jobs:
         id: app-token
         uses: ./.github/actions/fleet/github-release-app-token
         with:
-          client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID }}
+          client-id: ${{ vars.SOCKET_RELEASE_CLIENT_ID }}
           private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
           repositories: ${{ github.event.repository.name }}
           owner: ${{ github.repository_owner }}

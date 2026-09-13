@@ -120,6 +120,7 @@ const bootstrapRunner = (function (
    * `main()` actually parses.
    */
   interface ScriptMeta {
+    readonly heavyJob?: 'test' | 'coverage' | 'build' | 'type' | undefined
     readonly json?: 'native' | 'result' | undefined
     readonly describe: string
     readonly help: string

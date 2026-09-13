@@ -39,7 +39,7 @@
     "setup-security-tools": "node .claude/hooks/fleet/setup-security-tools/install.mts",
     "sync-oxlint-rules": "node scripts/fleet/sync-oxlint-rules.mts",
     "sync-package-manager-pins": "node scripts/fleet/sync-package-manager-pins.mts",
-    "type": "node node_modules/typescript/bin/tsc --noEmit -p .config/fleet/tsconfig.check.json",
+    "type": "node scripts/fleet/type.mts",
     "update": "node scripts/fleet/update.mts",
     "lint": "node scripts/fleet/lint.mts",
     "test": "node scripts/fleet/test.mts",
@@ -118,7 +118,9 @@
     "lockstep:assist": "node scripts/fleet/lockstep/assist/run.mts",
     "mcp:1password": "node scripts/fleet/mcp/1password/run.mts",
     "remote:github:release": "node scripts/fleet/release/github/remote.mts",
-    "worktree:create": "node scripts/fleet/worktree/create/run.mts"
+    "worktree:create": "node scripts/fleet/worktree/create/run.mts",
+    "slack:auth": "node scripts/fleet/mcp/connect.mts slack --client claude --reauthenticate",
+    "slack:token": "node scripts/fleet/setup/slack-token.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",
