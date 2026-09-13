@@ -152,7 +152,7 @@
     "ast-v8-to-istanbul": "catalog:",
     "c8": "catalog:",
     "chrome-devtools-mcp": "catalog:",
-    "conventional-changelog-conventionalcommits": "9.3.1",
+    "conventional-changelog-conventionalcommits": "catalog:",
     "fast-check": "catalog:",
     "magic-string": "catalog:",
     "markdownlint-cli2": "catalog:",
