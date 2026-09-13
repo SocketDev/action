@@ -96,7 +96,7 @@
     "ai:odai:cache": "node scripts/fleet/ai/odai/run.mts cache",
     "ai:odai:diagnose": "node scripts/fleet/ai/odai/run.mts diagnose",
     "ai:read": "node scripts/fleet/ai/bounded-reader.mts",
-    "update:chrome": "node scripts/fleet/ai/odai/run.mts verify-chrome",
+    "update:chrome": "node scripts/fleet/update/chrome.mts",
     "build:oxlint-bundle": "node scripts/fleet/build-oxlint-bundle.mts",
     "check:workspace-installation": "node scripts/fleet/check/workspace-installation.mts",
     "cover:types": "node scripts/fleet/cover/types/run.mts",
@@ -120,7 +120,8 @@
     "remote:github:release": "node scripts/fleet/release/github/remote.mts",
     "worktree:create": "node scripts/fleet/worktree/create/run.mts",
     "slack:auth": "node scripts/fleet/mcp/connect.mts slack --client claude --reauthenticate",
-    "slack:token": "node scripts/fleet/setup/slack-token.mts"
+    "slack:token": "node scripts/fleet/setup/slack-token.mts",
+    "github:browser": "node scripts/fleet/browser/github-auth.mts"
   },
   "dependencies": {
     "@actions/core": "3.0.1",

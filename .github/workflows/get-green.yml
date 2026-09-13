@@ -46,7 +46,10 @@ jobs:
           fi
           if [ -n "${GITHUB_TOKEN}" ]; then
             AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+            export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+            git fetch "${FETCH_ARGS[@]}"
           else
             git fetch "${FETCH_ARGS[@]}"
           fi
@@ -57,7 +60,7 @@ jobs:
         with:
           checkout: 'false'
           socket-api-token: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
-          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          payload-token-client-id: ${{ secrets.SOCKET_PR_CLIENT_ID }}
           payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
 
       # Provision the on-device model. Fail-open by contract: ready=false only
@@ -99,7 +102,7 @@ jobs:
         id: pr-app
         uses: ./.github/actions/fleet/github-pr-app-token
         with:
-          client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          client-id: ${{ secrets.SOCKET_PR_CLIENT_ID }}
           private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
           repositories: ${{ github.event.repository.name }}
 
@@ -134,7 +137,10 @@ jobs:
             --parent "origin/${SOURCE_BRANCH}" --branch "${BRANCH}" --repo "${REPOSITORY}" \
             --message 'fix: apply verified mechanical repairs'
           AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" \
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+          git \
               push origin "HEAD:refs/heads/${BRANCH}"
           OPEN_PRS="$(gh pr list --repo "${REPOSITORY}" --head "${BRANCH}" --base "${DEFAULT_BRANCH}" --state open --json number --jq 'length')"
           if [ "${OPEN_PRS}" = "0" ]; then

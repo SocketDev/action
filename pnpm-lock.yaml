@@ -304,6 +304,7 @@ catalogs:
       version: 2.9.0
 
 overrides:
+  '@polka/url': 1.0.0-next.29
   '@sinclair/typebox': 0.34.52
   '@socketregistry/packageurl-js': 1.5.2
   '@socketsecurity/lib': 7.0.1
@@ -349,6 +350,7 @@ overrides:
   undici: 6.28.0
 
 patchedDependencies:
+  '@polka/url@1.0.0-next.29': 60d82e95c5e67e66c41fe2987ddd4fc3f4992f12158e5c56838e7682e6ef72ea
   '@socketsecurity/lib@7.0.1': a07ae34e75e4e6547a1c68678e556ca4396d02abebb1efe42224f92ed132c8c3
   brace-expansion@5.0.9: a89e05a7c781115d8e78a92c9f9b843aa7c534a587baa5ac808074d4fafa6857
   minimatch@10.2.6: 83f1ea5b333d1b6fe1b36f93ccb222aa02e5dd468b2c646e285d7d53d234e174
@@ -4456,9 +4458,6 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@polka/url@0.5.0':
-    resolution: {integrity: sha512-oZLYFEAzUKyi3SKnXvj32ZCEGH6RDnao7COuCVhDydMS9NrCSVXhM79VaKyP5+Zc33m0QXEd2DN3UkU7OsHcfw==}
-
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
@@ -6803,9 +6802,7 @@ snapshots:
       playwright: 1.63.0-alpha-2026-08-31
       playwright-core: 1.63.0-alpha-2026-08-31
 
-  '@polka/url@0.5.0': {}
-
-  '@polka/url@1.0.0-next.29': {}
+  '@polka/url@1.0.0-next.29(patch_hash=60d82e95c5e67e66c41fe2987ddd4fc3f4992f12158e5c56838e7682e6ef72ea)': {}
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -8278,7 +8275,7 @@ snapshots:
 
   polka@0.5.2:
     dependencies:
-      '@polka/url': 0.5.0
+      '@polka/url': 1.0.0-next.29(patch_hash=60d82e95c5e67e66c41fe2987ddd4fc3f4992f12158e5c56838e7682e6ef72ea)
       trouter: 2.0.1
 
   portless@0.15.6: {}
@@ -8469,7 +8466,7 @@ snapshots:
 
   sirv@3.0.2:
     dependencies:
-      '@polka/url': 1.0.0-next.29
+      '@polka/url': 1.0.0-next.29(patch_hash=60d82e95c5e67e66c41fe2987ddd4fc3f4992f12158e5c56838e7682e6ef72ea)
       mrmime: 2.0.1
       totalist: 3.0.1
 

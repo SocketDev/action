@@ -42,7 +42,7 @@ inputs:
     default: '.'
   payload-token-client-id:
     description: >-
-      Existing PR App Client ID. Pass vars.SOCKET_PR_CLIENT_ID. The optional
+      Existing PR App Client ID. Pass secrets.SOCKET_PR_CLIENT_ID. The optional
       private release fallback mints only when both credentials are present.
       Public GHCR hydration remains anonymous.
     required: false
@@ -70,8 +70,8 @@ runs:
       env:
         # Route every workflow-context value through env so no ${{ }} expands
         # directly into the shell body (zizmor expression-injection). The token
-        # authorizes the fetch inline via `git -c …extraheader` and is NEVER
-        # written to .git/config — the persist-credentials:false equivalent.
+        # authorizes Git through step-local environment configuration.
+        # The credential stays out of arguments and .git/config.
         CHECKOUT_REF: ${{ inputs.ref }}
         CHECKOUT_DEST: ${{ inputs.working-directory }}
         CHECKOUT_FETCH_DEPTH: ${{ inputs.fetch-depth }}
@@ -111,7 +111,10 @@ runs:
         # Inline, non-persisting auth header (persist-credentials:false equiv).
         if [ -n "${GITHUB_TOKEN}" ]; then
           AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-          git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+          git fetch "${FETCH_ARGS[@]}"
         else
           git fetch "${FETCH_ARGS[@]}"
         fi
@@ -126,7 +129,7 @@ runs:
         # origin/HEAD, and they fail loud with their own What/Where/Fix.
         if [ "${CHECKOUT_FETCH_DEPTH}" = "0" ]; then
           if [ -n "${GITHUB_TOKEN}" ]; then
-            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64:-}" remote set-head origin --auto \
+            git remote set-head origin --auto \
               || echo "::warning::set-head failed — origin/HEAD unset"
           else
             git remote set-head origin --auto \

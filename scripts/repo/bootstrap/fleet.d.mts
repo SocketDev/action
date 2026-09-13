@@ -173,6 +173,7 @@ type ConfigFlag = 'bundlesVendoredDeps' | 'hasCodeql' | 'hasCratesRegistry' | 'h
 //#endregion
 //#region scripts/repo/gen/bootstrap/src/conditional-files.d.mts
 interface ConditionalManifestGroup {
+  readonly dependency?: string | undefined;
   readonly removeWhenInactive?: boolean | undefined;
   readonly marker?: string | undefined;
   readonly capability?: string | undefined;
