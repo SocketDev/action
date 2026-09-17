@@ -1,5 +1,5 @@
-name: 🔍 Check dist
-run-name: Check dist
+name: 'check: dist'
+run-name: 'check: dist'
 
 # A `github-action` member ships THE REPO ITSELF at a git tag: the runner
 # checks out the tag and executes the committed `dist/` bundle, never `src/`.
@@ -77,11 +77,11 @@ jobs:
       - name: Set up and install
         uses: ./.github/actions/fleet/setup-and-install
         with:
-          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Reuse the Release App for a contents:read token scoped to wheelhouse.
           # Both credentials enable the private release fallback. Without the
           # key, hydration still pulls public GHCR anonymously.
-          payload-token-client-id: ${{ secrets.SOCKET_PR_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
+          payload-token-client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID || vars.SOCKET_RELEASE_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
 
       - name: Rebuild dist
         run: pnpm run build
