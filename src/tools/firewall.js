@@ -1,6 +1,7 @@
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
+import { setTimeout as sleep } from 'node:timers/promises'
 
 import {
   addPath,
@@ -35,7 +36,7 @@ export const FIREWALL_DISTRIBUTIONS = {
  * Release tag every checksum below was taken from, and the version the action
  * installs when `firewall-version` is left at its default.
  */
-export const FIREWALL_VERSION = 'v1.15.0'
+export const FIREWALL_VERSION = 'v1.15.2'
 
 /**
  * SHA256 of each `FIREWALL_VERSION` asset, per edition and per
@@ -47,33 +48,48 @@ export const FIREWALL_VERSION = 'v1.15.0'
 export const FIREWALL_CHECKSUMS = {
   enterprise: {
     'darwin-arm64':
-      '98c87f9316a3caf67f33bb065f6b08123ae90325164535cf5b692cb1024cb64e',
+      '7fea0f5dcf14a158f009ab2906eeed853e624965390d914fa733f03d7f4780d0',
     'darwin-x64':
-      'fc39d500171dfa53eba26e4f59dfd187f3ae47094b8d3a54b7ac53df1c770245',
+      '53691eba2c1b9098c3c1be07bd2fc73662bcf21be31f829822a29ae2b06a520a',
     'linux-arm64':
-      '4cc5c51eb224cfa1c9819c218cc39753bce5273e89a50dfd226d8d71449bfd95',
+      'dacd379481777f7afada49f18f76a6beaf1323ca007e48d2bb8aac790ff058d9',
     'linux-x64':
-      '5d33de4859e5138633592fb49a62fb9ac520a6a16211100d21bcb871a9b2d77f',
+      '48dad19367ca076ffdad0b3d1b9df7bd1c381ae9b222b2fe5e132d690d660288',
     'win32-arm64':
-      'c42f3580db87f65492946687dd07c483620a8e00306252371ddf8bfba0defecc',
+      'a6d843238d048ffadbb00621f37ee1de9ba5964140b2f9392a14d5dce4d70966',
     'win32-x64':
-      '7869366709d7ca25c096ec0bcd98f5b69d9f2f13c4c0964dd5b8f656d0fb4359',
+      '6d4ae4a450b2c596e8db08ab06215dedc6daa6d40e5ebc235b1c1b6a72080bae',
   },
   free: {
     'darwin-arm64':
-      'fa473291b8b76220f4b636cf655e8a4dc03332145bdea3acfd9bc96887b2da20',
+      '28c4d14ed5db09e3a3e299c02036ddaa524c5c476cb28e32deac4f77091acacb',
     'darwin-x64':
-      '07cfcc9805812130ebca07f73c51c2cd9c0181b394f25be4c969c0d31c9dc26f',
+      '3abd6086098e6ad604a8814cd6a5d9e5dd8e64c2108583f9e85c12e08baa7a26',
     'linux-arm64':
-      '55671fa409ef3d40fcee66acbba4d7acfff8a5332d349ad47cca809ebf473cd0',
+      'd3e5490e7a1315ff2ba9bcc903d9d57de042d8dcde83dde1d59536725a470946',
     'linux-x64':
-      'c80371910a808ea5c68916c48e5451716a91ca411cf5e422fdbd8119729b742c',
+      'fea8171808f9d913635c8f55fa70f7e72451cd38b0fca3d694e12ee1a9d7fc68',
     'win32-arm64':
-      '926a228e5275fb1b0d6479a427a754bbf07189959c76aff021fa6ccc35c43c61',
+      'd762eb85db7b39f0d14f3724514e1eb45f86955b6bc7a9978bc82917549bf4eb',
     'win32-x64':
-      '029882f10e1020c96353b184ec0dba7da853e0f6d35131ca930515a7e61e89e6',
+      '8802ace1584212ed0361db6f4f12447f9f426b52c24eada54f7625910c3d5292',
   },
 }
+
+/**
+ * Download attempts made around `downloadTool`, which retries three times of
+ * its own accord, 10 to 20 seconds apart. That budget is roughly 40 seconds
+ * against a single origin, and a GitHub release-asset 504 routinely outlives
+ * it, failing the whole job over a blip a human fixes by pressing re-run.
+ */
+export const DOWNLOAD_MAX_ATTEMPTS = 3
+
+/**
+ * Seconds to wait before each retry, indexed by the attempt that just failed.
+ * Chosen to stretch the total window past a minute without stalling a job for
+ * long when the outage is not transient.
+ */
+export const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60]
 
 /**
  * Name the firewall binary is cached and executed under.
@@ -153,7 +169,7 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
 
     try {
       // download it
-      pathDownload = await downloadTool(url)
+      pathDownload = await downloadWithRetry(url)
     } catch (error) {
       throw new Error(
         `Failed to download Socket Firewall binary: ${errorMessage(error)}`,
@@ -215,6 +231,45 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
   }
 }
 
+/**
+ * `downloadTool` with attempts layered on top of its own. The last error is
+ * rethrown untouched so the caller still reports the real cause.
+ *
+ * @param {string} url Asset to download.
+ *
+ * @returns {Promise<string>} Path the asset was downloaded to.
+ */
+export async function downloadWithRetry(url) {
+  let lastError
+
+  for (let attempt = 1; attempt <= DOWNLOAD_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      return await downloadTool(url)
+    } catch (error) {
+      lastError = error
+
+      if (
+        attempt === DOWNLOAD_MAX_ATTEMPTS ||
+        !isRetryableDownloadError(error)
+      ) {
+        break
+      }
+
+      const seconds =
+        DOWNLOAD_RETRY_DELAYS_SECONDS[attempt - 1] ??
+        DOWNLOAD_RETRY_DELAYS_SECONDS.at(-1)
+
+      warning(
+        `Socket Firewall binary download failed (attempt ${attempt} of ${DOWNLOAD_MAX_ATTEMPTS}): ${errorMessage(error)}. Retrying in ${seconds}s.`,
+      )
+
+      await sleep(seconds * 1000)
+    }
+  }
+
+  throw lastError
+}
+
 export function firewallReleaseVersion(requestedVersion) {
   let versionToDownload = FIREWALL_VERSION
 
@@ -241,6 +296,26 @@ export async function getFileChecksum(filePath) {
   const hash = crypto.createHash('sha256')
   hash.update(await fs.readFile(filePath))
   return hash.digest('hex')
+}
+
+/**
+ * Whether a failed download is worth another attempt. A 4xx says the asset is
+ * not there to be had, so retrying only burns job time; 408 and 429 are the
+ * exceptions, and anything without a status (socket hang-up, DNS, timeout) is
+ * treated as transient.
+ *
+ * @param {unknown} error Error thrown by `downloadTool`.
+ *
+ * @returns {boolean} True when the download should be attempted again.
+ */
+export function isRetryableDownloadError(error) {
+  const status = error?.httpStatusCode
+
+  if (typeof status !== 'number') {
+    return true
+  }
+
+  return status >= 500 || status === 408 || status === 429
 }
 
 /**
