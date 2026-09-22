@@ -16,7 +16,10 @@ import {
   isRetryableDownloadError,
 } from '../../../src/tools/firewall.js'
 
-const { mockDownloadTool } = vi.hoisted(() => ({ mockDownloadTool: vi.fn() }))
+const { mockDownloadTool, sleepDelays } = vi.hoisted(() => ({
+  mockDownloadTool: vi.fn(),
+  sleepDelays: [] as number[],
+}))
 
 vi.mock(import('@actions/tool-cache'), async importOriginal => ({
   ...(await importOriginal()),
@@ -24,13 +27,17 @@ vi.mock(import('@actions/tool-cache'), async importOriginal => ({
 }))
 
 // The retry waits are real seconds; stubbing the sleep keeps the suite fast
-// without weakening what the attempts assert.
+// without weakening what the attempts assert. Recording each delay lets the
+// tests pin the backoff schedule itself.
 vi.mock(import('node:timers/promises'), async importOriginal => ({
   ...(await importOriginal()),
   setTimeout: async <T,>(
-    _delay?: number | undefined,
+    delay?: number | undefined,
     value?: T | undefined,
-  ): Promise<T> => value as T,
+  ): Promise<T> => {
+    sleepDelays.push(delay ?? 0)
+    return value as T
+  },
 }))
 
 /**
@@ -66,6 +73,7 @@ afterEach(() => {
   restoreRuntimeTarget?.()
   restoreRuntimeTarget = undefined
   mockDownloadTool.mockReset()
+  sleepDelays.length = 0
 })
 
 describe('FIREWALL_DISTRIBUTIONS', () => {
@@ -147,6 +155,7 @@ describe('downloadToolWithRetry', () => {
       downloadToolWithRetry('https://example.test/sfw'),
     ).resolves.toBe('/tmp/sfw')
     expect(mockDownloadTool).toHaveBeenCalledTimes(2)
+    expect(sleepDelays).toEqual([30_000])
   })
 
   it('rethrows the last error after exhausting its attempts', async () => {
@@ -156,6 +165,7 @@ describe('downloadToolWithRetry', () => {
       downloadToolWithRetry('https://example.test/sfw'),
     ).rejects.toThrow('Unexpected HTTP response: 504')
     expect(mockDownloadTool).toHaveBeenCalledTimes(3)
+    expect(sleepDelays).toEqual([30_000, 60_000])
   })
 
   it('does not spend attempts on a missing asset', async () => {
@@ -165,5 +175,6 @@ describe('downloadToolWithRetry', () => {
       downloadToolWithRetry('https://example.test/sfw'),
     ).rejects.toThrow('Unexpected HTTP response: 404')
     expect(mockDownloadTool).toHaveBeenCalledTimes(1)
+    expect(sleepDelays).toEqual([])
   })
 })
