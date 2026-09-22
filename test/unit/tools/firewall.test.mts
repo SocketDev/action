@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   downloadFirewall,
-  downloadWithRetry,
+  downloadToolWithRetry,
   FIREWALL_DISTRIBUTIONS,
   FIREWALL_EXEC_NAME,
   isRetryableDownloadError,
@@ -137,33 +137,33 @@ describe('isRetryableDownloadError', () => {
   })
 })
 
-describe('downloadWithRetry', () => {
+describe('downloadToolWithRetry', () => {
   it('returns the path once an attempt succeeds', async () => {
     mockDownloadTool
       .mockRejectedValueOnce(httpError(504))
       .mockResolvedValueOnce('/tmp/sfw')
 
-    await expect(downloadWithRetry('https://example.test/sfw')).resolves.toBe(
-      '/tmp/sfw',
-    )
+    await expect(
+      downloadToolWithRetry('https://example.test/sfw'),
+    ).resolves.toBe('/tmp/sfw')
     expect(mockDownloadTool).toHaveBeenCalledTimes(2)
   })
 
   it('rethrows the last error after exhausting its attempts', async () => {
     mockDownloadTool.mockRejectedValue(httpError(504))
 
-    await expect(downloadWithRetry('https://example.test/sfw')).rejects.toThrow(
-      'Unexpected HTTP response: 504',
-    )
+    await expect(
+      downloadToolWithRetry('https://example.test/sfw'),
+    ).rejects.toThrow('Unexpected HTTP response: 504')
     expect(mockDownloadTool).toHaveBeenCalledTimes(3)
   })
 
   it('does not spend attempts on a missing asset', async () => {
     mockDownloadTool.mockRejectedValue(httpError(404))
 
-    await expect(downloadWithRetry('https://example.test/sfw')).rejects.toThrow(
-      'Unexpected HTTP response: 404',
-    )
+    await expect(
+      downloadToolWithRetry('https://example.test/sfw'),
+    ).rejects.toThrow('Unexpected HTTP response: 404')
     expect(mockDownloadTool).toHaveBeenCalledTimes(1)
   })
 })

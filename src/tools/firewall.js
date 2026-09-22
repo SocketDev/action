@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { setTimeout as sleep } from 'node:timers/promises'
+import { setTimeout } from 'node:timers/promises'
 
 import {
   addPath,
@@ -77,17 +77,13 @@ export const FIREWALL_CHECKSUMS = {
 }
 
 /**
- * Download attempts made around `downloadTool`, which retries three times of
- * its own accord, 10 to 20 seconds apart. That budget is roughly 40 seconds
- * against a single origin, and a GitHub release-asset 504 routinely outlives
- * it, failing the whole job over a blip a human fixes by pressing re-run.
- */
-export const DOWNLOAD_MAX_ATTEMPTS = 3
-
-/**
- * Seconds to wait before each retry, indexed by the attempt that just failed.
- * Chosen to stretch the total window past a minute without stalling a job for
- * long when the outage is not transient.
+ * Seconds to wait before each retry, indexed by the attempt that just failed;
+ * one more attempt is made than there are entries here. `downloadTool` retries
+ * three times of its own accord, 10 to 20 seconds apart. That budget is
+ * roughly 40 seconds against a single origin, and a GitHub release-asset 504
+ * routinely outlives it, failing the whole job over a blip a human fixes by
+ * pressing re-run. These delays stretch the total window past a minute without
+ * stalling a job for long when the outage is not transient.
  */
 export const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60]
 
@@ -169,7 +165,7 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
 
     try {
       // download it
-      pathDownload = await downloadWithRetry(url)
+      pathDownload = await downloadToolWithRetry(url)
     } catch (error) {
       throw new Error(
         `Failed to download Socket Firewall binary: ${errorMessage(error)}`,
@@ -239,31 +235,30 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
  *
  * @returns {Promise<string>} Path the asset was downloaded to.
  */
-export async function downloadWithRetry(url) {
+export async function downloadToolWithRetry(url) {
   let lastError
 
-  for (let attempt = 1; attempt <= DOWNLOAD_MAX_ATTEMPTS; attempt += 1) {
+  for (
+    let attempt = 0;
+    attempt <= DOWNLOAD_RETRY_DELAYS_SECONDS.length;
+    attempt += 1
+  ) {
     try {
       return await downloadTool(url)
     } catch (error) {
       lastError = error
 
-      if (
-        attempt === DOWNLOAD_MAX_ATTEMPTS ||
-        !isRetryableDownloadError(error)
-      ) {
+      const seconds = DOWNLOAD_RETRY_DELAYS_SECONDS[attempt]
+
+      if (seconds === undefined || !isRetryableDownloadError(error)) {
         break
       }
 
-      const seconds =
-        DOWNLOAD_RETRY_DELAYS_SECONDS[attempt - 1] ??
-        DOWNLOAD_RETRY_DELAYS_SECONDS.at(-1)
-
       warning(
-        `Socket Firewall binary download failed (attempt ${attempt} of ${DOWNLOAD_MAX_ATTEMPTS}): ${errorMessage(error)}. Retrying in ${seconds}s.`,
+        `Socket Firewall binary download failed (attempt ${attempt + 1} of ${DOWNLOAD_RETRY_DELAYS_SECONDS.length + 1}): ${errorMessage(error)}. Retrying in ${seconds}s.`,
       )
 
-      await sleep(seconds * 1000)
+      await setTimeout(seconds * 1000)
     }
   }
 
@@ -300,9 +295,11 @@ export async function getFileChecksum(filePath) {
 
 /**
  * Whether a failed download is worth another attempt. A 4xx says the asset is
- * not there to be had, so retrying only burns job time; 408 and 429 are the
- * exceptions, and anything without a status (socket hang-up, DNS, timeout) is
- * treated as transient.
+ * not there to be had, so retrying only burns job time. 408 and 429 are the
+ * exceptions: a 408 means the server gave up waiting on this one request, not
+ * that the asset is missing, and a 429 is rate limiting that clears once the
+ * retry delay has been sat out. Anything without a status (socket hang-up,
+ * DNS, timeout) is treated as transient.
  *
  * @param {unknown} error Error thrown by `downloadTool`.
  *

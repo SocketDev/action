@@ -22125,16 +22125,13 @@ const FIREWALL_CHECKSUMS = {
 	}
 };
 /**
-* Download attempts made around `downloadTool`, which retries three times of
-* its own accord, 10 to 20 seconds apart. That budget is roughly 40 seconds
-* against a single origin, and a GitHub release-asset 504 routinely outlives
-* it, failing the whole job over a blip a human fixes by pressing re-run.
-*/
-const DOWNLOAD_MAX_ATTEMPTS = 3;
-/**
-* Seconds to wait before each retry, indexed by the attempt that just failed.
-* Chosen to stretch the total window past a minute without stalling a job for
-* long when the outage is not transient.
+* Seconds to wait before each retry, indexed by the attempt that just failed;
+* one more attempt is made than there are entries here. `downloadTool` retries
+* three times of its own accord, 10 to 20 seconds apart. That budget is
+* roughly 40 seconds against a single origin, and a GitHub release-asset 504
+* routinely outlives it, failing the whole job over a blip a human fixes by
+* pressing re-run. These delays stretch the total window past a minute without
+* stalling a job for long when the outage is not transient.
 */
 const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60];
 /**
@@ -22173,7 +22170,7 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 		debug(`downloading Socket Firewall binary from: ${url}`);
 		let pathDownload;
 		try {
-			pathDownload = await downloadWithRetry(url);
+			pathDownload = await downloadToolWithRetry(url);
 		} catch (error) {
 			throw new Error(`Failed to download Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
 		}
@@ -22206,15 +22203,15 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 *
 * @returns {Promise<string>} Path the asset was downloaded to.
 */
-async function downloadWithRetry(url) {
+async function downloadToolWithRetry(url) {
 	let lastError;
-	for (let attempt = 1; attempt <= 3; attempt += 1) try {
+	for (let attempt = 0; attempt <= DOWNLOAD_RETRY_DELAYS_SECONDS.length; attempt += 1) try {
 		return await downloadTool(url);
 	} catch (error) {
 		lastError = error;
-		if (attempt === 3 || !isRetryableDownloadError(error)) break;
-		const seconds = DOWNLOAD_RETRY_DELAYS_SECONDS[attempt - 1] ?? DOWNLOAD_RETRY_DELAYS_SECONDS.at(-1);
-		warning(`Socket Firewall binary download failed (attempt ${attempt} of ${3}): ${(0, import_message.errorMessage)(error)}. Retrying in ${seconds}s.`);
+		const seconds = DOWNLOAD_RETRY_DELAYS_SECONDS[attempt];
+		if (seconds === void 0 || !isRetryableDownloadError(error)) break;
+		warning(`Socket Firewall binary download failed (attempt ${attempt + 1} of ${DOWNLOAD_RETRY_DELAYS_SECONDS.length + 1}): ${(0, import_message.errorMessage)(error)}. Retrying in ${seconds}s.`);
 		await setTimeout$1(seconds * 1e3);
 	}
 	throw lastError;
@@ -22241,9 +22238,11 @@ async function getFileChecksum(filePath) {
 }
 /**
 * Whether a failed download is worth another attempt. A 4xx says the asset is
-* not there to be had, so retrying only burns job time; 408 and 429 are the
-* exceptions, and anything without a status (socket hang-up, DNS, timeout) is
-* treated as transient.
+* not there to be had, so retrying only burns job time. 408 and 429 are the
+* exceptions: a 408 means the server gave up waiting on this one request, not
+* that the asset is missing, and a 429 is rate limiting that clears once the
+* retry delay has been sat out. Anything without a status (socket hang-up,
+* DNS, timeout) is treated as transient.
 *
 * @param {unknown} error Error thrown by `downloadTool`.
 *
