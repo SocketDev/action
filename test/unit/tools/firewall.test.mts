@@ -13,6 +13,7 @@ import {
   downloadToolWithRetry,
   FIREWALL_DISTRIBUTIONS,
   FIREWALL_EXEC_NAME,
+  firewallDownloadUrls,
   isRetryableDownloadError,
 } from '../../../src/tools/firewall.js'
 
@@ -146,14 +147,15 @@ describe('isRetryableDownloadError', () => {
 })
 
 describe('downloadToolWithRetry', () => {
+  const GITHUB = 'https://github.test/sfw'
+  const MIRROR = 'https://mirror.test/sfw'
+
   it('returns the path once an attempt succeeds', async () => {
     mockDownloadTool
       .mockRejectedValueOnce(httpError(504))
       .mockResolvedValueOnce('/tmp/sfw')
 
-    await expect(
-      downloadToolWithRetry('https://example.test/sfw'),
-    ).resolves.toBe('/tmp/sfw')
+    await expect(downloadToolWithRetry([GITHUB])).resolves.toBe('/tmp/sfw')
     expect(mockDownloadTool).toHaveBeenCalledTimes(2)
     expect(sleepDelays).toEqual([30_000])
   })
@@ -161,9 +163,9 @@ describe('downloadToolWithRetry', () => {
   it('rethrows the last error after exhausting its attempts', async () => {
     mockDownloadTool.mockRejectedValue(httpError(504))
 
-    await expect(
-      downloadToolWithRetry('https://example.test/sfw'),
-    ).rejects.toThrow('Unexpected HTTP response: 504')
+    await expect(downloadToolWithRetry([GITHUB])).rejects.toThrow(
+      'Unexpected HTTP response: 504',
+    )
     expect(mockDownloadTool).toHaveBeenCalledTimes(3)
     expect(sleepDelays).toEqual([30_000, 60_000])
   })
@@ -171,10 +173,86 @@ describe('downloadToolWithRetry', () => {
   it('does not spend attempts on a missing asset', async () => {
     mockDownloadTool.mockRejectedValue(httpError(404))
 
-    await expect(
-      downloadToolWithRetry('https://example.test/sfw'),
-    ).rejects.toThrow('Unexpected HTTP response: 404')
+    await expect(downloadToolWithRetry([GITHUB])).rejects.toThrow(
+      'Unexpected HTTP response: 404',
+    )
     expect(mockDownloadTool).toHaveBeenCalledTimes(1)
     expect(sleepDelays).toEqual([])
+  })
+
+  it('alternates origins across the retry schedule', async () => {
+    mockDownloadTool.mockRejectedValue(httpError(504))
+
+    await expect(downloadToolWithRetry([MIRROR, GITHUB])).rejects.toThrow(
+      'Unexpected HTTP response: 504',
+    )
+    expect(mockDownloadTool.mock.calls).toEqual([[MIRROR], [GITHUB], [MIRROR]])
+    expect(sleepDelays).toEqual([30_000, 60_000])
+  })
+
+  it('tries the other origin immediately when a retry cannot help', async () => {
+    // A 404 from the mirror says nothing about GitHub: no backoff, one
+    // immediate try of the other origin.
+    mockDownloadTool
+      .mockRejectedValueOnce(httpError(404))
+      .mockResolvedValueOnce('/tmp/sfw')
+
+    await expect(downloadToolWithRetry([MIRROR, GITHUB])).resolves.toBe(
+      '/tmp/sfw',
+    )
+    expect(mockDownloadTool.mock.calls).toEqual([[MIRROR], [GITHUB]])
+    expect(sleepDelays).toEqual([])
+  })
+
+  it('gives up once every origin reported a missing asset', async () => {
+    mockDownloadTool.mockRejectedValue(httpError(404))
+
+    await expect(downloadToolWithRetry([MIRROR, GITHUB])).rejects.toThrow(
+      'Unexpected HTTP response: 404',
+    )
+    expect(mockDownloadTool).toHaveBeenCalledTimes(2)
+    expect(sleepDelays).toEqual([])
+  })
+})
+
+describe('firewallDownloadUrls', () => {
+  it('gives the free edition both origins, ordered by the coin flip', () => {
+    const github =
+      'https://github.com/SocketDev/sfw-free/releases/download/v1.15.2/sfw-free-linux-x86_64'
+    const mirror =
+      'https://install.socket.dev/firewall/dl/v1.15.2/sfw-free-linux-x86_64'
+
+    expect(
+      firewallDownloadUrls(
+        'free',
+        'sfw-free',
+        'v1.15.2',
+        'sfw-free-linux-x86_64',
+        () => 0.9,
+      ),
+    ).toEqual([github, mirror])
+    expect(
+      firewallDownloadUrls(
+        'free',
+        'sfw-free',
+        'v1.15.2',
+        'sfw-free-linux-x86_64',
+        () => 0.1,
+      ),
+    ).toEqual([mirror, github])
+  })
+
+  it('keeps the enterprise edition GitHub-only', () => {
+    expect(
+      firewallDownloadUrls(
+        'enterprise',
+        'firewall-release',
+        'v1.15.2',
+        'sfw-windows-x86_64.exe',
+        () => 0.1,
+      ),
+    ).toEqual([
+      'https://github.com/SocketDev/firewall-release/releases/download/v1.15.2/sfw-windows-x86_64.exe',
+    ])
   })
 })
