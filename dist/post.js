@@ -10073,21 +10073,44 @@ var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function getNodeOs() {
 		return nodeOs;
 	}
-	const osArch = nodeOs?.arch;
-	const osHomedir = nodeOs?.homedir;
-	const osPlatform = nodeOs?.platform;
-	const osTmpdir = nodeOs?.tmpdir;
+	const OsArch = nodeOs?.arch;
+	const OsHomedir = nodeOs?.homedir;
+	const OsPlatform = nodeOs?.platform;
+	const OsTmpdir = nodeOs?.tmpdir;
+	exports.OsArch = OsArch;
+	exports.OsHomedir = OsHomedir;
+	exports.OsPlatform = OsPlatform;
+	exports.OsTmpdir = OsTmpdir;
 	exports.getNodeOs = getNodeOs;
-	exports.osArch = osArch;
-	exports.osHomedir = osHomedir;
-	exports.osPlatform = osPlatform;
-	exports.osTmpdir = osTmpdir;
+}));
+
+var require_fs = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const nodeFs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("fs") : void 0;
+	function getNodeFs() {
+		return nodeFs;
+	}
+	const FsAccessSync = nodeFs?.accessSync;
+	const FsExistsSync = nodeFs?.existsSync;
+	const FsMkdirSync = nodeFs?.mkdirSync;
+	const FsReadFileSync = nodeFs?.readFileSync;
+	const FsRealpathSync = nodeFs?.realpathSync;
+	const FsStatSync = nodeFs?.statSync;
+	const FsWriteFileSync = nodeFs?.writeFileSync;
+	exports.FsAccessSync = FsAccessSync;
+	exports.FsExistsSync = FsExistsSync;
+	exports.FsMkdirSync = FsMkdirSync;
+	exports.FsReadFileSync = FsReadFileSync;
+	exports.FsRealpathSync = FsRealpathSync;
+	exports.FsStatSync = FsStatSync;
+	exports.FsWriteFileSync = FsWriteFileSync;
+	exports.getNodeFs = getNodeFs;
 }));
 
 var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_os = require_os();
-	let node_fs = __require("node:fs");
+	const require_node_fs = require_fs();
 	/**
 	* @file Platform detection and OS-specific constants.
 	*/
@@ -10121,7 +10144,7 @@ var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (getOs() !== "linux") memoizedLibc = void 0;
 			else {
 				memoizedLibc = "glibc";
-				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if ((0, node_fs.existsSync)(MUSL_LINKERS[i])) {
+				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if (require_node_fs.getNodeFs().existsSync(MUSL_LINKERS[i])) {
 					memoizedLibc = "musl";
 					break;
 				}
@@ -10335,12 +10358,14 @@ var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*      registers any `node:smol-*` builtins.
 	*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
 	*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
-	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
-	*      + `Function.prototype.call` trampoline that the JS form
-	*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
-	*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
-	*      + non-Node runtimes. Result is cached across calls; the lazy-loader
-	*      follows the same shape as `src/node/fs.ts` etc.
+	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction
+	*      adapter
+	*
+	*   - `Function.prototype.call` trampoline that the JS form `bind.bind(call)(fn)`
+	*     hits twice per invocation). ~2x faster on hot uncurried-call sites.
+	*     `getSmolUtil()` returns `undefined` on stock Node
+	*   - non-Node runtimes. Result is cached across calls; the lazy-loader follows
+	*     the same shape as `src/node/fs.ts` etc.
 	*
 	* @see https://github.com/SocketDev/socket-btm — socket-btm builds
 	*   the smol binary that exposes the `node:smol-util` binding.
@@ -10513,12 +10538,13 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
 	const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
 	const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
-	/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
-	const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
+	/* c8 ignore start - the smol Fast API binding ships only on socket-btm's smol Node binary, so this body cannot run under the stock-Node runner */
+	function smolStringCharCodeAt(s, i) {
 		const code = smolCharCodeAt(s, i);
 		return code === -1 ? NaN : code;
-	} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
+	}
 	/* c8 ignore stop */
+	const StringPrototypeCharCodeAt = smolCharCodeAt ? smolStringCharCodeAt : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
 	const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
 	const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
 	const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
@@ -10588,6 +10614,7 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
 	exports.StringPrototypeValueOf = StringPrototypeValueOf;
 	exports.StringRaw = StringRaw;
+	exports.smolStringCharCodeAt = smolStringCharCodeAt;
 }));
 
 var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
@@ -10667,9 +10694,9 @@ var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
 var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
+	const require_primordials_string = require_string();
 	const require_node_url = require_url();
 	const require_primordials_buffer = require_buffer();
-	const require_primordials_string = require_string();
 	const require_constants_encoding = require_encoding();
 	/**
 	* @file Shared internals for the `paths/` module — the leaf-level primitives
@@ -10691,6 +10718,39 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const msysDriveRegExp = /^\/([a-zA-Z])($|\/)/;
 	const nodeModulesPathRegExp = /(?:[/\\]|^)node_modules(?:$|[/\\])/;
 	const slashRegExp = /[/\\]/;
+	function appendNormalizedPathSegment(state, segment, prefix) {
+		if (segment.length === 0 || segment === ".") return;
+		if (segment === "..") collapsePathParent(state, prefix);
+		else {
+			state.collapsed += (state.collapsed.length === 0 ? "" : "/") + segment;
+			state.segmentCount += 1;
+		}
+	}
+	function collapsePathParent(state, prefix) {
+		if (state.segmentCount > 0) {
+			const lastSeparatorIndex = state.collapsed.lastIndexOf("/");
+			if (lastSeparatorIndex === -1) {
+				state.collapsed = "";
+				state.segmentCount = 0;
+				if (state.leadingDotDots > 0 && !prefix) {
+					state.collapsed = "..";
+					state.leadingDotDots = 1;
+				}
+			} else {
+				const lastSegmentStart = lastSeparatorIndex + 1;
+				if (state.collapsed.slice(lastSegmentStart) === "..") {
+					state.collapsed = `${state.collapsed}/..`;
+					state.leadingDotDots += 1;
+				} else {
+					state.collapsed = state.collapsed.slice(0, lastSeparatorIndex);
+					state.segmentCount -= 1;
+				}
+			}
+		} else if (!prefix) {
+			state.collapsed = state.collapsed + (state.collapsed.length === 0 ? "" : "/") + "..";
+			state.leadingDotDots += 1;
+		}
+	}
 	/**
 	* Normalize a path for equality comparison — forward slashes, no trailing
 	* separator, lowercased on Windows.
@@ -10704,6 +10764,14 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		let normalized = normalizePath(pathLike);
 		if (normalized.length > 1 && normalized.endsWith("/")) normalized = normalized.slice(0, -1);
 		return require_constants_platform.isWin32() ? normalized.toLowerCase() : normalized;
+	}
+	function hasUncPathPrefix(filepath) {
+		const first = require_primordials_string.StringPrototypeCharCodeAt(filepath, 0);
+		return filepath.length > 2 && isPathSeparatorCode(first) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === first && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== first;
+	}
+	function hasUncPathShare(filepath) {
+		const serverEnd = indexOfPathSeparator(filepath, skipPathSeparators(filepath, 2));
+		return serverEnd > 2 && skipPathSeparators(filepath, serverEnd) < filepath.length;
 	}
 	/**
 	* Find the next path separator at or after an index.
@@ -10734,11 +10802,33 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return -1;
 	}
+	function isPathSeparatorCode(code) {
+		return code === 47 || code === 92;
+	}
 	function msysDriveToNative(normalized) {
 		/* c8 ignore start - Windows-only branch. */
 		if (require_constants_platform.isWin32()) return normalized.replace(msysDriveRegExp, (_, letter, sep) => `${letter.toUpperCase()}:${sep || "/"}`);
 		/* c8 ignore stop */
 		return normalized;
+	}
+	function normalizedPathPrefix(filepath) {
+		const namespaceKind = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
+		if (filepath.length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92 && (namespaceKind === 63 || namespaceKind === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) return {
+			__proto__: null,
+			prefix: "//",
+			start: 2
+		};
+		if (hasUncPathPrefix(filepath) && hasUncPathShare(filepath)) return {
+			__proto__: null,
+			prefix: "//",
+			start: 2
+		};
+		const start = skipPathSeparators(filepath, 0);
+		return {
+			__proto__: null,
+			prefix: start ? "/" : "",
+			start
+		};
 	}
 	/**
 	* Normalize a path by converting backslashes to forward slashes and collapsing
@@ -10776,146 +10866,32 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const filepath = pathLikeToString(pathLike);
 		const { length } = filepath;
 		if (length === 0) return ".";
-		if (length < 2) return length === 1 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
-		let code = 0;
-		let start = 0;
-		let prefix = "";
-		if (length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92) {
-			const code2 = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
-			if ((code2 === 63 || code2 === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) {
-				start = 2;
-				prefix = "//";
-			}
-		}
-		if (start === 0) {
-			/* c8 ignore start - UNC path detection (\\server\share). Rare
-			input; not exercised by typical test fixtures. */
-			if (length > 2 && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 92 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 47)) {
-				let firstSegmentEnd = -1;
-				let hasSecondSegment = false;
-				let i = 2;
-				while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
-				while (i < length) {
-					const char = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
-					if (char === 47 || char === 92) {
-						firstSegmentEnd = i;
-						break;
-					}
-					i++;
-				}
-				if (firstSegmentEnd > 2) {
-					i = firstSegmentEnd;
-					while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
-					if (i < length) hasSecondSegment = true;
-				}
-				if (firstSegmentEnd > 2 && hasSecondSegment) {
-					start = 2;
-					prefix = "//";
-				} else {
-					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-					while (code === 47 || code === 92) {
-						start += 1;
-						code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-					}
-					if (start) prefix = "/";
-				}
-			} else {
-				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-				while (code === 47 || code === 92) {
-					start += 1;
-					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-				}
-				if (start) prefix = "/";
-			}
-		}
+		if (length === 1) return require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
+		const initial = normalizedPathPrefix(filepath);
+		const { prefix } = initial;
+		let { start } = initial;
 		let nextIndex = indexOfPathSeparator(filepath, start);
-		/* c8 ignore start */
-		if (nextIndex === -1) {
-			const segment = filepath.slice(start);
-			if (segment === "." || segment.length === 0) return prefix || ".";
-			if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
-			return msysDriveToNative(prefix + segment);
-		}
-		/* c8 ignore stop */
-		/* c8 ignore start */
-		let collapsed = "";
-		let segmentCount = 0;
-		let leadingDotDots = 0;
+		if (nextIndex === -1) return normalizeSinglePathSegment(filepath.slice(start), prefix);
+		const state = {
+			collapsed: "",
+			segmentCount: 0,
+			leadingDotDots: 0
+		};
 		while (nextIndex !== -1) {
-			const segment = filepath.slice(start, nextIndex);
-			if (segment.length > 0 && segment !== ".") {
-				if (segment === "..") {
-					if (segmentCount > 0) {
-						const lastSeparatorIndex = collapsed.lastIndexOf("/");
-						if (lastSeparatorIndex === -1) {
-							collapsed = "";
-							segmentCount = 0;
-							if (leadingDotDots > 0 && !prefix) {
-								collapsed = "..";
-								leadingDotDots = 1;
-							}
-						} else {
-							const lastSegmentStart = lastSeparatorIndex + 1;
-							if (collapsed.slice(lastSegmentStart) === "..") {
-								collapsed = `${collapsed}/${segment}`;
-								leadingDotDots += 1;
-							} else {
-								collapsed = collapsed.slice(0, lastSeparatorIndex);
-								segmentCount -= 1;
-							}
-						}
-					} else if (!prefix) {
-						collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
-						leadingDotDots += 1;
-					}
-				} else {
-					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
-					segmentCount += 1;
-				}
-			}
-			start = nextIndex + 1;
-			code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-			while (code === 47 || code === 92) {
-				start += 1;
-				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-			}
+			appendNormalizedPathSegment(state, filepath.slice(start, nextIndex), prefix);
+			start = skipPathSeparators(filepath, nextIndex + 1);
 			nextIndex = indexOfPathSeparator(filepath, start);
 		}
-		const lastSegment = filepath.slice(start);
-		if (lastSegment.length > 0 && lastSegment !== ".") {
-			if (lastSegment === "..") {
-				if (segmentCount > 0) {
-					const lastSeparatorIndex = collapsed.lastIndexOf("/");
-					if (lastSeparatorIndex === -1) {
-						collapsed = "";
-						segmentCount = 0;
-						if (leadingDotDots > 0 && !prefix) {
-							collapsed = "..";
-							leadingDotDots = 1;
-						}
-					} else {
-						const lastSegmentStart = lastSeparatorIndex + 1;
-						if (collapsed.slice(lastSegmentStart) === "..") {
-							collapsed = `${collapsed}/${lastSegment}`;
-							leadingDotDots += 1;
-						} else {
-							collapsed = collapsed.slice(0, lastSeparatorIndex);
-							segmentCount -= 1;
-						}
-					}
-				} else if (!prefix) {
-					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
-					leadingDotDots += 1;
-				}
-			} else {
-				collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
-				segmentCount += 1;
-			}
-		}
-		/* c8 ignore stop */
+		appendNormalizedPathSegment(state, filepath.slice(start), prefix);
+		const { collapsed } = state;
 		if (collapsed.length === 0) return prefix || ".";
-		if (DRIVE_LETTER_REGEXP.test(collapsed) && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 92)) return msysDriveToNative(`${prefix}${collapsed}/`);
+		if (DRIVE_LETTER_REGEXP.test(collapsed) && isPathSeparatorCode(require_primordials_string.StringPrototypeCharCodeAt(filepath, 2))) return msysDriveToNative(`${prefix}${collapsed}/`);
 		return msysDriveToNative(prefix + collapsed);
+	}
+	function normalizeSinglePathSegment(segment, prefix) {
+		if (segment === "." || segment.length === 0) return prefix || ".";
+		if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
+		return msysDriveToNative(prefix + segment);
 	}
 	/**
 	* Convert a path-like value to a string.
@@ -10958,6 +10934,10 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return String(pathLike);
 	}
+	function skipPathSeparators(filepath, start) {
+		while (isPathSeparatorCode(require_primordials_string.StringPrototypeCharCodeAt(filepath, start))) start += 1;
+		return start;
+	}
 	exports.CHAR_BACKWARD_SLASH = require_constants_encoding.CHAR_BACKWARD_SLASH;
 	exports.CHAR_COLON = require_constants_encoding.CHAR_COLON;
 	exports.CHAR_FORWARD_SLASH = require_constants_encoding.CHAR_FORWARD_SLASH;
@@ -10965,13 +10945,21 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.CHAR_LOWERCASE_Z = require_constants_encoding.CHAR_LOWERCASE_Z;
 	exports.CHAR_UPPERCASE_A = require_constants_encoding.CHAR_UPPERCASE_A;
 	exports.CHAR_UPPERCASE_Z = require_constants_encoding.CHAR_UPPERCASE_Z;
+	exports.appendNormalizedPathSegment = appendNormalizedPathSegment;
+	exports.collapsePathParent = collapsePathParent;
 	exports.foldPathForCompare = foldPathForCompare;
+	exports.hasUncPathPrefix = hasUncPathPrefix;
+	exports.hasUncPathShare = hasUncPathShare;
 	exports.indexOfPathSeparator = indexOfPathSeparator;
+	exports.isPathSeparatorCode = isPathSeparatorCode;
 	exports.msysDriveRegExp = msysDriveRegExp;
 	exports.msysDriveToNative = msysDriveToNative;
 	exports.nodeModulesPathRegExp = nodeModulesPathRegExp;
 	exports.normalizePath = normalizePath;
+	exports.normalizeSinglePathSegment = normalizeSinglePathSegment;
+	exports.normalizedPathPrefix = normalizedPathPrefix;
 	exports.pathLikeToString = pathLikeToString;
+	exports.skipPathSeparators = skipPathSeparators;
 	exports.slashRegExp = slashRegExp;
 }));
 
@@ -11022,7 +11010,7 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*
 	* @example
 	*   ;```typescript
-	*   splitPath('/home/user/file.txt') // ['', 'home', 'user', 'file.txt']
+	*   splitPath('/workspace/example/file.txt') // ['', 'workspace', 'example', 'file.txt']
 	*   splitPath('C:\\Users\\John') // ['C:', 'Users', 'John']
 	*   splitPath('') // []
 	*   ```
@@ -11047,7 +11035,7 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	* @example
 	*   ;```typescript
 	*   toUnixPath('C:\\path\\to\\file.txt') // '/c/path/to/file.txt' on Windows
-	*   toUnixPath('/home/user/file') // '/home/user/file'
+	*   toUnixPath('/workspace/example/file') // '/workspace/example/file'
 	*   ```
 	*
 	* @param {string | Buffer | URL} pathLike - The path to convert.
@@ -11385,6 +11373,29 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*   - `relative` — relative path from one absolute to another
 	*   - `relativeResolve` — `relative` + `normalizePath` convenience wrapper
 	*/
+	function findCommonPathPrefix(actualFrom, actualTo) {
+		const length = actualFrom.length < actualTo.length ? actualFrom.length - 1 : actualTo.length - 1;
+		let lastCommonSep = -1;
+		let i = 0;
+		for (; i < length; i += 1) {
+			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, 1 + i);
+			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, 1 + i);
+			/* c8 ignore start - Windows-only case folding. */
+			if (require_constants_platform.isWin32()) {
+				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
+				if (toCode >= 65 && toCode <= 90) toCode += 32;
+			}
+			/* c8 ignore stop */
+			if (fromCode !== toCode) break;
+			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, 1 + i))) lastCommonSep = i;
+		}
+		return {
+			__proto__: null,
+			length,
+			index: i,
+			lastCommonSep
+		};
+	}
 	/**
 	* Calculate the relative path from one path to another.
 	*
@@ -11418,25 +11429,12 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		/* c8 ignore stop */
 		const fromStart = 1;
-		const fromEnd = actualFrom.length;
-		const fromLen = fromEnd - fromStart;
+		const fromLen = actualFrom.length - fromStart;
 		const toStart = 1;
 		const toLen = actualTo.length - toStart;
-		const length = fromLen < toLen ? fromLen : toLen;
-		let lastCommonSep = -1;
-		let i = 0;
-		for (; i < length; i += 1) {
-			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i);
-			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i);
-			/* c8 ignore start - Windows-only case folding. */
-			if (require_constants_platform.isWin32()) {
-				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
-				if (toCode >= 65 && toCode <= 90) toCode += 32;
-			}
-			/* c8 ignore stop */
-			if (fromCode !== toCode) break;
-			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i))) lastCommonSep = i;
-		}
+		const common = findCommonPathPrefix(actualFrom, actualTo);
+		const { length, index: i } = common;
+		let { lastCommonSep } = common;
 		/* c8 ignore start */
 		if (i === length) {
 			if (toLen > length) {
@@ -11449,13 +11447,16 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 				else if (i === 0) lastCommonSep = 0;
 			}
 		}
-		/* c8 ignore stop */
+		return relativePathParentSegments(actualFrom, fromStart + lastCommonSep + 1) + actualTo.slice(toStart + lastCommonSep);
+	}
+	function relativePathParentSegments(actualFrom, start) {
+		const fromEnd = actualFrom.length;
 		let out = "";
-		for (i = fromStart + lastCommonSep + 1; i <= fromEnd; i += 1) {
+		for (let i = start; i <= fromEnd; i += 1) {
 			const code = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, i);
 			if (i === fromEnd || require_paths_predicates.isPathSeparator(code)) out += out.length === 0 ? ".." : "/..";
 		}
-		return out + actualTo.slice(toStart + lastCommonSep);
+		return out;
 	}
 	/**
 	* Get the normalized relative path from one path to another.
@@ -11514,7 +11515,9 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 		/* c8 ignore stop */
 		return require_paths_shared.normalizePath(resolvedPath);
 	}
+	exports.findCommonPathPrefix = findCommonPathPrefix;
 	exports.relative = relative;
+	exports.relativePathParentSegments = relativePathParentSegments;
 	exports.relativeResolve = relativeResolve;
 	exports.resolve = resolve;
 }));

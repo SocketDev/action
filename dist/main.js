@@ -9,10 +9,11 @@ import * as path$1 from "path";
 import crypto from "node:crypto";
 import { promises as promises$1, readFileSync as readFileSync$1 } from "node:fs";
 import path from "node:path";
+import { setTimeout as setTimeout$1 } from "node:timers/promises";
 import * as events$1 from "events";
 import * as child from "child_process";
 import { ok } from "assert";
-import { setTimeout as setTimeout$1 } from "timers";
+import { setTimeout as setTimeout$2 } from "timers";
 import * as http from "http";
 import * as https from "https";
 import * as util from "util";
@@ -1276,7 +1277,7 @@ var ExecState = class ExecState extends events$1.EventEmitter {
 	CheckComplete() {
 		if (this.done) return;
 		if (this.processClosed) this._setResult();
-		else if (this.processExited) this.timeout = setTimeout$1(ExecState.HandleTimeout, this.delay, this);
+		else if (this.processExited) this.timeout = setTimeout$2(ExecState.HandleTimeout, this.delay, this);
 	}
 	_debug(message) {
 		this.emit("debug", message);
@@ -19703,12 +19704,14 @@ var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*      registers any `node:smol-*` builtins.
 	*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
 	*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
-	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
-	*      + `Function.prototype.call` trampoline that the JS form
-	*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
-	*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
-	*      + non-Node runtimes. Result is cached across calls; the lazy-loader
-	*      follows the same shape as `src/node/fs.ts` etc.
+	*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction
+	*      adapter
+	*
+	*   - `Function.prototype.call` trampoline that the JS form `bind.bind(call)(fn)`
+	*     hits twice per invocation). ~2x faster on hot uncurried-call sites.
+	*     `getSmolUtil()` returns `undefined` on stock Node
+	*   - non-Node runtimes. Result is cached across calls; the lazy-loader follows
+	*     the same shape as `src/node/fs.ts` etc.
 	*
 	* @see https://github.com/SocketDev/socket-btm — socket-btm builds
 	*   the smol binary that exposes the `node:smol-util` binding.
@@ -20006,12 +20009,13 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
 	const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
 	const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
-	/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
-	const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
+	/* c8 ignore start - the smol Fast API binding ships only on socket-btm's smol Node binary, so this body cannot run under the stock-Node runner */
+	function smolStringCharCodeAt(s, i) {
 		const code = smolCharCodeAt(s, i);
 		return code === -1 ? NaN : code;
-	} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
+	}
 	/* c8 ignore stop */
+	const StringPrototypeCharCodeAt = smolCharCodeAt ? smolStringCharCodeAt : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
 	const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
 	const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
 	const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
@@ -20081,6 +20085,7 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
 	exports.StringPrototypeValueOf = StringPrototypeValueOf;
 	exports.StringRaw = StringRaw;
+	exports.smolStringCharCodeAt = smolStringCharCodeAt;
 }));
 
 var require_predicates$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
@@ -20446,21 +20451,44 @@ var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function getNodeOs() {
 		return nodeOs;
 	}
-	const osArch = nodeOs?.arch;
-	const osHomedir = nodeOs?.homedir;
-	const osPlatform = nodeOs?.platform;
-	const osTmpdir = nodeOs?.tmpdir;
+	const OsArch = nodeOs?.arch;
+	const OsHomedir = nodeOs?.homedir;
+	const OsPlatform = nodeOs?.platform;
+	const OsTmpdir = nodeOs?.tmpdir;
+	exports.OsArch = OsArch;
+	exports.OsHomedir = OsHomedir;
+	exports.OsPlatform = OsPlatform;
+	exports.OsTmpdir = OsTmpdir;
 	exports.getNodeOs = getNodeOs;
-	exports.osArch = osArch;
-	exports.osHomedir = osHomedir;
-	exports.osPlatform = osPlatform;
-	exports.osTmpdir = osTmpdir;
+}));
+
+var require_fs = /* @__PURE__ */ __commonJSMin(((exports) => {
+	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+	const nodeFs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("fs") : void 0;
+	function getNodeFs() {
+		return nodeFs;
+	}
+	const FsAccessSync = nodeFs?.accessSync;
+	const FsExistsSync = nodeFs?.existsSync;
+	const FsMkdirSync = nodeFs?.mkdirSync;
+	const FsReadFileSync = nodeFs?.readFileSync;
+	const FsRealpathSync = nodeFs?.realpathSync;
+	const FsStatSync = nodeFs?.statSync;
+	const FsWriteFileSync = nodeFs?.writeFileSync;
+	exports.FsAccessSync = FsAccessSync;
+	exports.FsExistsSync = FsExistsSync;
+	exports.FsMkdirSync = FsMkdirSync;
+	exports.FsReadFileSync = FsReadFileSync;
+	exports.FsRealpathSync = FsRealpathSync;
+	exports.FsStatSync = FsStatSync;
+	exports.FsWriteFileSync = FsWriteFileSync;
+	exports.getNodeFs = getNodeFs;
 }));
 
 var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_os = require_os();
-	let node_fs = __require("node:fs");
+	const require_node_fs = require_fs();
 	/**
 	* @file Platform detection and OS-specific constants.
 	*/
@@ -20494,7 +20522,7 @@ var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (getOs() !== "linux") memoizedLibc = void 0;
 			else {
 				memoizedLibc = "glibc";
-				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if ((0, node_fs.existsSync)(MUSL_LINKERS[i])) {
+				for (let i = 0, { length } = MUSL_LINKERS; i < length; i += 1) if (require_node_fs.getNodeFs().existsSync(MUSL_LINKERS[i])) {
 					memoizedLibc = "musl";
 					break;
 				}
@@ -20659,9 +20687,9 @@ var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
 var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
+	const require_primordials_string = require_string();
 	const require_node_url = require_url();
 	const require_primordials_buffer = require_buffer();
-	const require_primordials_string = require_string();
 	const require_constants_encoding = require_encoding();
 	/**
 	* @file Shared internals for the `paths/` module — the leaf-level primitives
@@ -20683,6 +20711,39 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	const msysDriveRegExp = /^\/([a-zA-Z])($|\/)/;
 	const nodeModulesPathRegExp = /(?:[/\\]|^)node_modules(?:$|[/\\])/;
 	const slashRegExp = /[/\\]/;
+	function appendNormalizedPathSegment(state, segment, prefix) {
+		if (segment.length === 0 || segment === ".") return;
+		if (segment === "..") collapsePathParent(state, prefix);
+		else {
+			state.collapsed += (state.collapsed.length === 0 ? "" : "/") + segment;
+			state.segmentCount += 1;
+		}
+	}
+	function collapsePathParent(state, prefix) {
+		if (state.segmentCount > 0) {
+			const lastSeparatorIndex = state.collapsed.lastIndexOf("/");
+			if (lastSeparatorIndex === -1) {
+				state.collapsed = "";
+				state.segmentCount = 0;
+				if (state.leadingDotDots > 0 && !prefix) {
+					state.collapsed = "..";
+					state.leadingDotDots = 1;
+				}
+			} else {
+				const lastSegmentStart = lastSeparatorIndex + 1;
+				if (state.collapsed.slice(lastSegmentStart) === "..") {
+					state.collapsed = `${state.collapsed}/..`;
+					state.leadingDotDots += 1;
+				} else {
+					state.collapsed = state.collapsed.slice(0, lastSeparatorIndex);
+					state.segmentCount -= 1;
+				}
+			}
+		} else if (!prefix) {
+			state.collapsed = state.collapsed + (state.collapsed.length === 0 ? "" : "/") + "..";
+			state.leadingDotDots += 1;
+		}
+	}
 	/**
 	* Normalize a path for equality comparison — forward slashes, no trailing
 	* separator, lowercased on Windows.
@@ -20696,6 +20757,14 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		let normalized = normalizePath(pathLike);
 		if (normalized.length > 1 && normalized.endsWith("/")) normalized = normalized.slice(0, -1);
 		return require_constants_platform.isWin32() ? normalized.toLowerCase() : normalized;
+	}
+	function hasUncPathPrefix(filepath) {
+		const first = require_primordials_string.StringPrototypeCharCodeAt(filepath, 0);
+		return filepath.length > 2 && isPathSeparatorCode(first) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === first && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== first;
+	}
+	function hasUncPathShare(filepath) {
+		const serverEnd = indexOfPathSeparator(filepath, skipPathSeparators(filepath, 2));
+		return serverEnd > 2 && skipPathSeparators(filepath, serverEnd) < filepath.length;
 	}
 	/**
 	* Find the next path separator at or after an index.
@@ -20726,11 +20795,33 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return -1;
 	}
+	function isPathSeparatorCode(code) {
+		return code === 47 || code === 92;
+	}
 	function msysDriveToNative(normalized) {
 		/* c8 ignore start - Windows-only branch. */
 		if (require_constants_platform.isWin32()) return normalized.replace(msysDriveRegExp, (_, letter, sep) => `${letter.toUpperCase()}:${sep || "/"}`);
 		/* c8 ignore stop */
 		return normalized;
+	}
+	function normalizedPathPrefix(filepath) {
+		const namespaceKind = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
+		if (filepath.length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92 && (namespaceKind === 63 || namespaceKind === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) return {
+			__proto__: null,
+			prefix: "//",
+			start: 2
+		};
+		if (hasUncPathPrefix(filepath) && hasUncPathShare(filepath)) return {
+			__proto__: null,
+			prefix: "//",
+			start: 2
+		};
+		const start = skipPathSeparators(filepath, 0);
+		return {
+			__proto__: null,
+			prefix: start ? "/" : "",
+			start
+		};
 	}
 	/**
 	* Normalize a path by converting backslashes to forward slashes and collapsing
@@ -20768,146 +20859,32 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const filepath = pathLikeToString(pathLike);
 		const { length } = filepath;
 		if (length === 0) return ".";
-		if (length < 2) return length === 1 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
-		let code = 0;
-		let start = 0;
-		let prefix = "";
-		if (length > 4 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 3) === 92) {
-			const code2 = require_primordials_string.StringPrototypeCharCodeAt(filepath, 2);
-			if ((code2 === 63 || code2 === 46) && require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92) {
-				start = 2;
-				prefix = "//";
-			}
-		}
-		if (start === 0) {
-			/* c8 ignore start - UNC path detection (\\server\share). Rare
-			input; not exercised by typical test fixtures. */
-			if (length > 2 && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 92 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 92 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 1) === 47 && require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) !== 47)) {
-				let firstSegmentEnd = -1;
-				let hasSecondSegment = false;
-				let i = 2;
-				while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
-				while (i < length) {
-					const char = require_primordials_string.StringPrototypeCharCodeAt(filepath, i);
-					if (char === 47 || char === 92) {
-						firstSegmentEnd = i;
-						break;
-					}
-					i++;
-				}
-				if (firstSegmentEnd > 2) {
-					i = firstSegmentEnd;
-					while (i < length && (require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, i) === 92)) i++;
-					if (i < length) hasSecondSegment = true;
-				}
-				if (firstSegmentEnd > 2 && hasSecondSegment) {
-					start = 2;
-					prefix = "//";
-				} else {
-					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-					while (code === 47 || code === 92) {
-						start += 1;
-						code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-					}
-					if (start) prefix = "/";
-				}
-			} else {
-				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-				while (code === 47 || code === 92) {
-					start += 1;
-					code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-				}
-				if (start) prefix = "/";
-			}
-		}
+		if (length === 1) return require_primordials_string.StringPrototypeCharCodeAt(filepath, 0) === 92 ? "/" : filepath;
+		const initial = normalizedPathPrefix(filepath);
+		const { prefix } = initial;
+		let { start } = initial;
 		let nextIndex = indexOfPathSeparator(filepath, start);
-		/* c8 ignore start */
-		if (nextIndex === -1) {
-			const segment = filepath.slice(start);
-			if (segment === "." || segment.length === 0) return prefix || ".";
-			if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
-			return msysDriveToNative(prefix + segment);
-		}
-		/* c8 ignore stop */
-		/* c8 ignore start */
-		let collapsed = "";
-		let segmentCount = 0;
-		let leadingDotDots = 0;
+		if (nextIndex === -1) return normalizeSinglePathSegment(filepath.slice(start), prefix);
+		const state = {
+			collapsed: "",
+			segmentCount: 0,
+			leadingDotDots: 0
+		};
 		while (nextIndex !== -1) {
-			const segment = filepath.slice(start, nextIndex);
-			if (segment.length > 0 && segment !== ".") {
-				if (segment === "..") {
-					if (segmentCount > 0) {
-						const lastSeparatorIndex = collapsed.lastIndexOf("/");
-						if (lastSeparatorIndex === -1) {
-							collapsed = "";
-							segmentCount = 0;
-							if (leadingDotDots > 0 && !prefix) {
-								collapsed = "..";
-								leadingDotDots = 1;
-							}
-						} else {
-							const lastSegmentStart = lastSeparatorIndex + 1;
-							if (collapsed.slice(lastSegmentStart) === "..") {
-								collapsed = `${collapsed}/${segment}`;
-								leadingDotDots += 1;
-							} else {
-								collapsed = collapsed.slice(0, lastSeparatorIndex);
-								segmentCount -= 1;
-							}
-						}
-					} else if (!prefix) {
-						collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
-						leadingDotDots += 1;
-					}
-				} else {
-					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + segment;
-					segmentCount += 1;
-				}
-			}
-			start = nextIndex + 1;
-			code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-			while (code === 47 || code === 92) {
-				start += 1;
-				code = require_primordials_string.StringPrototypeCharCodeAt(filepath, start);
-			}
+			appendNormalizedPathSegment(state, filepath.slice(start, nextIndex), prefix);
+			start = skipPathSeparators(filepath, nextIndex + 1);
 			nextIndex = indexOfPathSeparator(filepath, start);
 		}
-		const lastSegment = filepath.slice(start);
-		if (lastSegment.length > 0 && lastSegment !== ".") {
-			if (lastSegment === "..") {
-				if (segmentCount > 0) {
-					const lastSeparatorIndex = collapsed.lastIndexOf("/");
-					if (lastSeparatorIndex === -1) {
-						collapsed = "";
-						segmentCount = 0;
-						if (leadingDotDots > 0 && !prefix) {
-							collapsed = "..";
-							leadingDotDots = 1;
-						}
-					} else {
-						const lastSegmentStart = lastSeparatorIndex + 1;
-						if (collapsed.slice(lastSegmentStart) === "..") {
-							collapsed = `${collapsed}/${lastSegment}`;
-							leadingDotDots += 1;
-						} else {
-							collapsed = collapsed.slice(0, lastSeparatorIndex);
-							segmentCount -= 1;
-						}
-					}
-				} else if (!prefix) {
-					collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
-					leadingDotDots += 1;
-				}
-			} else {
-				collapsed = collapsed + (collapsed.length === 0 ? "" : "/") + lastSegment;
-				segmentCount += 1;
-			}
-		}
-		/* c8 ignore stop */
+		appendNormalizedPathSegment(state, filepath.slice(start), prefix);
+		const { collapsed } = state;
 		if (collapsed.length === 0) return prefix || ".";
-		if (DRIVE_LETTER_REGEXP.test(collapsed) && (require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 47 || require_primordials_string.StringPrototypeCharCodeAt(filepath, 2) === 92)) return msysDriveToNative(`${prefix}${collapsed}/`);
+		if (DRIVE_LETTER_REGEXP.test(collapsed) && isPathSeparatorCode(require_primordials_string.StringPrototypeCharCodeAt(filepath, 2))) return msysDriveToNative(`${prefix}${collapsed}/`);
 		return msysDriveToNative(prefix + collapsed);
+	}
+	function normalizeSinglePathSegment(segment, prefix) {
+		if (segment === "." || segment.length === 0) return prefix || ".";
+		if (segment === "..") return prefix ? require_primordials_string.StringPrototypeSlice(prefix, 0, -1) || "/" : "..";
+		return msysDriveToNative(prefix + segment);
 	}
 	/**
 	* Convert a path-like value to a string.
@@ -20950,6 +20927,10 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return String(pathLike);
 	}
+	function skipPathSeparators(filepath, start) {
+		while (isPathSeparatorCode(require_primordials_string.StringPrototypeCharCodeAt(filepath, start))) start += 1;
+		return start;
+	}
 	exports.CHAR_BACKWARD_SLASH = require_constants_encoding.CHAR_BACKWARD_SLASH;
 	exports.CHAR_COLON = require_constants_encoding.CHAR_COLON;
 	exports.CHAR_FORWARD_SLASH = require_constants_encoding.CHAR_FORWARD_SLASH;
@@ -20957,13 +20938,21 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.CHAR_LOWERCASE_Z = require_constants_encoding.CHAR_LOWERCASE_Z;
 	exports.CHAR_UPPERCASE_A = require_constants_encoding.CHAR_UPPERCASE_A;
 	exports.CHAR_UPPERCASE_Z = require_constants_encoding.CHAR_UPPERCASE_Z;
+	exports.appendNormalizedPathSegment = appendNormalizedPathSegment;
+	exports.collapsePathParent = collapsePathParent;
 	exports.foldPathForCompare = foldPathForCompare;
+	exports.hasUncPathPrefix = hasUncPathPrefix;
+	exports.hasUncPathShare = hasUncPathShare;
 	exports.indexOfPathSeparator = indexOfPathSeparator;
+	exports.isPathSeparatorCode = isPathSeparatorCode;
 	exports.msysDriveRegExp = msysDriveRegExp;
 	exports.msysDriveToNative = msysDriveToNative;
 	exports.nodeModulesPathRegExp = nodeModulesPathRegExp;
 	exports.normalizePath = normalizePath;
+	exports.normalizeSinglePathSegment = normalizeSinglePathSegment;
+	exports.normalizedPathPrefix = normalizedPathPrefix;
 	exports.pathLikeToString = pathLikeToString;
+	exports.skipPathSeparators = skipPathSeparators;
 	exports.slashRegExp = slashRegExp;
 }));
 
@@ -21014,7 +21003,7 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*
 	* @example
 	*   ;```typescript
-	*   splitPath('/home/user/file.txt') // ['', 'home', 'user', 'file.txt']
+	*   splitPath('/workspace/example/file.txt') // ['', 'workspace', 'example', 'file.txt']
 	*   splitPath('C:\\Users\\John') // ['C:', 'Users', 'John']
 	*   splitPath('') // []
 	*   ```
@@ -21039,7 +21028,7 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	* @example
 	*   ;```typescript
 	*   toUnixPath('C:\\path\\to\\file.txt') // '/c/path/to/file.txt' on Windows
-	*   toUnixPath('/home/user/file') // '/home/user/file'
+	*   toUnixPath('/workspace/example/file') // '/workspace/example/file'
 	*   ```
 	*
 	* @param {string | Buffer | URL} pathLike - The path to convert.
@@ -21377,6 +21366,29 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*   - `relative` — relative path from one absolute to another
 	*   - `relativeResolve` — `relative` + `normalizePath` convenience wrapper
 	*/
+	function findCommonPathPrefix(actualFrom, actualTo) {
+		const length = actualFrom.length < actualTo.length ? actualFrom.length - 1 : actualTo.length - 1;
+		let lastCommonSep = -1;
+		let i = 0;
+		for (; i < length; i += 1) {
+			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, 1 + i);
+			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, 1 + i);
+			/* c8 ignore start - Windows-only case folding. */
+			if (require_constants_platform.isWin32()) {
+				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
+				if (toCode >= 65 && toCode <= 90) toCode += 32;
+			}
+			/* c8 ignore stop */
+			if (fromCode !== toCode) break;
+			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, 1 + i))) lastCommonSep = i;
+		}
+		return {
+			__proto__: null,
+			length,
+			index: i,
+			lastCommonSep
+		};
+	}
 	/**
 	* Calculate the relative path from one path to another.
 	*
@@ -21410,25 +21422,12 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		/* c8 ignore stop */
 		const fromStart = 1;
-		const fromEnd = actualFrom.length;
-		const fromLen = fromEnd - fromStart;
+		const fromLen = actualFrom.length - fromStart;
 		const toStart = 1;
 		const toLen = actualTo.length - toStart;
-		const length = fromLen < toLen ? fromLen : toLen;
-		let lastCommonSep = -1;
-		let i = 0;
-		for (; i < length; i += 1) {
-			let fromCode = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i);
-			let toCode = require_primordials_string.StringPrototypeCharCodeAt(actualTo, toStart + i);
-			/* c8 ignore start - Windows-only case folding. */
-			if (require_constants_platform.isWin32()) {
-				if (fromCode >= 65 && fromCode <= 90) fromCode += 32;
-				if (toCode >= 65 && toCode <= 90) toCode += 32;
-			}
-			/* c8 ignore stop */
-			if (fromCode !== toCode) break;
-			if (require_paths_predicates.isPathSeparator(require_primordials_string.StringPrototypeCharCodeAt(actualFrom, fromStart + i))) lastCommonSep = i;
-		}
+		const common = findCommonPathPrefix(actualFrom, actualTo);
+		const { length, index: i } = common;
+		let { lastCommonSep } = common;
 		/* c8 ignore start */
 		if (i === length) {
 			if (toLen > length) {
@@ -21441,13 +21440,16 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 				else if (i === 0) lastCommonSep = 0;
 			}
 		}
-		/* c8 ignore stop */
+		return relativePathParentSegments(actualFrom, fromStart + lastCommonSep + 1) + actualTo.slice(toStart + lastCommonSep);
+	}
+	function relativePathParentSegments(actualFrom, start) {
+		const fromEnd = actualFrom.length;
 		let out = "";
-		for (i = fromStart + lastCommonSep + 1; i <= fromEnd; i += 1) {
+		for (let i = start; i <= fromEnd; i += 1) {
 			const code = require_primordials_string.StringPrototypeCharCodeAt(actualFrom, i);
 			if (i === fromEnd || require_paths_predicates.isPathSeparator(code)) out += out.length === 0 ? ".." : "/..";
 		}
-		return out + actualTo.slice(toStart + lastCommonSep);
+		return out;
 	}
 	/**
 	* Get the normalized relative path from one path to another.
@@ -21506,7 +21508,9 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 		/* c8 ignore stop */
 		return require_paths_shared.normalizePath(resolvedPath);
 	}
+	exports.findCommonPathPrefix = findCommonPathPrefix;
 	exports.relative = relative;
+	exports.relativePathParentSegments = relativePathParentSegments;
 	exports.relativeResolve = relativeResolve;
 	exports.resolve = resolve;
 }));
@@ -21956,7 +21960,7 @@ var require_quote = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*
 	* @example
 	*   quote(['git', 'commit', '-m', 'hello world'])
-	*   // → "git commit -m 'hello world'"
+	*   // → "`git commit` -m 'hello world'"
 	*
 	*   quote(['echo', '$HOME'])
 	*   // → "echo \\$HOME"
@@ -22094,7 +22098,7 @@ const FIREWALL_DISTRIBUTIONS = {
 * Release tag every checksum below was taken from, and the version the action
 * installs when `firewall-version` is left at its default.
 */
-const FIREWALL_VERSION = "v1.15.0";
+const FIREWALL_VERSION = "v1.15.2";
 /**
 * SHA256 of each `FIREWALL_VERSION` asset, per edition and per
 * `<platform>-<arch>`. The hashes are pinned in source rather than read from a
@@ -22104,22 +22108,32 @@ const FIREWALL_VERSION = "v1.15.0";
 */
 const FIREWALL_CHECKSUMS = {
 	enterprise: {
-		"darwin-arm64": "98c87f9316a3caf67f33bb065f6b08123ae90325164535cf5b692cb1024cb64e",
-		"darwin-x64": "fc39d500171dfa53eba26e4f59dfd187f3ae47094b8d3a54b7ac53df1c770245",
-		"linux-arm64": "4cc5c51eb224cfa1c9819c218cc39753bce5273e89a50dfd226d8d71449bfd95",
-		"linux-x64": "5d33de4859e5138633592fb49a62fb9ac520a6a16211100d21bcb871a9b2d77f",
-		"win32-arm64": "c42f3580db87f65492946687dd07c483620a8e00306252371ddf8bfba0defecc",
-		"win32-x64": "7869366709d7ca25c096ec0bcd98f5b69d9f2f13c4c0964dd5b8f656d0fb4359"
+		"darwin-arm64": "7fea0f5dcf14a158f009ab2906eeed853e624965390d914fa733f03d7f4780d0",
+		"darwin-x64": "53691eba2c1b9098c3c1be07bd2fc73662bcf21be31f829822a29ae2b06a520a",
+		"linux-arm64": "dacd379481777f7afada49f18f76a6beaf1323ca007e48d2bb8aac790ff058d9",
+		"linux-x64": "48dad19367ca076ffdad0b3d1b9df7bd1c381ae9b222b2fe5e132d690d660288",
+		"win32-arm64": "a6d843238d048ffadbb00621f37ee1de9ba5964140b2f9392a14d5dce4d70966",
+		"win32-x64": "6d4ae4a450b2c596e8db08ab06215dedc6daa6d40e5ebc235b1c1b6a72080bae"
 	},
 	free: {
-		"darwin-arm64": "fa473291b8b76220f4b636cf655e8a4dc03332145bdea3acfd9bc96887b2da20",
-		"darwin-x64": "07cfcc9805812130ebca07f73c51c2cd9c0181b394f25be4c969c0d31c9dc26f",
-		"linux-arm64": "55671fa409ef3d40fcee66acbba4d7acfff8a5332d349ad47cca809ebf473cd0",
-		"linux-x64": "c80371910a808ea5c68916c48e5451716a91ca411cf5e422fdbd8119729b742c",
-		"win32-arm64": "926a228e5275fb1b0d6479a427a754bbf07189959c76aff021fa6ccc35c43c61",
-		"win32-x64": "029882f10e1020c96353b184ec0dba7da853e0f6d35131ca930515a7e61e89e6"
+		"darwin-arm64": "28c4d14ed5db09e3a3e299c02036ddaa524c5c476cb28e32deac4f77091acacb",
+		"darwin-x64": "3abd6086098e6ad604a8814cd6a5d9e5dd8e64c2108583f9e85c12e08baa7a26",
+		"linux-arm64": "d3e5490e7a1315ff2ba9bcc903d9d57de042d8dcde83dde1d59536725a470946",
+		"linux-x64": "fea8171808f9d913635c8f55fa70f7e72451cd38b0fca3d694e12ee1a9d7fc68",
+		"win32-arm64": "d762eb85db7b39f0d14f3724514e1eb45f86955b6bc7a9978bc82917549bf4eb",
+		"win32-x64": "8802ace1584212ed0361db6f4f12447f9f426b52c24eada54f7625910c3d5292"
 	}
 };
+/**
+* Seconds to wait before each retry, indexed by the attempt that just failed;
+* one more attempt is made than there are entries here. `downloadTool` retries
+* three times of its own accord, 10 to 20 seconds apart. That budget is
+* roughly 40 seconds against a single origin, and a GitHub release-asset 504
+* routinely outlives it, failing the whole job over a blip a human fixes by
+* pressing re-run. These delays stretch the total window past a minute without
+* stalling a job for long when the outage is not transient.
+*/
+const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60];
 /**
 * Name the firewall binary is cached and executed under.
 */
@@ -22156,7 +22170,7 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 		debug(`downloading Socket Firewall binary from: ${url}`);
 		let pathDownload;
 		try {
-			pathDownload = await downloadTool(url);
+			pathDownload = await downloadToolWithRetry(url);
 		} catch (error) {
 			throw new Error(`Failed to download Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
 		}
@@ -22181,6 +22195,27 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 		debug(`report path set to : ${pathReport}`);
 	}
 }
+/**
+* `downloadTool` with attempts layered on top of its own. The last error is
+* rethrown untouched so the caller still reports the real cause.
+*
+* @param {string} url Asset to download.
+*
+* @returns {Promise<string>} Path the asset was downloaded to.
+*/
+async function downloadToolWithRetry(url) {
+	let lastError;
+	for (let attempt = 0; attempt <= DOWNLOAD_RETRY_DELAYS_SECONDS.length; attempt += 1) try {
+		return await downloadTool(url);
+	} catch (error) {
+		lastError = error;
+		const seconds = DOWNLOAD_RETRY_DELAYS_SECONDS[attempt];
+		if (seconds === void 0 || !isRetryableDownloadError(error)) break;
+		warning(`Socket Firewall binary download failed (attempt ${attempt + 1} of ${DOWNLOAD_RETRY_DELAYS_SECONDS.length + 1}): ${(0, import_message.errorMessage)(error)}. Retrying in ${seconds}s.`);
+		await setTimeout$1(seconds * 1e3);
+	}
+	throw lastError;
+}
 function firewallReleaseVersion(requestedVersion) {
 	let versionToDownload = FIREWALL_VERSION;
 	if (requestedVersion && requestedVersion !== "latest") {
@@ -22200,6 +22235,23 @@ async function getFileChecksum(filePath) {
 	const hash = crypto.createHash("sha256");
 	hash.update(await promises$1.readFile(filePath));
 	return hash.digest("hex");
+}
+/**
+* Whether a failed download is worth another attempt. A 4xx says the asset is
+* not there to be had, so retrying only burns job time. 408 and 429 are the
+* exceptions: a 408 means the server gave up waiting on this one request, not
+* that the asset is missing, and a 429 is rate limiting that clears once the
+* retry delay has been sat out. Anything without a status (socket hang-up,
+* DNS, timeout) is treated as transient.
+*
+* @param {unknown} error Error thrown by `downloadTool`.
+*
+* @returns {boolean} True when the download should be attempted again.
+*/
+function isRetryableDownloadError(error) {
+	const status = error?.httpStatusCode;
+	if (typeof status !== "number") return true;
+	return status >= 500 || status === 408 || status === 429;
 }
 /**
 * Compare a downloaded binary against the hash pinned for its release and
@@ -23030,9 +23082,7 @@ const convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
 */
 const JSONParseV2 = (text, reviver) => {
 	return JSON.parse(text, (key, value, context) => {
-		const isNumber = typeof value === "number";
-		const isOutOfBounds = value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER;
-		const isBigNumber = isNumber && isOutOfBounds;
+		const isBigNumber = typeof value === "number" && (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER);
 		const isInt = context && intRegex.test(context.source);
 		if (isBigNumber && isInt) return BigInt(context.source);
 		if (!(typeof reviver === "function")) return value;
