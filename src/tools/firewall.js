@@ -36,7 +36,7 @@ export const FIREWALL_DISTRIBUTIONS = {
  * Release tag every checksum below was taken from, and the version the action
  * installs when `firewall-version` is left at its default.
  */
-export const FIREWALL_VERSION = 'v1.15.2'
+export const FIREWALL_VERSION = 'v1.15.3'
 
 /**
  * SHA256 of each `FIREWALL_VERSION` asset, per edition and per
@@ -48,31 +48,31 @@ export const FIREWALL_VERSION = 'v1.15.2'
 export const FIREWALL_CHECKSUMS = {
   enterprise: {
     'darwin-arm64':
-      '7fea0f5dcf14a158f009ab2906eeed853e624965390d914fa733f03d7f4780d0',
+      'dee9d3179ce1cc6e8cf469c1e446af02ba7a47172cf13220b1808bbd7a524605',
     'darwin-x64':
-      '53691eba2c1b9098c3c1be07bd2fc73662bcf21be31f829822a29ae2b06a520a',
+      '873bf3ad2bdd012793a9801860fd3a26a5536353b783f6bce7b807002e3c7789',
     'linux-arm64':
-      'dacd379481777f7afada49f18f76a6beaf1323ca007e48d2bb8aac790ff058d9',
+      'aba4f4fba0d6775496f10c383d290518db1984bba5cf4378540878ac08752973',
     'linux-x64':
-      '48dad19367ca076ffdad0b3d1b9df7bd1c381ae9b222b2fe5e132d690d660288',
+      '165aab86a749d3a249c5572ff693548017f98c6ee8a8df51f41804c542decf70',
     'win32-arm64':
-      'a6d843238d048ffadbb00621f37ee1de9ba5964140b2f9392a14d5dce4d70966',
+      '261d58f5caa8d4afd1e7a5159249d28b73bcd817f7ed6ffb812d0b1cf7258fe1',
     'win32-x64':
-      '6d4ae4a450b2c596e8db08ab06215dedc6daa6d40e5ebc235b1c1b6a72080bae',
+      'cbbd2a50e3ced2ec1f32491542d979ec0e906142c3e13f0be7aa6355b6bd0388',
   },
   free: {
     'darwin-arm64':
-      '28c4d14ed5db09e3a3e299c02036ddaa524c5c476cb28e32deac4f77091acacb',
+      '284e68467dc017ac6a8c17bdfd6e883cdf6b3195d14c263610a2eb03ae1bfdc0',
     'darwin-x64':
-      '3abd6086098e6ad604a8814cd6a5d9e5dd8e64c2108583f9e85c12e08baa7a26',
+      'c68d15da47b870f557e148669e009e5ba0af386c4df6ec1ad88be05a418d207e',
     'linux-arm64':
-      'd3e5490e7a1315ff2ba9bcc903d9d57de042d8dcde83dde1d59536725a470946',
+      'd10a203a91aea18d527e24f32f9164e9d322c96ca57749e2ab535fa3791b0455',
     'linux-x64':
-      'fea8171808f9d913635c8f55fa70f7e72451cd38b0fca3d694e12ee1a9d7fc68',
+      '2aca7b45150bebd7343e977fb82f387ffe143f5bc03e557741daeb51f5ee27b4',
     'win32-arm64':
-      'd762eb85db7b39f0d14f3724514e1eb45f86955b6bc7a9978bc82917549bf4eb',
+      '521d1021ac82562978dc871f47d584c8f4c41c71c6c5e456ef6389429fef5457',
     'win32-x64':
-      '8802ace1584212ed0361db6f4f12447f9f426b52c24eada54f7625910c3d5292',
+      'f097b51e8ffb3d4d5313d84a371b20f18e4e2f830cc44b71165468161d9affc2',
   },
 }
 
