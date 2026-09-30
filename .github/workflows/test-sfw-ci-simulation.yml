@@ -168,19 +168,15 @@ jobs:
             grep -q "UV_HANDLE_CLOSING" run.log && category=libuv-assertion
             grep -q "fetch failed" run.log && category=telemetry-fetch-failed
           fi
-          mkdir -p results
-          printf '{"os":"%s","variant":"%s","iteration":%s,"actionOutcome":"%s","exit":"%s","category":"%s"}\n' \
-            "$OS" "$VARIANT" "$ITERATION" "$ACTION_OUTCOME" "${RUN_EXIT:-}" "$category" \
-            > "results/install-$OS-$VARIANT-$ITERATION.json"
+          # The result travels as a notice annotation: the report job reads it
+          # back through the checks API. The fleet's artifact composites are
+          # hydrated payload and are not available to a bare checkout.
+          printf '::notice title=sim-result::{"os":"%s","variant":"%s","iteration":%s,"actionOutcome":"%s","exit":"%s","category":"%s"}\n' \
+            "$OS" "$VARIANT" "$ITERATION" "$ACTION_OUTCOME" "${RUN_EXIT:-}" "$category"
           echo "category=$category exit=${RUN_EXIT:-}"
           if [ "$category" != ok ]; then
             echo "::group::run.log"; tail -40 run.log; echo "::endgroup::"
           fi
-      - name: 'Upload the result'
-        uses: ./.github/actions/fleet/upload-artifact
-        with:
-          name: result-install-${{ matrix.os }}-${{ matrix.variant }}-${{ matrix.iteration }}
-          path: results/
 
   report:
     needs: [plan, install]
@@ -211,10 +207,19 @@ jobs:
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
           git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
           git checkout -q --detach FETCH_HEAD
-      - name: 'Download the results'
-        uses: ./.github/actions/fleet/download-artifact
-        with:
-          path: results
+      - name: 'Collect the results from the install jobs'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          : > results.jsonl
+          for url in $(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100" --paginate --jq '.jobs[] | select(.name | startswith("Install (")) | .check_run_url'); do
+            gh api "$url/annotations" --jq '.[] | select(.title=="sim-result") | .message' >> results.jsonl
+          done
+          echo "collected $(wc -l < results.jsonl) result(s)"
       - name: 'Write the flake table'
         shell: bash
         env:
@@ -229,13 +234,13 @@ jobs:
             echo
             echo "| runner | variant | runs | ok | failures by category |"
             echo "| --- | --- | ---: | ---: | --- |"
-            find results -name 'install-*.json' -print0 | xargs -0 cat | jq -r -s '
+            jq -r -s '
               group_by(.os, .variant)[]
               | {os: .[0].os, variant: .[0].variant, runs: length,
                  ok: (map(select(.category=="ok")) | length),
                  cats: (map(select(.category!="ok") | .category) | group_by(.) | map("\(.[0]) ×\(length)") | join(", "))}
-              | "| \(.os) | \(.variant) | \(.runs) | \(.ok) | \(.cats) |"'
-          } >> "$GITHUB_STEP_SUMMARY"
+              | "| \(.os) | \(.variant) | \(.runs) | \(.ok) | \(.cats) |"' results.jsonl
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       # Binary download failures happen inside the action step and are counted
       # above as action-setup-failed. The action reports them as a failure
       # annotation, which is readable here even though the step output is not.
@@ -253,8 +258,4 @@ jobs:
             d=$(gh api "$url/annotations" --jq '[.[] | select(.message | test("Failed to download Socket Firewall binary"))] | length')
             setup=$((setup + n)); downloads=$((downloads + d))
           done
-          {
-            echo
-            echo "action-setup-failed breakdown: $downloads of $setup failure annotations name a binary download failure."
-          } >> "$GITHUB_STEP_SUMMARY"
-          cat "$GITHUB_STEP_SUMMARY"
+          echo "action-setup-failed breakdown: $downloads of $setup failure annotations name a binary download failure." | tee -a "$GITHUB_STEP_SUMMARY"
