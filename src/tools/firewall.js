@@ -88,6 +88,14 @@ export const FIREWALL_CHECKSUMS = {
 export const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60]
 
 /**
+ * Socket-owned mirror of the sfw-free release binaries, relayed by
+ * firewall-download-server in depscan. Free edition only: the enterprise
+ * repository is private and not mirrored.
+ */
+export const FIREWALL_FREE_MIRROR_BASE_URL =
+  'https://install.socket.dev/firewall/dl'
+
+/**
  * Name the firewall binary is cached and executed under.
  */
 export const FIREWALL_EXEC_NAME = 'sfw'
@@ -147,8 +155,16 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
     process.arch,
   ]
 
-  // construct the download url
-  const url = `https://github.com/SocketDev/${repo}/releases/download/${versionToDownload}/${nameDownload}`
+  // construct the download urls, tried in a random order per job: half the
+  // fleet's downloads keep the mirror's edge cache warm, which is what lets it
+  // keep serving during a GitHub release-asset incident.
+  const origins = firewallDownloadUrls(
+    edition,
+    repo,
+    versionToDownload,
+    nameDownload,
+  )
+  const urls = shuffledIndexes(origins.length).map(i => origins[i])
 
   let pathCache
 
@@ -159,13 +175,13 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
 
   // no cache, download new
   if (!pathCache) {
-    debug(`downloading Socket Firewall binary from: ${url}`)
+    debug(`downloading Socket Firewall binary from: ${urls.join(', ')}`)
 
     let pathDownload
 
     try {
       // download it
-      pathDownload = await downloadToolWithRetry(url)
+      pathDownload = await downloadToolWithRetry(urls)
     } catch (error) {
       throw new Error(
         `Failed to download Socket Firewall binary: ${errorMessage(error)}`,
@@ -228,14 +244,19 @@ export async function downloadFirewall({ edition = 'free', ...inputs }) {
 }
 
 /**
- * `downloadTool` with attempts layered on top of its own. The last error is
- * rethrown untouched so the caller still reports the real cause.
+ * `downloadTool` with attempts layered on top of its own, alternating between
+ * equivalent origins. Retryable failures spend the delay table; an error that
+ * a retry cannot change (a 404) still gets one immediate try per remaining
+ * origin, because a missing asset on one host says nothing about the others.
+ * The last error is rethrown untouched so the caller still reports the real
+ * cause.
  *
- * @param {string} url Asset to download.
+ * @param {string[]} urls Equivalent origins for the same asset, in the order
+ *   to try them.
  *
  * @returns {Promise<string>} Path the asset was downloaded to.
  */
-export async function downloadToolWithRetry(url) {
+export async function downloadToolWithRetry(urls) {
   let lastError
 
   for (
@@ -243,6 +264,8 @@ export async function downloadToolWithRetry(url) {
     attempt <= DOWNLOAD_RETRY_DELAYS_SECONDS.length;
     attempt += 1
   ) {
+    const url = urls[attempt % urls.length]
+
     try {
       return await downloadTool(url)
     } catch (error) {
@@ -250,19 +273,51 @@ export async function downloadToolWithRetry(url) {
 
       const seconds = DOWNLOAD_RETRY_DELAYS_SECONDS[attempt]
 
-      if (seconds === undefined || !isRetryableDownloadError(error)) {
+      if (seconds === undefined) {
         break
       }
 
-      warning(
-        `Socket Firewall binary download failed (attempt ${attempt + 1} of ${DOWNLOAD_RETRY_DELAYS_SECONDS.length + 1}): ${errorMessage(error)}. Retrying in ${seconds}s.`,
-      )
-
-      await setTimeout(seconds * 1000)
+      if (isRetryableDownloadError(error)) {
+        warning(
+          `Socket Firewall binary download from ${url} failed (attempt ${attempt + 1} of ${DOWNLOAD_RETRY_DELAYS_SECONDS.length + 1}): ${errorMessage(error)}. Retrying in ${seconds}s.`,
+        )
+        await setTimeout(seconds * 1000)
+      } else if (attempt < urls.length - 1) {
+        warning(
+          `Socket Firewall binary download from ${url} failed: ${errorMessage(error)}. Trying ${urls[(attempt + 1) % urls.length]}.`,
+        )
+      } else {
+        break
+      }
     }
   }
 
   throw lastError
+}
+
+/**
+ * Equivalent origins to download one release asset from. GitHub release
+ * assets come first; the free edition is also mirrored on Socket-owned
+ * infrastructure. The enterprise repository is private and not mirrored, so it
+ * stays GitHub-only. Callers decide the order to try them in.
+ *
+ * @param {string} edition Firewall edition being installed.
+ * @param {string} repo GitHub repository the release lives in.
+ * @param {string} version Release tag to download.
+ * @param {string} asset Release asset name.
+ *
+ * @returns {string[]} Download URLs, GitHub first.
+ */
+export function firewallDownloadUrls(edition, repo, version, asset) {
+  const urls = [
+    `https://github.com/SocketDev/${repo}/releases/download/${version}/${asset}`,
+  ]
+
+  if (edition === 'free') {
+    urls.push(`${FIREWALL_FREE_MIRROR_BASE_URL}/${version}/${asset}`)
+  }
+
+  return urls
 }
 
 export function firewallReleaseVersion(requestedVersion) {
@@ -313,6 +368,26 @@ export function isRetryableDownloadError(error) {
   }
 
   return status >= 500 || status === 408 || status === 429
+}
+
+/**
+ * A random permutation of `0 .. length - 1` (Fisher-Yates), for callers that
+ * need to try equivalent options in an unbiased order.
+ *
+ * @param {number} length How many indexes to permute.
+ * @param {() => number} random Injectable for tests.
+ *
+ * @returns {number[]} Every index once, in random order.
+ */
+export function shuffledIndexes(length, random = Math.random) {
+  const order = Array.from({ length }, (_, i) => i)
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    const swap = order[i]
+    order[i] = order[j]
+    order[j] = swap
+  }
+  return order
 }
 
 /**
