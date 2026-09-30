@@ -1,0 +1,260 @@
+name: 'test: sfw ci simulation'
+run-name: 'test: sfw ci simulation'
+
+# Reproduces a customer CI shape (this action installing sfw, then an explicit
+# `sfw npm install`) against the checked-out action, so a change to the action
+# or the sfw binary it pins can be measured before it is announced.
+#
+# This is a measurement, not a pass/fail test, which is why it is dispatched
+# rather than run on every PR: `sfw npm install` on a public Node fixture,
+# repeated N times per runner for the candidate (this checkout) and a baseline
+# action ref, then aggregated into a flake table.
+#
+# Dispatch on a branch: Actions -> test: sfw ci simulation -> Run workflow, or
+#   gh workflow run test-sfw-ci-simulation.yml --ref <branch> -f iterations=20
+# The candidate is always the checked-out ref; only the baseline is an input.
+
+on:
+  workflow_dispatch:
+    inputs:
+      baseline_action_ref:
+        description: 'socketdev/action ref to compare against; empty skips the baseline'
+        required: false
+        default: v1.3.2
+      fixture_repo:
+        description: 'Public GitHub repo with a package.json to run `sfw npm install` in'
+        required: true
+        default: expressjs/express
+      iterations:
+        description: 'Install repetitions per runner and variant'
+        required: true
+        default: '10'
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: 'Plan'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      iterations: ${{ steps.plan.outputs.iterations }}
+      variants: ${{ steps.plan.outputs.variants }}
+    steps:
+      - name: 'Expand the matrix inputs'
+        id: plan
+        shell: bash
+        env:
+          ITERATIONS: ${{ inputs.iterations }}
+          BASELINE: ${{ inputs.baseline_action_ref }}
+        run: |
+          set -euo pipefail
+          n="$ITERATIONS"
+          [[ "$n" =~ ^[0-9]+$ ]] && [ "$n" -ge 1 ] && [ "$n" -le 50 ] || { echo "iterations must be 1..50"; exit 1; }
+          echo "iterations=$(seq -s, 1 "$n" | sed 's/^/[/;s/$/]/')" >> "$GITHUB_OUTPUT"
+          if [ -n "$BASELINE" ]; then
+            echo 'variants=["candidate","baseline"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'variants=["candidate"]' >> "$GITHUB_OUTPUT"
+          fi
+
+  install:
+    needs: plan
+    name: 'Install (${{ matrix.os }}, ${{ matrix.variant }}, ${{ matrix.iteration }})'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, windows-11-arm, ubuntu-26.04]
+        variant: ${{ fromJSON(needs.plan.outputs.variants) }}
+        iteration: ${{ fromJSON(needs.plan.outputs.iterations) }}
+        exclude:
+          # Action refs before win32-arm64 support (SocketDev/action#13) fail
+          # at setup on ARM, so the baseline is measured on x64 only.
+          - os: windows-11-arm
+            variant: baseline
+    steps:
+      # The candidate is this checkout, used as `./`. A local composite cannot
+      # run before the repo exists, so the checkout is an inline fetch.
+      - name: 'Bootstrap checkout'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_REF: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git init -q
+          git config --local advice.detachedHead false
+          git remote add origin "${SERVER_URL}/${REPOSITORY}"
+          AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+          git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
+          git checkout -q --detach FETCH_HEAD
+      # The baseline is a second copy of the action at the requested ref, in
+      # its own directory so `./` stays the candidate.
+      - name: 'Fetch the baseline action'
+        if: matrix.variant == 'baseline'
+        shell: bash
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          BASELINE_REF: ${{ inputs.baseline_action_ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p .socket-action-baseline && cd .socket-action-baseline
+          git init -q
+          git remote add origin "${SERVER_URL}/SocketDev/action"
+          git fetch --no-tags --depth 1 origin "${BASELINE_REF}"
+          git checkout -q --detach FETCH_HEAD
+      - name: 'Fetch the fixture'
+        shell: bash
+        env:
+          SERVER_URL: ${{ github.server_url }}
+          FIXTURE_REPO: ${{ inputs.fixture_repo }}
+        run: git clone -q --depth=1 --single-branch "${SERVER_URL}/${FIXTURE_REPO}" fixture
+      - name: 'Install socket firewall from the candidate'
+        id: socket-candidate
+        if: matrix.variant == 'candidate'
+        continue-on-error: true
+        uses: ./
+        with:
+          mode: firewall
+          job-summary: errors
+      - name: 'Install socket firewall from the baseline'
+        id: socket-baseline
+        if: matrix.variant == 'baseline'
+        continue-on-error: true
+        uses: ./.socket-action-baseline
+        with:
+          mode: firewall
+          job-summary: errors
+      # The customer shape under test: an explicit `sfw npm install`, not the
+      # action's shims.
+      - name: 'Run SFW npm install'
+        id: run
+        continue-on-error: true
+        shell: bash
+        working-directory: fixture
+        run: |
+          set +e
+          sfw npm install --ignore-scripts --foreground-scripts > ../run.log 2>&1
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+      - name: 'Classify the outcome'
+        shell: bash
+        env:
+          OS: ${{ matrix.os }}
+          VARIANT: ${{ matrix.variant }}
+          ITERATION: ${{ matrix.iteration }}
+          ACTION_OUTCOME: ${{ matrix.variant == 'candidate' && steps.socket-candidate.outcome || steps.socket-baseline.outcome }}
+          RUN_EXIT: ${{ steps.run.outputs.exit }}
+        run: |
+          set -euo pipefail
+          touch run.log
+          # A binary download failure happens inside the action step, so it
+          # lands here as action-setup-failed; the report job splits those out
+          # from the step's annotations.
+          category=ok
+          if [ "$ACTION_OUTCOME" != "success" ]; then
+            category=action-setup-failed
+          elif [ "${RUN_EXIT:-1}" != "0" ]; then
+            category=other
+            grep -q "not found in PATH" run.log && category=not-found-in-path
+            grep -q "timed out after" run.log && category=powershell-timeout
+            grep -q "UV_HANDLE_CLOSING" run.log && category=libuv-assertion
+            grep -q "fetch failed" run.log && category=telemetry-fetch-failed
+          fi
+          mkdir -p results
+          printf '{"os":"%s","variant":"%s","iteration":%s,"actionOutcome":"%s","exit":"%s","category":"%s"}\n' \
+            "$OS" "$VARIANT" "$ITERATION" "$ACTION_OUTCOME" "${RUN_EXIT:-}" "$category" \
+            > "results/install-$OS-$VARIANT-$ITERATION.json"
+          echo "category=$category exit=${RUN_EXIT:-}"
+          if [ "$category" != ok ]; then
+            echo "::group::run.log"; tail -40 run.log; echo "::endgroup::"
+          fi
+      - name: 'Upload the result'
+        uses: ./.github/actions/fleet/upload-artifact
+        with:
+          name: result-install-${{ matrix.os }}-${{ matrix.variant }}-${{ matrix.iteration }}
+          path: results/
+
+  report:
+    needs: [plan, install]
+    if: always()
+    name: 'Report'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+    steps:
+      - name: 'Bootstrap checkout'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_REF: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git init -q
+          git config --local advice.detachedHead false
+          git remote add origin "${SERVER_URL}/${REPOSITORY}"
+          AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+          git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
+          git checkout -q --detach FETCH_HEAD
+      - name: 'Download the results'
+        uses: ./.github/actions/fleet/download-artifact
+        with:
+          path: results
+      - name: 'Write the flake table'
+        shell: bash
+        env:
+          CANDIDATE: ${{ github.sha }}
+          BASELINE: ${{ inputs.baseline_action_ref }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## test: sfw ci simulation"
+            echo
+            echo "candidate: \`$CANDIDATE\`  baseline: \`${BASELINE:-none}\`"
+            echo
+            echo "| runner | variant | runs | ok | failures by category |"
+            echo "| --- | --- | ---: | ---: | --- |"
+            find results -name 'install-*.json' -print0 | xargs -0 cat | jq -r -s '
+              group_by(.os, .variant)[]
+              | {os: .[0].os, variant: .[0].variant, runs: length,
+                 ok: (map(select(.category=="ok")) | length),
+                 cats: (map(select(.category!="ok") | .category) | group_by(.) | map("\(.[0]) ×\(length)") | join(", "))}
+              | "| \(.os) | \(.variant) | \(.runs) | \(.ok) | \(.cats) |"'
+          } >> "$GITHUB_STEP_SUMMARY"
+      # Binary download failures happen inside the action step and are counted
+      # above as action-setup-failed. The action reports them as a failure
+      # annotation, which is readable here even though the step output is not.
+      - name: 'Split out binary download failures'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          downloads=0; setup=0
+          for url in $(gh api "repos/$REPO/actions/runs/$RUN_ID/jobs?per_page=100" --paginate --jq '.jobs[] | select(.name | startswith("Install (")) | .check_run_url'); do
+            n=$(gh api "$url/annotations" --jq '[.[] | select(.annotation_level=="failure")] | length')
+            d=$(gh api "$url/annotations" --jq '[.[] | select(.message | test("Failed to download Socket Firewall binary"))] | length')
+            setup=$((setup + n)); downloads=$((downloads + d))
+          done
+          {
+            echo
+            echo "action-setup-failed breakdown: $downloads of $setup failure annotations name a binary download failure."
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"
