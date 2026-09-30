@@ -10,7 +10,7 @@ import { build } from 'rolldown'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { actionBundles } from '../../../.config/repo/rolldown.config.mts'
-import { runMainAsync } from '../../../scripts/fleet/process/run-main.mts'
+import { runMainAsync } from '../../../scripts/fleet/process/main/run.mts'
 import { main, SCRIPT_META } from '../../../scripts/repo/build.mts'
 import { ACTION_DIST_DIR } from '../../../scripts/repo/paths.mts'
 

@@ -36,6 +36,7 @@ vi.mock(import('node:timers/promises'), async importOriginal => ({
     value?: T | undefined,
   ): Promise<T> => {
     sleepDelays.push(delay ?? 0)
+    // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- mirrors node's setTimeout(delay, value): the resolved value is the caller's T by contract
     return value as T
   },
 }))

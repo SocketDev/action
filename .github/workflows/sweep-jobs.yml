@@ -16,9 +16,8 @@ run-name: 'sweep: jobs'
 # over-budget repo quietly loses the entries it restores most and every job
 # rebuilds cold.
 #
-# Byte-identical across the fleet (cascaded); edit
-# template/base/universal/.github/workflows/sweep-jobs.yml and re-cascade via
-# `pnpm run sync`.
+# Byte-identical across the fleet (cascaded); edit this template and run
+# `pnpm run dogfood fleet-code --dogfood` to update this checkout.
 
 on:
   schedule:
@@ -51,7 +50,7 @@ concurrency:
 jobs:
   prune:
     name: Sweep
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     steps:
       # First step can't call the local ./.github/actions/fleet/checkout

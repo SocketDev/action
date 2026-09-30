@@ -1,10 +1,10 @@
 # Baseline CI — seeded once by socket-wheelhouse (template/presets/), then
-# repo-owned: edit freely. Runs check + test via the LOCAL composite actions
+# repo-owned: edit freely. Runs checks and affected tests via the LOCAL composite actions
 # under .github/actions/fleet/ (cascade-updated), referenced by ./ path — no
 # cross-repo reusable workflow, no first-party `uses:@sha`. Add repo-specific
 # jobs anywhere under `jobs:`.
-name: "ci: gates"
-run-name: "ci: gates"
+name: 'ci: gates'
+run-name: 'ci: gates'
 
 on:
   push:
@@ -19,7 +19,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || startsWith(github.ref, 'refs/heads/staging/') || github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 # Fleet no-phone-home posture: NOT set here. The shared setup action's first
 # step emits every FLEET_ENV knob into $GITHUB_ENV, derived from
@@ -43,7 +43,7 @@ jobs:
   # in the test matrix).
   check:
     name: Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - name: Bootstrap checkout
@@ -65,7 +65,10 @@ jobs:
           FETCH_ARGS=(--no-tags --prune --depth 1 origin "${TRIGGER_REF}")
           if [ -n "${GITHUB_TOKEN}" ]; then
             AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+            export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+            git fetch "${FETCH_ARGS[@]}"
           else
             git fetch "${FETCH_ARGS[@]}"
           fi
@@ -78,30 +81,15 @@ jobs:
           # shallow clone rather than false-green.
           checkout-fetch-depth: '0'
           socket-api-token: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
-          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Reuse the Release App for a contents:read token scoped to wheelhouse.
           # Both credentials enable the private release fallback. Without the
           # key, hydration still pulls public GHCR anonymously.
-          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
-      - name: Prepare hook snapshot validation
-        uses: ./.github/actions/fleet/run-script
-        with:
-          main-script: node scripts/fleet/setup/hook-snapshot.mts --no-wire
+          payload-token-client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID || vars.SOCKET_RELEASE_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
       - name: 'Check'
         uses: ./.github/actions/fleet/run-script
         with:
-          main-script: pnpm run check --all
-      # The type pass runs HERE, not only in the pre-push hook. A type error is
-      # the one class of breakage that surfaces against the whole project rather
-      # than per-edit, so nothing before this catches it — and the local hook is
-      # routinely bypassed, because the wheelhouse tree is dirty at a push by
-      # construction (the live /fleet/ mirrors wait for a cascade commit) and the
-      # push guidance says to force through. Without this, a --no-verify push
-      # lands an unverified type on the default branch.
-      - name: 'Check types'
-        uses: ./.github/actions/fleet/run-script
-        with:
-          main-script: pnpm run type
+          main-script: pnpm run ci:gates --stage=check
 
   test:
     name: 'Test (${{ matrix.os }})'
@@ -109,7 +97,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-26.04, macos-26, windows-2025]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -132,7 +120,10 @@ jobs:
           FETCH_ARGS=(--no-tags --prune --depth 1 origin "${TRIGGER_REF}")
           if [ -n "${GITHUB_TOKEN}" ]; then
             AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-            git -c "http.${SERVER_URL}/.extraheader=AUTHORIZATION: basic ${AUTH_B64}" fetch "${FETCH_ARGS[@]}"
+            export GIT_CONFIG_COUNT=1
+            export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+            export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+            git fetch "${FETCH_ARGS[@]}"
           else
             git fetch "${FETCH_ARGS[@]}"
           fi
@@ -141,11 +132,11 @@ jobs:
         uses: ./.github/actions/fleet/setup-and-install
         with:
           socket-api-token: ${{ secrets.SOCKET_API_TOKEN_FOR_CLI_AND_SFW }}
-          # Reuse the PR App for a contents:read token scoped to wheelhouse.
+          # Reuse the Release App for a contents:read token scoped to wheelhouse.
           # Both credentials enable the private release fallback. Without the
           # key, hydration still pulls public GHCR anonymously.
-          payload-token-client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
-          payload-token-private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}
+          payload-token-client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID || vars.SOCKET_RELEASE_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
       # The SFW proxy interposes crates.io at the system level. Other tools
       # receive its CA via NODE_EXTRA_CA_CERTS; cargo needs CARGO_HTTP_CAINFO
       # explicitly, and on Windows schannel additionally demands revocation
@@ -174,6 +165,9 @@ jobs:
           # prebuilt-artifact downloads). Unauthenticated calls share the
           # hosted runner's IP-scoped rate limit and 403 under load.
           GH_TOKEN: ${{ github.token }}
+          # Push events expose the comparison commit only in the event payload.
+          # The runner uses GITHUB_BASE_REF for pull requests.
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
         with:
           setup-script: pnpm run build
-          main-script: pnpm run test --ci
+          main-script: pnpm run ci:gates --stage=test
