@@ -96,6 +96,14 @@ jobs:
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
           git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
           git checkout -q --detach FETCH_HEAD
+      # Artifact composites are untracked fleet payload. Hydrate them here
+      # so upload-artifact resolves; checkout:false keeps this revision.
+      - name: 'Hydrate fleet Actions'
+        uses: ./.github/actions/fleet/checkout
+        with:
+          checkout: 'false'
+          payload-token-client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID || vars.SOCKET_RELEASE_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
       # The baseline is a second copy of the action at the requested ref, in
       # its own directory so `./` stays the candidate.
       - name: 'Fetch the baseline action'
@@ -211,6 +219,14 @@ jobs:
           export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
           git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
           git checkout -q --detach FETCH_HEAD
+      # Artifact composites are untracked fleet payload. Hydrate them here
+      # so download-artifact resolves; checkout:false keeps this revision.
+      - name: 'Hydrate fleet Actions'
+        uses: ./.github/actions/fleet/checkout
+        with:
+          checkout: 'false'
+          payload-token-client-id: ${{ secrets.SOCKET_RELEASE_CLIENT_ID || vars.SOCKET_RELEASE_CLIENT_ID }}
+          payload-token-private-key: ${{ secrets.SOCKET_RELEASE_APP_PRIVATE_KEY }}
       - name: 'Download the results'
         uses: ./.github/actions/fleet/download-artifact
         with:
