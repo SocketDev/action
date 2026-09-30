@@ -123,6 +123,8 @@ const { pnpmEcosystemFingerprint } = (function () {
           {
             cwd: root,
             encoding: 'utf8',
+            // This local query needs no sfw network-auth handshake.
+            env: { ...pnpmProcess.env, SOCKET_SHIM_ACTIVE_PNPM: '1' },
             maxBuffer: PNPM_CONFIG_MAX_BYTES,
             stdio: ['ignore', 'pipe', 'pipe'],
             timeout: PNPM_CONFIG_TIMEOUT_MS,
@@ -736,7 +738,7 @@ export function fetchBundle(): boolean {
     }
     return true
   }
-  if (!tryRun('node', [fleet])) {
+  if (!tryRun('node', [fleet, '--cached'])) {
     log('bundle refresh (fleet.mjs) reported a problem — continuing')
     return false
   }
@@ -811,6 +813,15 @@ export function resolveRepoRoot(startDir: string): string {
 export async function hydrateWorkspace(
   options?: { strict?: boolean | undefined } | undefined,
 ): Promise<boolean> {
+  // Runs before the pack applies: the rule file's repo-owned half rides in the
+  // same file as the fleet block, so it is renamed, never recreated.
+  const fleetSeed = path.join(HERE, 'fleet.mjs')
+  if (existsSync(fleetSeed)) {
+    const { migrateRuleFile } = await import(pathToFileURL(fleetSeed).href)
+    if (typeof migrateRuleFile === 'function') {
+      migrateRuleFile(REPO_ROOT)
+    }
+  }
   if (!fetchBundle() && options?.strict !== false) return false
   const wsPath = path.join(REPO_ROOT, 'pnpm-workspace.yaml')
   if (existsSync(wsPath)) {

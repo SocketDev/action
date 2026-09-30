@@ -39,7 +39,7 @@ concurrency:
 jobs:
   check-dist:
     name: Check distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     env:
       # Socket Firewall + CLI auth for the sfw-wrapped setup + pnpm install —
