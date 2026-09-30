@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-**MANDATORY**: Act as principal-level engineer. This file is a thin index. Rule details live in `docs/fleet/agents.md/` and `docs/repo/agents.md/`. Edit fleet rules in `template/`, then cascade. Repository rules belong to this repository. (`.claude/hooks/fleet/{claude-md-size-guard,claude-md-section-size-guard,claude-md-defer-detail-nudge,claude-md-rule-add-guard}/`)
+# AGENTS.md
 
 <!-- <fleet> -->
 
@@ -167,16 +165,3 @@
 - A written mermaid fence gets rewritten GitHub-safe at edit time. [`hook-registry`](docs/fleet/agents.md/hook-registry.md)
 
 <!-- </fleet> -->
-
-<!-- <repo> -->
-
-## 🏗️ Project-Specific
-
-Per-repo content lives below this header, in the same bullet-index shape as the fleet block above.
-
-- One rule per `-` bullet, stating it in a single line, linking [`topic`](docs/agents.md/repo/topic.md) for the detail.
-- Architecture, commands, build pipeline, and domain detail live in `docs/agents.md/repo/<topic>.md`, per-repo, never cascaded.
-- A `###` subsection may open with at most one orienting sentence; everything actionable under it is bullets.
-- The whole file is capped at 40 KB and each `###` section at 8 lines. (`scripts/fleet/check/claude-md-repo-section-is-a-bullet-index.mts`)
-
-<!-- </repo> -->
