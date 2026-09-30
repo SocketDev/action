@@ -8,7 +8,7 @@ catalog:
   # actions is its GitHub-Actions parser, pinned explicitly (not left
   # transitive) so its version is uniform fleet-wide.
   '@ultrathink/acorn.rs.wasm': 0.2.0
-  'ata-validator': 1.27.0
+  'ata-validator': 1.27.1
   'brace-expansion': 5.0.12
   'conventional-changelog-conventionalcommits': 9.3.1
   'dtu-github-actions': 0.18.1
@@ -18,7 +18,7 @@ catalog:
   '@shadscan/cli': 0.17.0
   '@sinclair/typebox': 0.34.52
   'ecc-agentshield': 1.6.0
-  'fallow': 3.27.0
+  'fallow': 3.28.0
   'mcp-tada': 0.4.0
   'run-local-ci': 0.18.1
   # typebox 1.x — the unscoped rewrite of @sinclair/typebox. Both names are
@@ -79,8 +79,8 @@ catalog:
   # candidates before simulating what a port actually cuts. Published
   # 2026-06-08, past the 7-day soak.
   'npm-high-impact': 1.13.0
-  'oxfmt': 0.68.0
-  'oxlint': 1.83.0
+  'oxfmt': 0.70.0
+  'oxlint': 1.85.0
   'oxlint-tsgolint': 7.0.2003
   # parse5 — the HTML parser half of the markdown story. mdast hands raw HTML
   # back as an opaque `html` node (README `<picture>`/`<img>` blocks), so
