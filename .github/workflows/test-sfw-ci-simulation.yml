@@ -168,9 +168,6 @@ jobs:
             grep -q "UV_HANDLE_CLOSING" run.log && category=libuv-assertion
             grep -q "fetch failed" run.log && category=telemetry-fetch-failed
           fi
-          # The result travels as a notice annotation: the report job reads it
-          # back through the checks API. The fleet's artifact composites are
-          # hydrated payload and are not available to a bare checkout.
           printf '::notice title=sim-result::{"os":"%s","variant":"%s","iteration":%s,"actionOutcome":"%s","exit":"%s","category":"%s"}\n' \
             "$OS" "$VARIANT" "$ITERATION" "$ACTION_OUTCOME" "${RUN_EXIT:-}" "$category"
           echo "category=$category exit=${RUN_EXIT:-}"
