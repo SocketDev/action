@@ -1,0 +1,74 @@
+name: 'test: sfw mirror'
+run-name: 'test: sfw mirror'
+
+# Sfw binary download origins can fail, ensure the action still works
+# if only one of them is unavailable
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fault-download-origin:
+    name: 'Block a download origin (${{ matrix.os }}, ${{ matrix.blocked }})'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2025, ubuntu-26.04]
+        # Each origin must carry the install alone. The github case only
+        # passes with the mirror fallback in the checked-out action.
+        blocked: [github, mirror]
+    steps:
+      - name: 'Bootstrap checkout'
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SERVER_URL: ${{ github.server_url }}
+          REPOSITORY: ${{ github.repository }}
+          TRIGGER_REF: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git init -q
+          git config --local advice.detachedHead false
+          git remote add origin "${SERVER_URL}/${REPOSITORY}"
+          AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${SERVER_URL}/.extraheader"
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic ${AUTH_B64}"
+          git fetch --no-tags --prune --depth 1 origin "${TRIGGER_REF}"
+          git checkout -q --detach FETCH_HEAD
+      - name: 'Block the origin in the hosts file'
+        shell: bash
+        env:
+          BLOCKED: ${{ matrix.blocked }}
+          RUNNER_OS: ${{ runner.os }}
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Windows ]; then HOSTS="$WINDIR/System32/drivers/etc/hosts"; else HOSTS=/etc/hosts; fi
+          if [ "$BLOCKED" = github ]; then
+            hosts="github.com objects.githubusercontent.com release-assets.githubusercontent.com"
+          else
+            hosts="install.socket.dev"
+          fi
+          # 127.0.0.1 refuses the connection at once. A black-hole address would
+          # make every attempt wait out a TCP connect timeout, which on Linux
+          # outlives the job.
+          for h in $hosts; do printf '127.0.0.1 %s\n' "$h" | sudo tee -a "$HOSTS" > /dev/null 2>&1 || printf '127.0.0.1 %s\n' "$h" >> "$HOSTS"; done
+          [ "$RUNNER_OS" = Windows ] && ipconfig //flushdns > /dev/null || true
+      - name: 'Install socket firewall via the remaining origin'
+        uses: ./
+        with:
+          mode: firewall
+          job-summary: errors
+          use-cache: 'false'
+      - name: 'Run the installed binary'
+        shell: bash
+        run: sfw --version
