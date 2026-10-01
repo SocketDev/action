@@ -6,24 +6,34 @@
  *   states which platforms it supports.
  */
 
+import { mkdtemp, writeFile } from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
+
 import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { safeDelete } from '@socketsecurity/lib-stable/fs/safe'
 
 import {
   downloadFirewall,
   downloadToolWithRetry,
+  findCachedFirewall,
   FIREWALL_DISTRIBUTIONS,
+  FIREWALL_EXEC_FILE,
   FIREWALL_EXEC_NAME,
   isRetryableDownloadError,
 } from '../../../src/tools/firewall.js'
 
-const { mockDownloadTool, sleepDelays } = vi.hoisted(() => ({
+const { mockDownloadTool, mockFind, sleepDelays } = vi.hoisted(() => ({
   mockDownloadTool: vi.fn(),
+  mockFind: vi.fn(),
   sleepDelays: [] as number[],
 }))
 
 vi.mock(import('@actions/tool-cache'), async importOriginal => ({
   ...(await importOriginal()),
   downloadTool: mockDownloadTool,
+  find: mockFind,
 }))
 
 // The retry waits are real seconds; stubbing the sleep keeps the suite fast
@@ -74,6 +84,7 @@ afterEach(() => {
   restoreRuntimeTarget?.()
   restoreRuntimeTarget = undefined
   mockDownloadTool.mockReset()
+  mockFind.mockReset()
   sleepDelays.length = 0
 })
 
@@ -102,9 +113,59 @@ describe('FIREWALL_DISTRIBUTIONS', () => {
   })
 })
 
+describe('FIREWALL_EXEC_FILE', () => {
+  it('carries the .exe suffix only on Windows', () => {
+    expect(FIREWALL_EXEC_FILE).toBe(
+      process.platform === 'win32' ? 'sfw.exe' : 'sfw',
+    )
+  })
+})
+
 describe('FIREWALL_EXEC_NAME', () => {
   it('is the name later workflow steps call', () => {
     expect(FIREWALL_EXEC_NAME).toBe('sfw')
+  })
+})
+
+describe('findCachedFirewall', () => {
+  const CACHE_OPTIONS = ['socket-firewall-free', 'v1.15.3', 'x64']
+  let cacheDir: string | undefined
+
+  afterEach(async () => {
+    if (cacheDir) {
+      await safeDelete(cacheDir, { recursive: true })
+      cacheDir = undefined
+    }
+  })
+
+  it('reports no entry when the tool cache has none', async () => {
+    mockFind.mockReturnValue('')
+
+    expect(findCachedFirewall(CACHE_OPTIONS)).toBeUndefined()
+    expect(mockFind).toHaveBeenCalledWith(...CACHE_OPTIONS)
+  })
+
+  it('reuses an entry that holds the binary this version runs', async () => {
+    cacheDir = await mkdtemp(path.join(os.tmpdir(), 'sfw-cache-'))
+    await writeFile(path.join(cacheDir, FIREWALL_EXEC_FILE), '')
+    mockFind.mockReturnValue(cacheDir)
+
+    expect(findCachedFirewall(CACHE_OPTIONS)).toBe(cacheDir)
+  })
+
+  it('treats an entry that lacks the binary as a miss', async () => {
+    // Earlier versions cached the Windows binary as `sfw`, so a kept tool
+    // cache can satisfy `find` without holding `sfw.exe`. Off Windows the
+    // stray name is the other one, which keeps the case exercised everywhere.
+    const strayName =
+      FIREWALL_EXEC_FILE === FIREWALL_EXEC_NAME
+        ? `${FIREWALL_EXEC_NAME}.exe`
+        : FIREWALL_EXEC_NAME
+    cacheDir = await mkdtemp(path.join(os.tmpdir(), 'sfw-cache-'))
+    await writeFile(path.join(cacheDir, strayName), '')
+    mockFind.mockReturnValue(cacheDir)
+
+    expect(findCachedFirewall(CACHE_OPTIONS)).toBeUndefined()
   })
 })
 

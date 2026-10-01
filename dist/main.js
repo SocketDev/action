@@ -7,7 +7,8 @@ import * as fs from "fs";
 import { constants, existsSync, promises, readFileSync } from "fs";
 import * as path$1 from "path";
 import crypto from "node:crypto";
-import { promises as promises$1, readFileSync as readFileSync$1 } from "node:fs";
+import { existsSync as existsSync$1, promises as promises$1, readFileSync as readFileSync$1 } from "node:fs";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { setTimeout as setTimeout$1 } from "node:timers/promises";
 import * as events$1 from "events";
@@ -22139,6 +22140,14 @@ const DOWNLOAD_RETRY_DELAYS_SECONDS = [30, 60];
 */
 const FIREWALL_EXEC_NAME = "sfw";
 /**
+* File name the binary is cached under. Windows gets the `.exe` suffix: the
+* `.cmd` shims run the binary through cmd.exe, which does not execute a
+* suffix-less file, and neither does PowerShell. Bash on a Windows runner
+* does, which is why `sfw npm install` typed in a workflow worked while every
+* shimmed `npm install`, and every `sfw` call that reached a shim, failed.
+*/
+const FIREWALL_EXEC_FILE = process.platform === "win32" ? `${"sfw"}.exe` : "sfw";
+/**
 * Downloads firewall binary if not in cache, checks it against the hash pinned
 * for its release, and adds to exec path. Package manager shims are written
 * too unless the `shims` input turns them off.
@@ -22165,7 +22174,7 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 	];
 	const url = `https://github.com/SocketDev/${repo}/releases/download/${versionToDownload}/${nameDownload}`;
 	let pathCache;
-	if (inputs.useCache) pathCache = find(...cacheOptions);
+	if (inputs.useCache) pathCache = findCachedFirewall(cacheOptions);
 	if (!pathCache) {
 		debug(`downloading Socket Firewall binary from: ${url}`);
 		let pathDownload;
@@ -22176,12 +22185,12 @@ async function downloadFirewall({ edition = "free", ...inputs }) {
 		}
 		await validateChecksum(pathDownload, expectedHash);
 		try {
-			pathCache = await cacheFile(pathDownload, "sfw", ...cacheOptions);
+			pathCache = await cacheFile(pathDownload, FIREWALL_EXEC_FILE, ...cacheOptions);
 		} catch (error) {
 			throw new Error(`Failed to cache Socket Firewall binary: ${(0, import_message.errorMessage)(error)}`);
 		}
 	}
-	const pathBinary = path.join(pathCache, "sfw");
+	const pathBinary = path.join(pathCache, FIREWALL_EXEC_FILE);
 	if (process.platform !== "win32") await exec("chmod", ["+x", pathBinary]);
 	setOutput("firewall-path-binary", pathBinary);
 	addPath(pathCache);
@@ -22216,6 +22225,29 @@ async function downloadToolWithRetry(url) {
 	}
 	throw lastError;
 }
+/**
+* Directory an earlier job cached the binary in, or undefined when there is
+* none this version can use. `find` only checks that the version directory
+* and its `.complete` marker exist. Action versions before this one cached the
+* Windows binary as `sfw`, without the suffix the shims need, so a runner that
+* keeps its tool cache can hold an entry that lacks the file this version
+* runs. That entry counts as a miss and the fresh download replaces it.
+*
+* @param {string[]} cacheOptions Tool name, version and arch, as passed to
+*   `find` and `cacheFile`.
+*
+* @returns {string | undefined} Cache directory holding
+*   `FIREWALL_EXEC_FILE`, if there is one.
+*/
+function findCachedFirewall(cacheOptions) {
+	const pathCache = find(...cacheOptions);
+	if (!pathCache) return;
+	if (!existsSync$1(path.join(pathCache, FIREWALL_EXEC_FILE))) {
+		debug(`cache entry ${pathCache} has no ${FIREWALL_EXEC_FILE}, downloading again`);
+		return;
+	}
+	return pathCache;
+}
 function firewallReleaseVersion(requestedVersion) {
 	let versionToDownload = FIREWALL_VERSION;
 	if (requestedVersion && requestedVersion !== "latest") {
@@ -22233,7 +22265,7 @@ function firewallReleaseVersion(requestedVersion) {
 */
 async function getFileChecksum(filePath) {
 	const hash = crypto.createHash("sha256");
-	hash.update(await promises$1.readFile(filePath));
+	hash.update(await readFile(filePath));
 	return hash.digest("hex");
 }
 /**
