@@ -22099,7 +22099,7 @@ const FIREWALL_DISTRIBUTIONS = {
 * Release tag every checksum below was taken from, and the version the action
 * installs when `firewall-version` is left at its default.
 */
-const FIREWALL_VERSION = "v1.15.3";
+const FIREWALL_VERSION = "v1.15.4";
 /**
 * SHA256 of each `FIREWALL_VERSION` asset, per edition and per
 * `<platform>-<arch>`. The hashes are pinned in source rather than read from a
@@ -22109,20 +22109,20 @@ const FIREWALL_VERSION = "v1.15.3";
 */
 const FIREWALL_CHECKSUMS = {
 	enterprise: {
-		"darwin-arm64": "dee9d3179ce1cc6e8cf469c1e446af02ba7a47172cf13220b1808bbd7a524605",
-		"darwin-x64": "873bf3ad2bdd012793a9801860fd3a26a5536353b783f6bce7b807002e3c7789",
-		"linux-arm64": "aba4f4fba0d6775496f10c383d290518db1984bba5cf4378540878ac08752973",
-		"linux-x64": "165aab86a749d3a249c5572ff693548017f98c6ee8a8df51f41804c542decf70",
-		"win32-arm64": "261d58f5caa8d4afd1e7a5159249d28b73bcd817f7ed6ffb812d0b1cf7258fe1",
-		"win32-x64": "cbbd2a50e3ced2ec1f32491542d979ec0e906142c3e13f0be7aa6355b6bd0388"
+		"darwin-arm64": "b243b85e68435d2fb5a9419a037bfbc70f37e9ea5ca5a6690276843779331772",
+		"darwin-x64": "4b3e686afca92029afe3d0d477c2755e0b50bcb9c3bb3c2df178940be380ca50",
+		"linux-arm64": "f044a48abfaf546b4d0877602043a905418daf7063e79fb8087760bba4d13c5e",
+		"linux-x64": "bcb8e0f0debec245a0cff6fed01ab2cb2c37c0d03a0be6c0b39164d60dd3a291",
+		"win32-arm64": "6804c7972da28638ad7abda9378c1cf59ba6e10d1c04294560de9c46c0b5d733",
+		"win32-x64": "a6b8b8909a95d92bf83521a6dce418d4c44189ff977854ef1fa1767361654a0b"
 	},
 	free: {
-		"darwin-arm64": "284e68467dc017ac6a8c17bdfd6e883cdf6b3195d14c263610a2eb03ae1bfdc0",
-		"darwin-x64": "c68d15da47b870f557e148669e009e5ba0af386c4df6ec1ad88be05a418d207e",
-		"linux-arm64": "d10a203a91aea18d527e24f32f9164e9d322c96ca57749e2ab535fa3791b0455",
-		"linux-x64": "2aca7b45150bebd7343e977fb82f387ffe143f5bc03e557741daeb51f5ee27b4",
-		"win32-arm64": "521d1021ac82562978dc871f47d584c8f4c41c71c6c5e456ef6389429fef5457",
-		"win32-x64": "f097b51e8ffb3d4d5313d84a371b20f18e4e2f830cc44b71165468161d9affc2"
+		"darwin-arm64": "1b705ea7c399727ee41aa93f63e0469d2c3787c50e1dd8842cb8ff5ceec9eb99",
+		"darwin-x64": "b19f96f0dd3ebc4ecc7111dbc43cc2b095f37bf759273c0bd9c0c4784ea24731",
+		"linux-arm64": "c8c80aa582829f24f5d633f2c3f2ccd0b070bbee80bf3b956e5e2a9880184e20",
+		"linux-x64": "cf9f55b8343e1ef6e6dcccdb09b99c70c0430a22ed7d0079286eccddeaf72670",
+		"win32-arm64": "16607f9c64055b8e0af918dc93a72a342ca8352f46e6e3f810d1a378a380a82a",
+		"win32-x64": "f8c94fc5e41d49c51d2fd013c2c169274df9c483fc763d8c82ff71c5579d3bb0"
 	}
 };
 /**
@@ -22250,24 +22250,6 @@ async function downloadToolWithRetry(urls) {
 	}
 }
 /**
-* Equivalent origins to download one release asset from. GitHub release
-* assets come first; the free edition is also mirrored on Socket-owned
-* infrastructure. The enterprise repository is private and not mirrored, so it
-* stays GitHub-only. Callers decide the order to try them in.
-*
-* @param {string} edition Firewall edition being installed.
-* @param {string} repo GitHub repository the release lives in.
-* @param {string} version Release tag to download.
-* @param {string} asset Release asset name.
-*
-* @returns {string[]} Download URLs, GitHub first.
-*/
-function firewallDownloadUrls(edition, repo, version, asset) {
-	const urls = [`https://github.com/SocketDev/${repo}/releases/download/${version}/${asset}`];
-	if (edition === "free") urls.push(`${FIREWALL_FREE_MIRROR_BASE_URL}/${version}/${asset}`);
-	return urls;
-}
-/**
 * Directory an earlier job cached the binary in, or undefined when there is
 * none this version can use. `find` only checks that the version directory
 * and its `.complete` marker exist. Action versions before this one cached the
@@ -22289,6 +22271,24 @@ function findCachedFirewall(cacheOptions) {
 		return;
 	}
 	return pathCache;
+}
+/**
+* Equivalent origins to download one release asset from. GitHub release
+* assets come first; the free edition is also mirrored on Socket-owned
+* infrastructure. The enterprise repository is private and not mirrored, so it
+* stays GitHub-only. Callers decide the order to try them in.
+*
+* @param {string} edition Firewall edition being installed.
+* @param {string} repo GitHub repository the release lives in.
+* @param {string} version Release tag to download.
+* @param {string} asset Release asset name.
+*
+* @returns {string[]} Download URLs, GitHub first.
+*/
+function firewallDownloadUrls(edition, repo, version, asset) {
+	const urls = [`https://github.com/SocketDev/${repo}/releases/download/${version}/${asset}`];
+	if (edition === "free") urls.push(`${FIREWALL_FREE_MIRROR_BASE_URL}/${version}/${asset}`);
+	return urls;
 }
 function firewallReleaseVersion(requestedVersion) {
 	let versionToDownload = FIREWALL_VERSION;
