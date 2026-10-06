@@ -1,6 +1,6 @@
 catalog:
-  '@mdn/browser-compat-data': 8.1.2
-  '@modelcontextprotocol/client': 2.0.0
+  '@mdn/browser-compat-data': 8.1.3
+  '@modelcontextprotocol/client': 2.2.0
   '@polka/url': 1.0.0-next.29
   # run-local-ci (bin: local-ci, formerly published as @redwoodjs/agent-ci)
   # runs a repo's GitHub Actions workflows locally in Docker so a change can
@@ -8,7 +8,7 @@ catalog:
   # actions is its GitHub-Actions parser, pinned explicitly (not left
   # transitive) so its version is uniform fleet-wide.
   '@ultrathink/acorn.rs.wasm': 0.2.0
-  'ata-validator': 1.27.1
+  'ata-validator': 1.38.0
   'brace-expansion': 5.0.12
   'conventional-changelog-conventionalcommits': 9.3.1
   'dtu-github-actions': 0.18.1
@@ -18,7 +18,7 @@ catalog:
   '@shadscan/cli': 0.17.0
   '@sinclair/typebox': 0.34.52
   'ecc-agentshield': 1.6.0
-  'fallow': 3.28.0
+  'fallow': 3.30.0
   'mcp-tada': 0.4.0
   'run-local-ci': 0.18.1
   # typebox 1.x — the unscoped rewrite of @sinclair/typebox. Both names are
@@ -45,7 +45,7 @@ catalog:
   '@socketsecurity/sdk': 4.1.5
   '@socketsecurity/sdk-stable': 'npm:@socketsecurity/sdk@4.1.5'
   '@types/mdast': 4.0.4
-  '@types/node': 26.6.2
+  '@types/node': 26.6.3
   '@types/semver': 7.8.0
   '@types/shell-quote': 1.7.5
   'compromise': 14.17.0
@@ -53,7 +53,7 @@ catalog:
   # derivation, version compare, config validation). Runs standalone in vitest.
   # published: 2026-07-08 (past 7-day soak). See .claude/skills/fleet/property-testing.
   'fast-check': 4.10.2
-  'magic-string': 1.4.1
+  'magic-string': 1.4.2
   'markdownlint-cli2': 0.23.3
   'mdast-util-from-markdown': 2.0.3
   # GFM pair for render-faithful markdown parsing (tables, footnotes,
@@ -62,8 +62,8 @@ catalog:
   'mdast-util-gfm': 3.1.0
   # The serializer half, for tools that legitimately EMIT markdown; edits to
   # existing documents stay position-based (never a whole-doc round-trip).
-  'mdast-util-to-markdown': 2.1.2
-  'micromark': 4.0.2
+  'mdast-util-to-markdown': 2.1.3
+  'micromark': 4.0.3
   'micromark-extension-gfm': 3.0.0
   'minimatch': 10.2.6
   'neosanitize': 0.3.0
@@ -105,25 +105,25 @@ catalog:
   'regjsparser': 0.13.3
   'rolldown': 1.2.10
   'semver': 7.8.5
-  'shell-quote': 1.10.0
-  'taze': 21.1.0
+  'shell-quote': 1.11.0
+  'taze': 21.2.0
   # vite 8.0.16 swaps esbuild → rolldown natively (bundles rolldown
   # 1.0.2) and patches the <=8.0.15 advisories (GHSA-fx2h-pf6j-xcff
   # high, GHSA-v6wh-96g9-6wx3 medium). Tracked here so the pnpm
   # override below pins every transitive `vite` (vitest, @vitest/*,
   # plugin authors) to it.
-  'typescript': 7.1.0-dev.20260922.1
-  'vitest': 5.0.1
-  '@vitest/coverage-v8': 5.0.1
+  'typescript': 7.1.0-dev.20260928.1
+  'vitest': 5.0.2
+  '@vitest/coverage-v8': 5.0.2
   '@bcoe/v8-coverage': 1.0.2
   ast-v8-to-istanbul: 1.0.7
-  'chrome-devtools-mcp': 1.9.0
+  'chrome-devtools-mcp': 1.10.1
   # Playwright MCP server — agent-driven browsing with the fleet agent-banner
   # init script (see .config/fleet/playwright/).
   '@playwright/mcp': 0.0.82
-  '@vitest/ui': 5.0.1
+  '@vitest/ui': 5.0.2
   c8: 12.0.0
-  'yaml': 2.9.0
+  'yaml': 2.9.1
   'svgo': 4.1.0
 
 # pnpm `overrides` block — two purposes:
@@ -165,7 +165,7 @@ overrides:
   'isexe@>=3': '4.0.0'
   'js-yaml@>=5.0.0 <5.2.2': '5.4.2'
   'lru-cache@>=10': '11.5.3'
-  'magic-string': '1.4.1'
+  'magic-string': '1.4.2'
   'mime-db': '1.54.0'
   'mime-types@>=3': '3.0.2'
   'minimatch@>=3': '10.2.6'
@@ -176,7 +176,7 @@ overrides:
   'semver@>=5.0.0 <7.6.0': '7.8.5'
   'side-channel': 'npm:@socketregistry/side-channel@1.0.10'
   'ssri@>=12': '13.0.1'
-  'string-width@>=5': '8.2.2'
+  'string-width@>=5': '8.3.0'
   'tinyexec': '1.3.1'
   'typebox': 'catalog:'
   'undici@<6': '6.28.0'
@@ -203,7 +203,7 @@ overrides:
   # package, so any 5.x resolves as a trust downgrade and the install fails.
   # 6.28.0 is the version the rest of the fleet pins and keeps the
   # ProxyAgent/Agent/fetch surface `@actions/http-client` uses.
-  'undici': '6.28.0'
+  'undici': '6.29.0'
 
 packages:
   - .claude/hooks/fleet/*
@@ -368,7 +368,6 @@ patchedDependencies:
   # This preserves membership and bounds matcher memory for fleet coverage.
   # CPU-profiled forks use the configured teardown deadline to flush profiles.
   # Ordinary forks retain the upstream 500 ms termination grace.
-  vitest@5.0.1: patches/fleet/vitest@5.0.1.patch
 includeWorkspaceRoot: true
 pipelines:
   fleet-prepare:
