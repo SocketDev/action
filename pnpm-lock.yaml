@@ -356,7 +356,7 @@ overrides:
   yaml@2: 2.9.1
   '@actions/http-client': 4.0.1
   packageurl-js: npm:@socketregistry/packageurl-js@1.5.2
-  undici: 6.28.0
+  undici: 6.29.0
 
 patchedDependencies:
   '@polka/url@1.0.0-next.29': 60d82e95c5e67e66c41fe2987ddd4fc3f4992f12158e5c56838e7682e6ef72ea
@@ -6569,8 +6569,8 @@ packages:
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
 
-  undici@6.28.0:
-    resolution: {integrity: sha512-LIY910g9TI13YS95lrMFrs8Rm/u/irgHeTWoKCoteeJ04CUJ92eEfj0rVn+7VKMPBpUPiUoBKfhNyLI23EE/KA==}
+  undici@6.29.0:
+    resolution: {integrity: sha512-R+RODBqp6i2pPflGdq+xIOUkl+RNfGgHwoinecKu/JCuf2uO06cOKoDbI2P7Dn6KcswdKwrczbU6IYJ6K8X+wg==}
     engines: {node: '>=18.17'}
 
   unicorn-magic@0.4.0:
@@ -6788,12 +6788,12 @@ snapshots:
       '@octokit/plugin-rest-endpoint-methods': 17.0.0(@octokit/core@7.0.6)
       '@octokit/request': 10.0.11
       '@octokit/request-error': 7.1.0
-      undici: 6.28.0
+      undici: 6.29.0
 
   '@actions/http-client@4.0.1':
     dependencies:
       tunnel: 0.0.6
-      undici: 6.28.0
+      undici: 6.29.0
 
   '@actions/io@3.0.2': {}
 
@@ -9232,7 +9232,7 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  undici@6.28.0: {}
+  undici@6.29.0: {}
 
   unicorn-magic@0.4.0: {}
 

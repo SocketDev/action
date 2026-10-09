@@ -201,9 +201,9 @@ overrides:
   # attestation while later-published 6.x/7.x/8.x releases do. pnpm's
   # `trustPolicy: no-downgrade` compares by publish DATE across the whole
   # package, so any 5.x resolves as a trust downgrade and the install fails.
-  # 6.28.0 is the version the rest of the fleet pins and keeps the
-  # ProxyAgent/Agent/fetch surface `@actions/http-client` uses.
-  'undici': '6.28.0'
+  # 6.29.0 keeps the ProxyAgent/Agent/fetch surface `@actions/http-client`
+  # uses while including the dependency update in the action bundle.
+  'undici': '6.29.0'
 
 packages:
   - .claude/hooks/fleet/*
