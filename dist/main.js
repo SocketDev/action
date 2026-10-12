@@ -21564,7 +21564,7 @@ var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function separatorWrappedSubstring(pathLike) {
 		if (!isSeparatorWrapped(pathLike)) return;
 		const filepath = require_paths_shared.pathLikeToString(pathLike);
-		return `/${require_primordials_string.StringPrototypeSlice(filepath, 1, -1).replaceAll("\\", "/")}/`;
+		return `/${require_paths_shared.normalizePath(require_primordials_string.StringPrototypeSlice(filepath, 1, -1))}/`;
 	}
 	exports.isAbsolute = isAbsolute;
 	exports.isNodeModules = isNodeModules;
@@ -21889,7 +21889,7 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 	const { JSONParse: _p_JSONParse, JSONStringify: _p_JSONStringify } = require_json();
 	const { MathRandom: _p_MathRandom } = require_math();
 	const { RegExpCtor: _p_RegExpCtor } = require_regexp();
-	const { StringPrototypeCharAt: _p_StringPrototypeCharAt } = require_string();
+	const { StringFromCharCode: _p_StringFromCharCode, StringPrototypeCharAt: _p_StringPrototypeCharAt, StringPrototypeCharCodeAt: _p_StringPrototypeCharCodeAt } = require_string();
 	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 	var require_quote$1 = /* @__PURE__ */ __commonJSMin(((exports$1, module$2) => {
 		/** @import { ControlOperator } from './parse' */
@@ -21913,15 +21913,18 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 			">"
 		];
 		var LINE_TERMINATORS = /[\n\r\u2028\u2029]/;
-		var GLOB_SHELL_SPECIAL = /[\s#!"$&'():;<=>@\\^`|]/g;
+		var GLOB_SHELL_SPECIAL = /[\s#!"$&'():;<=>@\\^`|~]/g;
 		/** @type {typeof import('./quote')} */
 		module$2.exports = function quote(xs) {
+			var sawComment = false;
 			return xs.map(function(s) {
+				if (sawComment && typeof s === "string" && LINE_TERMINATORS.test(s)) throw new _p_TypeErrorCtor("a token after a `comment` must not contain line terminators");
 				if (s === "") return "''";
 				if (s && typeof s === "object") {
 					if ("op" in s && s.op === "glob") {
 						if (typeof s.pattern !== "string") throw new _p_TypeErrorCtor("glob token requires a string `pattern`");
 						if (LINE_TERMINATORS.test(s.pattern)) throw new _p_TypeErrorCtor("glob `pattern` must not contain line terminators");
+						if (s.pattern === "") return "''";
 						return s.pattern.replace(GLOB_SHELL_SPECIAL, "\\$&");
 					}
 					if ("op" in s && typeof s.op === "string") {
@@ -21930,12 +21933,14 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 					}
 					if ("comment" in s && typeof s.comment === "string") {
 						if (LINE_TERMINATORS.test(s.comment)) throw new _p_TypeErrorCtor("`comment` must not contain line terminators");
+						sawComment = true;
 						return "#" + s.comment;
 					}
 					throw new _p_TypeErrorCtor("unrecognized object token shape");
 				}
-				if (/["\s\\]/.test(s) && !/'/.test(s)) return "'" + s.replace(/(['])/g, "\\$1") + "'";
-				if (/["'\s]/.test(s)) return "\"" + s.replace(/(["\\$`!])/g, "\\$1") + "\"";
+				if (/'/.test(s) && /!/.test(s)) return "'" + s.replace(/'/g, "'\"'\"'") + "'";
+				if (/["\s\\]/.test(s) && !/'/.test(s)) return "'" + s + "'";
+				if (/["'\s]/.test(s)) return "\"" + s.replace(/(["\\$`])/g, "\\$1") + "\"";
 				return String(s).replace(/([A-Za-z]:)?([#!"$&'()*,:;<=>?@[\\\]^`{|}~])/g, "$1\\$2");
 			}).join(" ");
 		};
@@ -21963,7 +21968,11 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 		var controlRE = new _p_RegExpCtor("^" + CONTROL + "$");
 		var META = "|&;()<> \\t";
 		var SINGLE_QUOTE = "'([^']*?)'";
-		var DOUBLE_QUOTE = "\"((\\\\\"|[^\"])*?)\"";
+		var ANSI_C_BODY = "(?:\\\\[\\s\\S]|[^\\\\'])*?";
+		var ANSI_C_QUOTE = "\\$'" + ANSI_C_BODY + "'";
+		var ansiCAt = new _p_RegExpCtor("\\$'" + ANSI_C_BODY + "(?:(')|\\\\?$)", "g");
+		var ANSI_C_LETTERS = "abeEfnrtv";
+		var ANSI_C_CHARS = "\x07\b\x1B\x1B\f\n\r	\v";
 		var hash = /^#$/;
 		var SQ = "'";
 		var DQ = "\"";
@@ -21999,6 +22008,38 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 			if (typeof r === "object") return pre + TOKEN + _p_JSONStringify(r) + TOKEN;
 			return pre + r;
 		}
+		var ansiCEscape = /\\([0-7]{1,3}|x[\dA-Fa-f]{1,2}|u[\dA-Fa-f]{1,4}|U[\dA-Fa-f]{1,8}|c(?:\\\\|[\s\S])|[abeEfnrtv\\'"?])/g;
+		/**
+		* @param {string} m
+		* @param {string} escape
+		*/
+		function expandAnsiCEscape(m, escape) {
+			var kind = _p_StringPrototypeCharAt(escape, 0);
+			if (kind === "c") {
+				var ctrl = _p_StringPrototypeCharAt(escape, 1);
+				return ctrl === "?" ? "" : _p_StringFromCharCode(_p_StringPrototypeCharCodeAt(ctrl, 0) & 31);
+			}
+			if (kind === "x" || kind === "u" || kind === "U") {
+				var cp = parseInt(escape.slice(1), 16);
+				if (cp > 1114111) return m;
+				return String.fromCharCode.apply(null, cp > 65535 ? [55232 + (cp >> 10), 56320 + (cp & 1023)] : [cp]);
+			}
+			if (kind >= "0" && kind <= "7") return _p_StringFromCharCode(parseInt(escape, 8) & 255);
+			var letter = ANSI_C_LETTERS.indexOf(escape);
+			return letter < 0 ? escape : _p_StringPrototypeCharAt(ANSI_C_CHARS, letter);
+		}
+		/** @param {string} body */
+		function expandAnsiC(body) {
+			return body.replace(ansiCEscape, expandAnsiCEscape).split("\0")[0];
+		}
+		/**
+		* @param {string} s
+		* @param {number} i
+		*/
+		function closesAnsiC(s, i) {
+			ansiCAt.lastIndex = i;
+			return !!ansiCAt.exec(s)[1];
+		}
 		/**
 		* @param {string} string
 		* @param {Env} [env]
@@ -22009,8 +22050,9 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 			if (!opts) opts = {};
 			var BS = opts.escape || "\\";
 			var ifs = opts.splitUnquoted === true ? " 	\n" : typeof opts.splitUnquoted === "string" ? opts.splitUnquoted : "";
-			var BAREWORD = "(\\" + BS + "['\"" + META + "]|[^\\s'\"" + META + "])+";
-			var matches = matchAll(string, new _p_RegExpCtor(["(" + CONTROL + ")", "(" + BAREWORD + "|" + DOUBLE_QUOTE + "|" + SINGLE_QUOTE + ")+"].join("|"), "g"));
+			var BAREWORD = "(\\" + BS + "['\"$\\" + BS + META + "]|\\$\\$|\\$(?!" + ANSI_C_QUOTE.slice(2) + ")|[^\\s'\"$" + META + "])+";
+			var DOUBLE_QUOTE = "\"(?:\\" + BS + "[\\s\\S]|[^\"\\" + BS + "])*\"";
+			var matches = matchAll(string, new _p_RegExpCtor(["(" + CONTROL + ")", "(" + ANSI_C_QUOTE + "|" + BAREWORD + "|" + DOUBLE_QUOTE + "|" + SINGLE_QUOTE + ")+"].join("|"), "g"));
 			if (matches.length === 0) return [];
 			if (!env) env = {};
 			var commented = false;
@@ -22051,10 +22093,8 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 						varend -= 1;
 						varname = s.slice(i, varend);
 						i = varend;
-					} else if (/[*@#?$!_-]/.test(char)) {
-						varname = char;
-						i += 1;
-					} else {
+					} else if (/[*@#?$!-]/.test(char)) varname = char;
+					else {
 						var slicedFromI = s.slice(i);
 						varend = slicedFromI.match(/[^\w\d_]/);
 						if (!varend) {
@@ -22108,7 +22148,12 @@ var require_shell_quote$1 = /* @__PURE__ */ __commonJSMin(((exports, module) => 
 						if (out.length) return [out, commentObj];
 						return [commentObj];
 					} else if (c === BS) esc = true;
-					else if (c === DS) {
+					else if (c === DS && _p_StringPrototypeCharAt(s, i + 1) === SQ && closesAnsiC(s, i)) {
+						flushRun();
+						sawQuote = true;
+						out += expandAnsiC(s.slice(i + 2, ansiCAt.lastIndex - 1));
+						i = ansiCAt.lastIndex - 1;
+					} else if (c === DS) {
 						var value = parseEnvVar();
 						if (!ifs) out += value;
 						else for (var vi = 0; vi < value.length; vi += 1) {
