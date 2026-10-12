@@ -175,7 +175,7 @@ describe.skipIf(process.platform === 'win32')('firewall setup order', () => {
   )
 
   it.each(['free', 'enterprise'])(
-    'rejects a later runtime shadowing %s firewall setup even without a summary',
+    'fails when later runtime setup shadows %s firewall shims',
     async edition => {
       const originalDir = path.join(fixtureRoot, 'original-runtime')
       writeExecutable(

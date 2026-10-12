@@ -1,8 +1,16 @@
 import { readFile } from 'node:fs/promises'
 
-import { debug, getInput, info, setFailed, summary } from '@actions/core'
+import {
+  debug,
+  getInput,
+  info,
+  setFailed,
+  summary,
+  warning,
+} from '@actions/core'
 import { PackageURL } from 'packageurl-js'
 
+import { diagnoseFirewallShims } from './tools/firewall-shim-diagnostics.js'
 import { assertFirewallShimPrecedence } from './tools/firewall-shims.js'
 
 export async function writeFirewallSummary() {
@@ -121,6 +129,22 @@ export async function main() {
     return
   }
 
+  const diagnostics = await diagnoseFirewallShims()
+  const affected = diagnostics.filter(diagnostic =>
+    ['missing', 'unavailable'].includes(diagnostic.status),
+  )
+  if (affected.length > 0) {
+    const commands = affected
+      .map(({ command, status }) =>
+        status === 'unavailable'
+          ? `${command} (could not be checked)`
+          : `${command} (${status})`,
+      )
+      .join(', ')
+    warning(
+      `Socket Firewall could not verify shims for: ${commands}. This check observes the final PATH and cannot confirm whether earlier commands were intercepted. Run runtime and package-manager setup before Socket, or run Socket again after those setup steps.`,
+    )
+  }
   await assertFirewallShimPrecedence()
   await writeFirewallSummary()
 }

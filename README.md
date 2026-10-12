@@ -49,6 +49,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
       - uses: SocketDev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
         with:
           mode: firewall-free
@@ -74,6 +78,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
 
       - uses: SocketDev/action@v1.3.2
         with:
@@ -158,6 +166,10 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+
       - uses: SocketDev/action@ba6de6cc0565af1f42295590380973573297e31f # v1.3.2
         with:
           mode: firewall-enterprise
@@ -184,6 +196,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
 
       - uses: SocketDev/action@v1.3.2
         with:
@@ -276,11 +292,11 @@ Additional ecosystems available with [sfw-enterprise][sfw-enterprise-ecosystems]
 
 ### Setup order for automatic shims
 
-Run runtime and package-manager setup actions before the firewall action. Install dependencies afterward. A later setup step can put its binaries ahead of the firewall shims on `PATH`.
+Run `actions/setup-node`, `actions/setup-python`, and package-manager setup before Socket. Install dependencies afterward. Automatic shims cover supported tools that are installed when Socket runs. A later setup step can put its binaries ahead of the firewall shims on `PATH`.
 
-With automatic shims enabled, the post action fails the job if supported commands resolve outside the shim directory. This check also runs with `job-summary: none`. It checks the final `PATH` after execution. It cannot protect earlier installs or detect temporary drift that was later restored.
+The post action fails if a recorded command resolves outside its shim directory and warns if a recorded shim is missing. These checks also run with `job-summary: none`. They inspect the final job `PATH` and cannot prove whether earlier commands were intercepted or detect temporary drift that was later restored.
 
-Run the firewall action again after changing runtimes, or use explicit `sfw` invocation. In current source, `shims: 'false'` selects explicit invocation and disables the final shim check.
+Run Socket again after later tool setup, or call `sfw` explicitly. When `shims: 'false'`, use explicit `sfw` invocation and no final shim diagnostic runs.
 
 ### Bypassing shims for publishing
 

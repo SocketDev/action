@@ -149,10 +149,15 @@ export async function createFirewallShims(firewallBinaryPath, edition) {
   if (runnerPath === undefined) {
     process.env.PATH = shimDir
   }
-  saveState(FIREWALL_SHIM_STATE_KEY, { commands, directory: shimDir })
 
   // Later steps read SFW_SHIM_DIR to disable the shims for a publish flow.
   exportVariable('SFW_SHIM_DIR', shimDir)
+
+  saveState(FIREWALL_SHIM_STATE_KEY, {
+    commands,
+    completedCommands: shimmed,
+    directory: shimDir,
+  })
 
   info(`created shims for: ${shimmed.join(', ')}`)
 }
@@ -214,7 +219,13 @@ export function parseFirewallShimState(saved) {
     !state.commands.every(
       command =>
         typeof command === 'string' && /^[a-z][a-z0-9]*$/.test(command),
-    )
+    ) ||
+    (state.completedCommands !== undefined &&
+      (!Array.isArray(state.completedCommands) ||
+        !state.completedCommands.every(
+          command =>
+            typeof command === 'string' && /^[a-z][a-z0-9]*$/.test(command),
+        )))
   ) {
     throw invalidFirewallShimState()
   }
