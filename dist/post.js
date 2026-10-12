@@ -11344,7 +11344,7 @@ var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function separatorWrappedSubstring(pathLike) {
 		if (!isSeparatorWrapped(pathLike)) return;
 		const filepath = require_paths_shared.pathLikeToString(pathLike);
-		return `/${require_primordials_string.StringPrototypeSlice(filepath, 1, -1).replaceAll("\\", "/")}/`;
+		return `/${require_paths_shared.normalizePath(require_primordials_string.StringPrototypeSlice(filepath, 1, -1))}/`;
 	}
 	exports.isAbsolute = isAbsolute;
 	exports.isNodeModules = isNodeModules;

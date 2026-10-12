@@ -54,10 +54,7 @@
   "workspace": {
     "blockExoticSubdeps": true,
     "minimumReleaseAge": 10080,
-    "minimumReleaseAgeExclude": [
-      "@socketregistry/*",
-      "@socketsecurity/*"
-    ],
+    "minimumReleaseAgeExclude": ["@socketregistry/*", "@socketsecurity/*"],
     "resolutionMode": "highest",
     "trustPolicy": "no-downgrade"
   }
