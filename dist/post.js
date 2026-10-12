@@ -471,6 +471,14 @@ function error(message, properties = {}) {
 	issueCommand("error", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
 }
 /**
+* Adds a warning issue
+* @param message warning issue message. Errors will be converted to string via toString()
+* @param properties optional properties to add to the annotation.
+*/
+function warning(message, properties = {}) {
+	issueCommand("warning", toCommandProperties(properties), message instanceof Error ? message.toString() : message);
+}
+/**
 * Writes info to log with console.log.
 * @param message info message
 */
@@ -11580,8 +11588,53 @@ function parseFirewallShimState(saved) {
 	} catch {
 		throw invalidFirewallShimState();
 	}
-	if (!state || typeof state !== "object" || typeof state.directory !== "string" || !path.isAbsolute(state.directory) || !Array.isArray(state.commands) || state.commands.length === 0 || !state.commands.every((command) => typeof command === "string" && /^[a-z][a-z0-9]*$/.test(command))) throw invalidFirewallShimState();
+	if (!state || typeof state !== "object" || typeof state.directory !== "string" || !path.isAbsolute(state.directory) || !Array.isArray(state.commands) || state.commands.length === 0 || !state.commands.every((command) => typeof command === "string" && /^[a-z][a-z0-9]*$/.test(command)) || state.completedCommands !== void 0 && (!Array.isArray(state.completedCommands) || !state.completedCommands.every((command) => typeof command === "string" && /^[a-z][a-z0-9]*$/.test(command)))) throw invalidFirewallShimState();
 	return state;
+}
+
+/**
+* @typedef {{
+*   command: string
+*   status: 'selected' | 'missing' | 'shadowed' | 'unavailable'
+* }} FirewallShimDiagnostic
+*/
+/**
+* Report which saved firewall shims resolve first in the current job PATH.
+*
+* @returns {Promise<FirewallShimDiagnostic[]>}
+*/
+async function diagnoseFirewallShims() {
+	const saved = getState(FIREWALL_SHIM_STATE_KEY);
+	if (!saved) return [];
+	const state = parseFirewallShimState(saved);
+	const expectedDirectory = firewallCommandPath(state.directory);
+	const diagnostics = [];
+	const commands = state.completedCommands ?? state.commands;
+	for (const command of commands) {
+		let executable;
+		try {
+			executable = await which(command, false);
+		} catch {
+			diagnostics.push({
+				command,
+				status: "unavailable"
+			});
+			continue;
+		}
+		if (!executable) {
+			diagnostics.push({
+				command,
+				status: "missing"
+			});
+			continue;
+		}
+		const actualDirectory = firewallCommandPath(path.dirname(executable));
+		diagnostics.push({
+			command,
+			status: actualDirectory === expectedDirectory ? "selected" : "shadowed"
+		});
+	}
+	return diagnostics;
 }
 
 async function writeFirewallSummary() {
@@ -11669,6 +11722,11 @@ async function main() {
 	if (getInput("mode", { required: true }).toLowerCase() === "patch") {
 		info("patch mode: no post-run actions required");
 		return;
+	}
+	const affected = (await diagnoseFirewallShims()).filter((diagnostic) => ["missing", "unavailable"].includes(diagnostic.status));
+	if (affected.length > 0) {
+		const commands = affected.map(({ command, status }) => status === "unavailable" ? `${command} (could not be checked)` : `${command} (${status})`).join(", ");
+		warning(`Socket Firewall could not verify shims for: ${commands}. This check observes the final PATH and cannot confirm whether earlier commands were intercepted. Run runtime and package-manager setup before Socket, or run Socket again after those setup steps.`);
 	}
 	await assertFirewallShimPrecedence();
 	await writeFirewallSummary();
