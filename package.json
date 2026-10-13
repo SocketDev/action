@@ -21,6 +21,7 @@
     "build": "node scripts/repo/build.mts",
     "check": "node scripts/fleet/check.mts",
     "check:paths": "node scripts/fleet/check/paths-are-valid.mts",
+    "docs:action:check": "node scripts/repo/check/docs-action.mts",
     "ci:local": "node scripts/fleet/ci/local/run.mts run --all --quiet --github-token --pause-on-failure",
     "clean": "node scripts/fleet/clean.mts",
     "cover": "node scripts/fleet/cover.mts",

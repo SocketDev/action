@@ -7,13 +7,13 @@ Use `SocketDev/action` in a workflow step to install Socket Firewall or run
 
 ## Modes
 
-| `mode` value | Behavior | Socket token |
-| --- | --- | --- |
-| `firewall` | Installs Socket Firewall. The action selects Enterprise when `socket-token` is nonempty; otherwise it selects Free. | Optional. Required for Enterprise. |
-| `firewall-free` | Installs the Free edition. | Not used to select the edition. |
-| `firewall-enterprise` | Installs the Enterprise edition. | Supply `socket-token`. |
-| `patch` | Downloads `socket-patch`, adds it to `PATH`, then runs `socket-patch apply`. | Not used. |
-| `cli` | Declared in the manifest description but not implemented by the current entrypoint. It fails as an unsupported mode. | Not applicable. |
+| `mode` value          | Supported | Behavior                                                                                                             | Socket token                       |
+| --------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `firewall`            | Yes       | Installs Socket Firewall. The action selects Enterprise when `socket-token` is nonempty; otherwise it selects Free.  | Optional. Required for Enterprise. |
+| `firewall-free`       | Yes       | Installs the Free edition.                                                                                           | Not used to select the edition.    |
+| `firewall-enterprise` | Yes       | Installs the Enterprise edition.                                                                                     | Supply `socket-token`.             |
+| `patch`               | Yes       | Downloads `socket-patch`, adds it to `PATH`, then runs `socket-patch apply`.                                         | Not used.                          |
+| `cli`                 | No        | Declared in the manifest description but not implemented by the current entrypoint. It fails as an unsupported mode. | Not applicable.                    |
 
 Mode names are lowercased before dispatch. The manifest marks `mode` required,
 but does not define a default. Choose a supported mode explicitly.
@@ -24,20 +24,20 @@ All inputs below come from [`action.yml`](../action.yml). GitHub Actions passes
 input values as strings; the action parses the Boolean inputs with
 `@actions/core`.
 
-| Input | Required | Default | Effect |
-| --- | --- | --- | --- |
-| `mode` | Yes | None | Selects the mode described above. |
-| `firewall-version` | No | `latest` | The default resolves to the checksum-pinned `v1.15.0` Firewall release. A different requested version fails checksum validation. |
-| `github-token` | Yes in the manifest | `${{ github.server_url == 'https://github.com' && github.token || '' }}` | Used by patch mode to look up release metadata through the GitHub API. The action downloads binaries from public release URLs. |
-| `job-summary` | No | `all` | Firewall post-step summary policy: `all`, `errors`, or `none`. The implementation also maps `true` to `all` and `false` to `none`. Patch mode skips the post-step summary. |
-| `patch-cwd` | No | Empty string | When nonempty in patch mode, passes `--cwd <value>` to `socket-patch apply`. |
-| `patch-dry-run` | No | `false` | When true in patch mode, passes `--dry-run`; the patch tool verifies changes without applying them. |
-| `patch-ecosystems` | No | Empty string | When nonempty in patch mode, passes `--ecosystems <value>`. The manifest describes comma-separated ecosystem names: `npm`, `pypi`, and `cargo`. |
-| `patch-version` | No | `latest` | Selects the `socket-patch` release. A value other than `latest` is looked up using a `v`-prefixed release tag. |
-| `shims` | No | `true` | In Firewall mode, creates package-manager shims that route commands through `sfw`. Set to `false` to invoke `sfw` explicitly. |
-| `socket-token` | No | Empty string | Sets both `SOCKET_API_TOKEN` and `SOCKET_API_KEY` for later steps and selects Enterprise in `firewall` mode. The action masks this value in logs. |
-| `socket_api_key` | No | Empty string | Declared as an input in the manifest. The current entrypoint does not read it; use `socket-token` to export the token and select Enterprise mode. |
-| `use-cache` | No | `true` | Reuses a cached Firewall or patch binary when available. Set to `false` to download it again. |
+| Input              | Required | Default                                                                    | Effect                                                                                                                                                                     |
+| ------------------ | -------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mode`             | Yes      | Not set                                                                    | Selects the mode described above.                                                                                                                                          |
+| `firewall-version` | No       | `latest`                                                                   | The default resolves to the checksum-pinned `v1.15.0` Firewall release. A different requested version fails checksum validation.                                           |
+| `github-token`     | Yes      | `${{ github.server_url == 'https://github.com' && github.token \|\| '' }}` | Used by patch mode to look up release metadata through the GitHub API. The action downloads binaries from public release URLs.                                             |
+| `job-summary`      | No       | `all`                                                                      | Firewall post-step summary policy: `all`, `errors`, or `none`. The implementation also maps `true` to `all` and `false` to `none`. Patch mode skips the post-step summary. |
+| `patch-cwd`        | No       | `''`                                                                       | When nonempty in patch mode, passes `--cwd <value>` to `socket-patch apply`.                                                                                               |
+| `patch-dry-run`    | No       | `false`                                                                    | When true in patch mode, passes `--dry-run`; the patch tool verifies changes without applying them.                                                                        |
+| `patch-ecosystems` | No       | `''`                                                                       | When nonempty in patch mode, passes `--ecosystems <value>`. The manifest describes comma-separated ecosystem names: `npm`, `pypi`, and `cargo`.                            |
+| `patch-version`    | No       | `latest`                                                                   | Selects the `socket-patch` release. A value other than `latest` is looked up using a `v`-prefixed release tag.                                                             |
+| `shims`            | No       | `true`                                                                     | In Firewall mode, creates package-manager shims that route commands through `sfw`. Set to `false` to invoke `sfw` explicitly.                                              |
+| `socket-token`     | No       | Not set                                                                    | Sets both `SOCKET_API_TOKEN` and `SOCKET_API_KEY` for later steps and selects Enterprise in `firewall` mode. The action masks this value in logs.                          |
+| `socket_api_key`   | No       | Not set                                                                    | Declared as an input in the manifest. The current entrypoint does not read it; use `socket-token` to export the token and select Enterprise mode.                          |
+| `use-cache`        | No       | `true`                                                                     | Reuses a cached Firewall or patch binary when available. Set to `false` to download it again.                                                                              |
 
 Boolean values must use the syntax accepted by `@actions/core`'s
 `getBooleanInput`, such as `true` or `false`.
@@ -53,11 +53,11 @@ creation. This input has no effect in patch mode.
 
 ## Outputs
 
-| Output | Set in | Value |
-| --- | --- | --- |
-| `firewall-path-report` | Firewall mode when `job-summary` is not `none` | Path to the generated Firewall report JSON. |
-| `firewall-path-binary` | Firewall mode | Path to the installed `sfw` executable. |
-| `patch-path-binary` | Patch mode | Path to the installed `socket-patch` executable. |
+| Output                 | Set in                                         | Value                                            |
+| ---------------------- | ---------------------------------------------- | ------------------------------------------------ |
+| `firewall-path-report` | Firewall mode when `job-summary` is not `none` | Path to the generated Firewall report JSON.      |
+| `firewall-path-binary` | Firewall mode                                  | Path to the installed `sfw` executable.          |
+| `patch-path-binary`    | Patch mode                                     | Path to the installed `socket-patch` executable. |
 
 Each output is available to later workflow steps through the action step's
 `outputs` context. For example, `steps.socket.outputs.patch-path-binary` reads
@@ -68,11 +68,11 @@ the patch binary path when the step id is `socket`.
 Patch mode supports these runner platform and architecture pairs, based on the
 Node platform and architecture values used by the action:
 
-| Runner platform | Runner architecture |
-| --- | --- |
-| macOS | ARM64, x64 |
-| Linux | ARM, ARM64, IA32, x64 |
-| Windows | ARM64, IA32, x64 |
+| Runner platform | Runner architecture   |
+| --------------- | --------------------- |
+| macOS           | ARM64, x64            |
+| Linux           | ARM, ARM64, IA32, x64 |
+| Windows         | ARM64, IA32, x64      |
 
 The action downloads the matching release archive, checks it against the
 release's `SHA256SUMS`, extracts it, adds the binary directory to `PATH`, and
