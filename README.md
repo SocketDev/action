@@ -22,7 +22,13 @@ This action can run in multiple modes:
 
 - [Socket Firewall: Free](#socket-firewall-free)
 - [Socket Firewall: Enterprise](#socket-firewall-enterprise)
+- [Patch mode](docs/action.md#patch-mode)
 - Socket CLI: _Coming soon_
+
+### Documentation
+
+See the [Action reference](docs/action.md) for every input and output, supported
+modes, runner platforms, and workflow effects.
 
 ### Why We Recommend Pinning
 
