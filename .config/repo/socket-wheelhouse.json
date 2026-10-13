@@ -54,11 +54,18 @@
   "workspace": {
     "blockExoticSubdeps": true,
     "minimumReleaseAge": 10080,
-    "minimumReleaseAgeExclude": [
-      "@socketregistry/*",
-      "@socketsecurity/*"
-    ],
+    "minimumReleaseAgeExclude": ["@socketregistry/*", "@socketsecurity/*"],
     "resolutionMode": "highest",
     "trustPolicy": "no-downgrade"
+  },
+  "docs": {
+    "surfaces": [
+      {
+        "kind": "action",
+        "hub": "docs/action.md",
+        "sources": ["action.yml", "src/main.js", "src/post.js"],
+        "check": "docs:action:check"
+      }
+    ]
   }
 }
