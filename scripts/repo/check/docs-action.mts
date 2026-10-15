@@ -204,17 +204,17 @@ function extractModes(source: string): string[] {
   const modes: string[] = []
   let defaultCount = 0
   for (const clause of modeSwitch.cases) {
-    if (!isPlainObject(clause) || clause.type !== 'SwitchCase') {
+    if (!isPlainObject(clause) || clause['type'] !== 'SwitchCase') {
       throw new Error('src/main.js: unsupported inputs.mode dispatch case')
     }
-    if (clause.test === null) {
+    if (clause['test'] === null) {
       defaultCount += 1
     } else if (
-      isPlainObject(clause.test) &&
-      clause.test.type === 'Literal' &&
-      typeof clause.test.value === 'string'
+      isPlainObject(clause['test']) &&
+      clause['test']['type'] === 'Literal' &&
+      typeof clause['test']['value'] === 'string'
     ) {
-      modes.push(clause.test.value)
+      modes.push(clause['test']['value'])
     } else {
       throw new Error('src/main.js: unsupported inputs.mode dispatch case')
     }
