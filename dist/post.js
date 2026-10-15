@@ -7,7 +7,7 @@ import { constants, promises } from "fs";
 import * as path$1 from "path";
 import path from "node:path";
 
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __commonJSMin$1 = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod, mod.exports), cb = null), mod.exports);
 var __require = /* #__PURE__ */ (() => createRequire(import.meta.url))();
 
 /**
@@ -487,13 +487,13 @@ function getState(name) {
 	return process.env[`STATE_${name}`] || "";
 }
 
-var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 	let node_module = __require("node:module");
-	var require_purl = /* @__PURE__ */ __commonJSMin(((exports$1) => {
-		Object.defineProperty(exports$1, Symbol.toStringTag, { value: "Module" });
-		exports$1.PURL_Type = {
+	var require_purl = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		exports.PURL_Type = {
 			ALPM: "alpm",
 			APK: "apk",
 			BITBUCKET: "bitbucket",
@@ -528,8 +528,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			VSCODE: "vscode"
 		};
 	}));
-	var require_error = /* @__PURE__ */ __commonJSMin(((exports$2) => {
-		Object.defineProperty(exports$2, Symbol.toStringTag, { value: "Module" });
+	var require_error = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to `Error` and its subclass constructors, plus V8's
 		*   stack-trace API. `Error.isError` is ES2025; `captureStackTrace` /
@@ -560,21 +560,21 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			return Error.stackTraceLimit;
 			/* c8 ignore stop */
 		}
-		exports$2.AggregateErrorCtor = AggregateErrorCtor;
-		exports$2.ErrorCaptureStackTrace = ErrorCaptureStackTrace;
-		exports$2.ErrorCtor = ErrorCtor;
-		exports$2.ErrorIsError = ErrorIsError;
-		exports$2.ErrorPrepareStackTrace = ErrorPrepareStackTrace;
-		exports$2.ErrorStackTraceLimit = ErrorStackTraceLimit;
-		exports$2.EvalErrorCtor = EvalErrorCtor;
-		exports$2.RangeErrorCtor = RangeErrorCtor;
-		exports$2.ReferenceErrorCtor = ReferenceErrorCtor;
-		exports$2.SyntaxErrorCtor = SyntaxErrorCtor;
-		exports$2.TypeErrorCtor = TypeErrorCtor;
-		exports$2.URIErrorCtor = URIErrorCtor;
+		exports.AggregateErrorCtor = AggregateErrorCtor;
+		exports.ErrorCaptureStackTrace = ErrorCaptureStackTrace;
+		exports.ErrorCtor = ErrorCtor;
+		exports.ErrorIsError = ErrorIsError;
+		exports.ErrorPrepareStackTrace = ErrorPrepareStackTrace;
+		exports.ErrorStackTraceLimit = ErrorStackTraceLimit;
+		exports.EvalErrorCtor = EvalErrorCtor;
+		exports.RangeErrorCtor = RangeErrorCtor;
+		exports.ReferenceErrorCtor = ReferenceErrorCtor;
+		exports.SyntaxErrorCtor = SyntaxErrorCtor;
+		exports.TypeErrorCtor = TypeErrorCtor;
+		exports.URIErrorCtor = URIErrorCtor;
 	}));
-	var require_runtime$1 = /* @__PURE__ */ __commonJSMin(((exports$3) => {
-		Object.defineProperty(exports$3, Symbol.toStringTag, { value: "Module" });
+	var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Runtime environment detection constants. All checks use only
 		*   `typeof`-safe global probes so this module is safe to import in browser,
@@ -597,13 +597,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		* defined without `window` in worker contexts.
 		*/
 		const IS_WORKER = typeof self !== "undefined" && typeof window === "undefined" && typeof document === "undefined";
-		exports$3.IS_BROWSER = IS_BROWSER;
-		exports$3.IS_NODE = IS_NODE;
-		exports$3.IS_WORKER = IS_WORKER;
+		exports.IS_BROWSER = IS_BROWSER;
+		exports.IS_NODE = IS_NODE;
+		exports.IS_WORKER = IS_WORKER;
 	}));
-	var require_module$1 = /* @__PURE__ */ __commonJSMin(((exports$4) => {
-		Object.defineProperty(exports$4, Symbol.toStringTag, { value: "Module" });
-		const require_constants_runtime = require_runtime$1();
+	var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_constants_runtime = require_runtime();
 		let module$1 = __require("module");
 		/**
 		* @file Accessors for `node:module` that work across runtimes. Ambient
@@ -706,16 +706,16 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			const req = bindRequire(fromUrl);
 			if (req) return req(specifier);
 		}
-		exports$4.bindRequire = bindRequire;
-		exports$4.getNodeModule = getNodeModule;
-		exports$4.getRequire = getRequire;
-		exports$4.isNodeBuiltin = isNodeBuiltin;
-		exports$4.requireBuiltin = requireBuiltin;
-		exports$4.requireFrom = requireFrom;
+		exports.bindRequire = bindRequire;
+		exports.getNodeModule = getNodeModule;
+		exports.getRequire = getRequire;
+		exports.isNodeBuiltin = isNodeBuiltin;
+		exports.requireBuiltin = requireBuiltin;
+		exports.requireFrom = requireFrom;
 	}));
-	var require_detect$1 = /* @__PURE__ */ __commonJSMin(((exports$5) => {
-		Object.defineProperty(exports$5, Symbol.toStringTag, { value: "Module" });
-		const require_node_module = require_module$1();
+	var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_node_module = require_module();
 		/**
 		* @file Smol detection + lazy-loader for `node:smol-util`. Two
 		*   responsibilities:
@@ -780,11 +780,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			if (isSmolCache === void 0) isSmolCache = require_node_module.isNodeBuiltin("node:smol-util");
 			return isSmolCache;
 		}
-		exports$5.getSmolUtil = getSmolUtil;
-		exports$5.isSmol = isSmol;
+		exports.getSmolUtil = getSmolUtil;
+		exports.isSmol = isSmol;
 	}));
-	var require_uncurry$1 = /* @__PURE__ */ __commonJSMin(((exports$6) => {
-		Object.defineProperty(exports$6, Symbol.toStringTag, { value: "Module" });
+	var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
 		*   Node.js's internal/per_context/primordials.js. Every other primordials leaf
@@ -796,7 +796,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
 		*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
 		*/
-		const smolUtil = require_detect$1().getSmolUtil();
+		const smolUtil = require_detect().getSmolUtil();
 		const { apply, bind, call } = Function.prototype;
 		const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
 		const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
@@ -820,15 +820,15 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 				return;
 			}
 		});
-		exports$6.applyBind = applyBind;
-		exports$6.applySafe = applySafe;
-		exports$6.bindCall = bindCall;
-		exports$6.uncurryThis = uncurryThis;
-		exports$6.weakRefSafe = weakRefSafe;
+		exports.applyBind = applyBind;
+		exports.applySafe = applySafe;
+		exports.bindCall = bindCall;
+		exports.uncurryThis = uncurryThis;
+		exports.weakRefSafe = weakRefSafe;
 	}));
-	var require_map_set = /* @__PURE__ */ __commonJSMin(((exports$7) => {
-		Object.defineProperty(exports$7, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_map_set = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		const require_primordials_error = require_error();
 		/**
 		* @file Safe references to `Map`, `Set`, `WeakMap`, `WeakSet`, and `WeakRef`.
@@ -900,54 +900,54 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			WeakMapPrototypeSet(map, key, value);
 			return value;
 		}
-		exports$7.MapCtor = MapCtor;
-		exports$7.MapPrototypeClear = MapPrototypeClear;
-		exports$7.MapPrototypeDelete = MapPrototypeDelete;
-		exports$7.MapPrototypeEntries = MapPrototypeEntries;
-		exports$7.MapPrototypeForEach = MapPrototypeForEach;
-		exports$7.MapPrototypeGet = MapPrototypeGet;
-		exports$7.MapPrototypeGetOrInsert = MapPrototypeGetOrInsert;
-		exports$7.MapPrototypeGetOrInsertComputed = MapPrototypeGetOrInsertComputed;
-		exports$7.MapPrototypeHas = MapPrototypeHas;
-		exports$7.MapPrototypeKeys = MapPrototypeKeys;
-		exports$7.MapPrototypeSet = MapPrototypeSet;
-		exports$7.MapPrototypeValues = MapPrototypeValues;
-		exports$7.SetCtor = SetCtor;
-		exports$7.SetPrototypeAdd = SetPrototypeAdd;
-		exports$7.SetPrototypeClear = SetPrototypeClear;
-		exports$7.SetPrototypeDelete = SetPrototypeDelete;
-		exports$7.SetPrototypeDifference = SetPrototypeDifference;
-		exports$7.SetPrototypeEntries = SetPrototypeEntries;
-		exports$7.SetPrototypeForEach = SetPrototypeForEach;
-		exports$7.SetPrototypeHas = SetPrototypeHas;
-		exports$7.SetPrototypeIntersection = SetPrototypeIntersection;
-		exports$7.SetPrototypeIsDisjointFrom = SetPrototypeIsDisjointFrom;
-		exports$7.SetPrototypeIsSubsetOf = SetPrototypeIsSubsetOf;
-		exports$7.SetPrototypeIsSupersetOf = SetPrototypeIsSupersetOf;
-		exports$7.SetPrototypeKeys = SetPrototypeKeys;
-		exports$7.SetPrototypeSymmetricDifference = SetPrototypeSymmetricDifference;
-		exports$7.SetPrototypeUnion = SetPrototypeUnion;
-		exports$7.SetPrototypeValues = SetPrototypeValues;
-		exports$7.WeakMapCtor = WeakMapCtor;
-		exports$7.WeakMapPrototypeDelete = WeakMapPrototypeDelete;
-		exports$7.WeakMapPrototypeGet = WeakMapPrototypeGet;
-		exports$7.WeakMapPrototypeGetOrInsert = WeakMapPrototypeGetOrInsert;
-		exports$7.WeakMapPrototypeGetOrInsertComputed = WeakMapPrototypeGetOrInsertComputed;
-		exports$7.WeakMapPrototypeHas = WeakMapPrototypeHas;
-		exports$7.WeakMapPrototypeSet = WeakMapPrototypeSet;
-		exports$7.WeakRefCtor = WeakRefCtor;
-		exports$7.WeakSetCtor = WeakSetCtor;
-		exports$7.WeakSetPrototypeAdd = WeakSetPrototypeAdd;
-		exports$7.WeakSetPrototypeDelete = WeakSetPrototypeDelete;
-		exports$7.WeakSetPrototypeHas = WeakSetPrototypeHas;
-		exports$7.mapGetOrInsertComputedFallback = mapGetOrInsertComputedFallback;
-		exports$7.mapGetOrInsertFallback = mapGetOrInsertFallback;
-		exports$7.weakMapGetOrInsertComputedFallback = weakMapGetOrInsertComputedFallback;
-		exports$7.weakMapGetOrInsertFallback = weakMapGetOrInsertFallback;
+		exports.MapCtor = MapCtor;
+		exports.MapPrototypeClear = MapPrototypeClear;
+		exports.MapPrototypeDelete = MapPrototypeDelete;
+		exports.MapPrototypeEntries = MapPrototypeEntries;
+		exports.MapPrototypeForEach = MapPrototypeForEach;
+		exports.MapPrototypeGet = MapPrototypeGet;
+		exports.MapPrototypeGetOrInsert = MapPrototypeGetOrInsert;
+		exports.MapPrototypeGetOrInsertComputed = MapPrototypeGetOrInsertComputed;
+		exports.MapPrototypeHas = MapPrototypeHas;
+		exports.MapPrototypeKeys = MapPrototypeKeys;
+		exports.MapPrototypeSet = MapPrototypeSet;
+		exports.MapPrototypeValues = MapPrototypeValues;
+		exports.SetCtor = SetCtor;
+		exports.SetPrototypeAdd = SetPrototypeAdd;
+		exports.SetPrototypeClear = SetPrototypeClear;
+		exports.SetPrototypeDelete = SetPrototypeDelete;
+		exports.SetPrototypeDifference = SetPrototypeDifference;
+		exports.SetPrototypeEntries = SetPrototypeEntries;
+		exports.SetPrototypeForEach = SetPrototypeForEach;
+		exports.SetPrototypeHas = SetPrototypeHas;
+		exports.SetPrototypeIntersection = SetPrototypeIntersection;
+		exports.SetPrototypeIsDisjointFrom = SetPrototypeIsDisjointFrom;
+		exports.SetPrototypeIsSubsetOf = SetPrototypeIsSubsetOf;
+		exports.SetPrototypeIsSupersetOf = SetPrototypeIsSupersetOf;
+		exports.SetPrototypeKeys = SetPrototypeKeys;
+		exports.SetPrototypeSymmetricDifference = SetPrototypeSymmetricDifference;
+		exports.SetPrototypeUnion = SetPrototypeUnion;
+		exports.SetPrototypeValues = SetPrototypeValues;
+		exports.WeakMapCtor = WeakMapCtor;
+		exports.WeakMapPrototypeDelete = WeakMapPrototypeDelete;
+		exports.WeakMapPrototypeGet = WeakMapPrototypeGet;
+		exports.WeakMapPrototypeGetOrInsert = WeakMapPrototypeGetOrInsert;
+		exports.WeakMapPrototypeGetOrInsertComputed = WeakMapPrototypeGetOrInsertComputed;
+		exports.WeakMapPrototypeHas = WeakMapPrototypeHas;
+		exports.WeakMapPrototypeSet = WeakMapPrototypeSet;
+		exports.WeakRefCtor = WeakRefCtor;
+		exports.WeakSetCtor = WeakSetCtor;
+		exports.WeakSetPrototypeAdd = WeakSetPrototypeAdd;
+		exports.WeakSetPrototypeDelete = WeakSetPrototypeDelete;
+		exports.WeakSetPrototypeHas = WeakSetPrototypeHas;
+		exports.mapGetOrInsertComputedFallback = mapGetOrInsertComputedFallback;
+		exports.mapGetOrInsertFallback = mapGetOrInsertFallback;
+		exports.weakMapGetOrInsertComputedFallback = weakMapGetOrInsertComputedFallback;
+		exports.weakMapGetOrInsertFallback = weakMapGetOrInsertFallback;
 	}));
-	var require_regexp$1 = /* @__PURE__ */ __commonJSMin(((exports$8) => {
-		Object.defineProperty(exports$8, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `RegExp` and its prototype methods. `RegExp.escape`
 		*   is ES2025; the primordial is typed `Function | undefined` so older runtimes
@@ -962,16 +962,16 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const RegExpPrototypeTest = require_primordials_uncurry.uncurryThis(RegExp.prototype.test);
 		const RegExpPrototypeSymbolMatch = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.match]);
 		const RegExpPrototypeSymbolReplace = require_primordials_uncurry.uncurryThis(RegExp.prototype[Symbol.replace]);
-		exports$8.RegExpCtor = RegExpCtor;
-		exports$8.RegExpEscape = RegExpEscape;
-		exports$8.RegExpPrototypeExec = RegExpPrototypeExec;
-		exports$8.RegExpPrototypeSymbolMatch = RegExpPrototypeSymbolMatch;
-		exports$8.RegExpPrototypeSymbolReplace = RegExpPrototypeSymbolReplace;
-		exports$8.RegExpPrototypeTest = RegExpPrototypeTest;
+		exports.RegExpCtor = RegExpCtor;
+		exports.RegExpEscape = RegExpEscape;
+		exports.RegExpPrototypeExec = RegExpPrototypeExec;
+		exports.RegExpPrototypeSymbolMatch = RegExpPrototypeSymbolMatch;
+		exports.RegExpPrototypeSymbolReplace = RegExpPrototypeSymbolReplace;
+		exports.RegExpPrototypeTest = RegExpPrototypeTest;
 	}));
-	var require_primordial$1 = /* @__PURE__ */ __commonJSMin(((exports$9) => {
-		Object.defineProperty(exports$9, Symbol.toStringTag, { value: "Module" });
-		const require_node_module = require_module$1();
+	var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_node_module = require_module();
 		/**
 		* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
 		*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
@@ -1002,11 +1002,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			}
 			return smolPrimordial;
 		}
-		exports$9.getSmolPrimordial = getSmolPrimordial;
+		exports.getSmolPrimordial = getSmolPrimordial;
 	}));
-	var require_string$1 = /* @__PURE__ */ __commonJSMin(((exports$10) => {
-		Object.defineProperty(exports$10, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `String` static methods and prototype methods.
 		*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
@@ -1036,7 +1036,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
 		*   canonical design statement.
 		*/
-		const smolPrimordial = require_primordial$1().getSmolPrimordial();
+		const smolPrimordial = require_primordial().getSmolPrimordial();
 		const StringCtor = String;
 		const StringFromCharCode = String.fromCharCode;
 		const StringFromCodePoint = String.fromCodePoint;
@@ -1081,50 +1081,50 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const StringPrototypeTrimEnd = require_primordials_uncurry.uncurryThis(String.prototype.trimEnd);
 		const StringPrototypeTrimStart = require_primordials_uncurry.uncurryThis(String.prototype.trimStart);
 		const StringPrototypeValueOf = require_primordials_uncurry.uncurryThis(String.prototype.valueOf);
-		exports$10.StringCtor = StringCtor;
-		exports$10.StringFromCharCode = StringFromCharCode;
-		exports$10.StringFromCodePoint = StringFromCodePoint;
-		exports$10.StringPrototypeAt = StringPrototypeAt;
-		exports$10.StringPrototypeCharAt = StringPrototypeCharAt;
-		exports$10.StringPrototypeCharCodeAt = StringPrototypeCharCodeAt;
-		exports$10.StringPrototypeCodePointAt = StringPrototypeCodePointAt;
-		exports$10.StringPrototypeConcat = StringPrototypeConcat;
-		exports$10.StringPrototypeEndsWith = StringPrototypeEndsWith;
-		exports$10.StringPrototypeIncludes = StringPrototypeIncludes;
-		exports$10.StringPrototypeIndexOf = StringPrototypeIndexOf;
-		exports$10.StringPrototypeIsWellFormed = StringPrototypeIsWellFormed;
-		exports$10.StringPrototypeLastIndexOf = StringPrototypeLastIndexOf;
-		exports$10.StringPrototypeLocaleCompare = StringPrototypeLocaleCompare;
-		exports$10.StringPrototypeMatch = StringPrototypeMatch;
-		exports$10.StringPrototypeMatchAll = StringPrototypeMatchAll;
-		exports$10.StringPrototypeNormalize = StringPrototypeNormalize;
-		exports$10.StringPrototypePadEnd = StringPrototypePadEnd;
-		exports$10.StringPrototypePadStart = StringPrototypePadStart;
-		exports$10.StringPrototypeRepeat = StringPrototypeRepeat;
-		exports$10.StringPrototypeReplace = StringPrototypeReplace;
-		exports$10.StringPrototypeReplaceAll = StringPrototypeReplaceAll;
-		exports$10.StringPrototypeSearch = StringPrototypeSearch;
-		exports$10.StringPrototypeSlice = StringPrototypeSlice;
-		exports$10.StringPrototypeSplit = StringPrototypeSplit;
-		exports$10.StringPrototypeStartsWith = StringPrototypeStartsWith;
-		exports$10.StringPrototypeSubstring = StringPrototypeSubstring;
-		exports$10.StringPrototypeToLocaleLowerCase = StringPrototypeToLocaleLowerCase;
-		exports$10.StringPrototypeToLocaleUpperCase = StringPrototypeToLocaleUpperCase;
-		exports$10.StringPrototypeToLowerCase = StringPrototypeToLowerCase;
-		exports$10.StringPrototypeToString = StringPrototypeToString;
-		exports$10.StringPrototypeToUpperCase = StringPrototypeToUpperCase;
-		exports$10.StringPrototypeToWellFormed = StringPrototypeToWellFormed;
-		exports$10.StringPrototypeTrim = StringPrototypeTrim;
-		exports$10.StringPrototypeTrimEnd = StringPrototypeTrimEnd;
-		exports$10.StringPrototypeTrimStart = StringPrototypeTrimStart;
-		exports$10.StringPrototypeValueOf = StringPrototypeValueOf;
-		exports$10.StringRaw = StringRaw;
+		exports.StringCtor = StringCtor;
+		exports.StringFromCharCode = StringFromCharCode;
+		exports.StringFromCodePoint = StringFromCodePoint;
+		exports.StringPrototypeAt = StringPrototypeAt;
+		exports.StringPrototypeCharAt = StringPrototypeCharAt;
+		exports.StringPrototypeCharCodeAt = StringPrototypeCharCodeAt;
+		exports.StringPrototypeCodePointAt = StringPrototypeCodePointAt;
+		exports.StringPrototypeConcat = StringPrototypeConcat;
+		exports.StringPrototypeEndsWith = StringPrototypeEndsWith;
+		exports.StringPrototypeIncludes = StringPrototypeIncludes;
+		exports.StringPrototypeIndexOf = StringPrototypeIndexOf;
+		exports.StringPrototypeIsWellFormed = StringPrototypeIsWellFormed;
+		exports.StringPrototypeLastIndexOf = StringPrototypeLastIndexOf;
+		exports.StringPrototypeLocaleCompare = StringPrototypeLocaleCompare;
+		exports.StringPrototypeMatch = StringPrototypeMatch;
+		exports.StringPrototypeMatchAll = StringPrototypeMatchAll;
+		exports.StringPrototypeNormalize = StringPrototypeNormalize;
+		exports.StringPrototypePadEnd = StringPrototypePadEnd;
+		exports.StringPrototypePadStart = StringPrototypePadStart;
+		exports.StringPrototypeRepeat = StringPrototypeRepeat;
+		exports.StringPrototypeReplace = StringPrototypeReplace;
+		exports.StringPrototypeReplaceAll = StringPrototypeReplaceAll;
+		exports.StringPrototypeSearch = StringPrototypeSearch;
+		exports.StringPrototypeSlice = StringPrototypeSlice;
+		exports.StringPrototypeSplit = StringPrototypeSplit;
+		exports.StringPrototypeStartsWith = StringPrototypeStartsWith;
+		exports.StringPrototypeSubstring = StringPrototypeSubstring;
+		exports.StringPrototypeToLocaleLowerCase = StringPrototypeToLocaleLowerCase;
+		exports.StringPrototypeToLocaleUpperCase = StringPrototypeToLocaleUpperCase;
+		exports.StringPrototypeToLowerCase = StringPrototypeToLowerCase;
+		exports.StringPrototypeToString = StringPrototypeToString;
+		exports.StringPrototypeToUpperCase = StringPrototypeToUpperCase;
+		exports.StringPrototypeToWellFormed = StringPrototypeToWellFormed;
+		exports.StringPrototypeTrim = StringPrototypeTrim;
+		exports.StringPrototypeTrimEnd = StringPrototypeTrimEnd;
+		exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
+		exports.StringPrototypeValueOf = StringPrototypeValueOf;
+		exports.StringRaw = StringRaw;
 	}));
 	var import_purl = require_purl();
 	var import_error = require_error();
 	var import_map_set = require_map_set();
-	var import_regexp = require_regexp$1();
-	var import_string = require_string$1();
+	var import_regexp = require_regexp();
+	var import_string = require_string();
 	let cachedPackageURL$2;
 	/**
 	* @internal Register the `PackageURL` class for string parsing in compare functions.
@@ -1355,16 +1355,16 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			return matchComponent(typePattern, _purl.type ?? "", typeMatcher) && matchComponent(namespacePattern ?? "", _purl.namespace ?? "", namespaceMatcher) && matchComponent(namePattern, _purl.name ?? "", nameMatcher) && matchComponent(versionPattern ?? "", _purl.version ?? "", versionMatcher);
 		};
 	}
-	var require_array = /* @__PURE__ */ __commonJSMin(((exports$11) => {
-		Object.defineProperty(exports$11, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_array = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `Array`, typed-array, `ArrayBuffer`, `DataView`,
 		*   `Atomics`, and shared iterator-prototype primordials. `Array.fromAsync` and
 		*   `Array.prototype.with` are ES2024 / ES2023; the primordial captures the
 		*   live reference at module load so consumers never see a tampered global.
 		*/
-		const smolPrimordial = require_primordial$1().getSmolPrimordial();
+		const smolPrimordial = require_primordial().getSmolPrimordial();
 		const ArrayCtor = Array;
 		const ArrayBufferCtor = ArrayBuffer;
 		const DataViewCtor = DataView;
@@ -1433,68 +1433,68 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		/* c8 ignore start */
 		const IteratorPrototypeReturn = typeof iteratorProto.return === "function" ? require_primordials_uncurry.uncurryThis(iteratorProto.return) : void 0;
 		/* c8 ignore stop */
-		exports$11.ArrayBufferCtor = ArrayBufferCtor;
-		exports$11.ArrayBufferIsView = ArrayBufferIsView;
-		exports$11.ArrayCtor = ArrayCtor;
-		exports$11.ArrayFrom = ArrayFrom;
-		exports$11.ArrayFromAsync = ArrayFromAsync;
-		exports$11.ArrayIsArray = ArrayIsArray;
-		exports$11.ArrayOf = ArrayOf;
-		exports$11.ArrayPrototypeAt = ArrayPrototypeAt;
-		exports$11.ArrayPrototypeConcat = ArrayPrototypeConcat;
-		exports$11.ArrayPrototypeCopyWithin = ArrayPrototypeCopyWithin;
-		exports$11.ArrayPrototypeEntries = ArrayPrototypeEntries;
-		exports$11.ArrayPrototypeEvery = ArrayPrototypeEvery;
-		exports$11.ArrayPrototypeFill = ArrayPrototypeFill;
-		exports$11.ArrayPrototypeFilter = ArrayPrototypeFilter;
-		exports$11.ArrayPrototypeFind = ArrayPrototypeFind;
-		exports$11.ArrayPrototypeFindIndex = ArrayPrototypeFindIndex;
-		exports$11.ArrayPrototypeFindLast = ArrayPrototypeFindLast;
-		exports$11.ArrayPrototypeFindLastIndex = ArrayPrototypeFindLastIndex;
-		exports$11.ArrayPrototypeFlat = ArrayPrototypeFlat;
-		exports$11.ArrayPrototypeFlatMap = ArrayPrototypeFlatMap;
-		exports$11.ArrayPrototypeForEach = ArrayPrototypeForEach;
-		exports$11.ArrayPrototypeIncludes = ArrayPrototypeIncludes;
-		exports$11.ArrayPrototypeIndexOf = ArrayPrototypeIndexOf;
-		exports$11.ArrayPrototypeJoin = ArrayPrototypeJoin;
-		exports$11.ArrayPrototypeKeys = ArrayPrototypeKeys;
-		exports$11.ArrayPrototypeLastIndexOf = ArrayPrototypeLastIndexOf;
-		exports$11.ArrayPrototypeMap = ArrayPrototypeMap;
-		exports$11.ArrayPrototypePop = ArrayPrototypePop;
-		exports$11.ArrayPrototypePush = ArrayPrototypePush;
-		exports$11.ArrayPrototypeReduce = ArrayPrototypeReduce;
-		exports$11.ArrayPrototypeReduceRight = ArrayPrototypeReduceRight;
-		exports$11.ArrayPrototypeReverse = ArrayPrototypeReverse;
-		exports$11.ArrayPrototypeShift = ArrayPrototypeShift;
-		exports$11.ArrayPrototypeSlice = ArrayPrototypeSlice;
-		exports$11.ArrayPrototypeSome = ArrayPrototypeSome;
-		exports$11.ArrayPrototypeSort = ArrayPrototypeSort;
-		exports$11.ArrayPrototypeSplice = ArrayPrototypeSplice;
-		exports$11.ArrayPrototypeToLocaleString = ArrayPrototypeToLocaleString;
-		exports$11.ArrayPrototypeToReversed = ArrayPrototypeToReversed;
-		exports$11.ArrayPrototypeToSorted = ArrayPrototypeToSorted;
-		exports$11.ArrayPrototypeToSpliced = ArrayPrototypeToSpliced;
-		exports$11.ArrayPrototypeToString = ArrayPrototypeToString;
-		exports$11.ArrayPrototypeUnshift = ArrayPrototypeUnshift;
-		exports$11.ArrayPrototypeValues = ArrayPrototypeValues;
-		exports$11.ArrayPrototypeWith = ArrayPrototypeWith;
-		exports$11.AtomicsWait = AtomicsWait;
-		exports$11.DataViewCtor = DataViewCtor;
-		exports$11.Float32ArrayCtor = Float32ArrayCtor;
-		exports$11.Float64ArrayCtor = Float64ArrayCtor;
-		exports$11.Int16ArrayCtor = Int16ArrayCtor;
-		exports$11.Int32ArrayCtor = Int32ArrayCtor;
-		exports$11.Int8ArrayCtor = Int8ArrayCtor;
-		exports$11.IteratorPrototypeNext = IteratorPrototypeNext;
-		exports$11.IteratorPrototypeReturn = IteratorPrototypeReturn;
-		exports$11.Uint16ArrayCtor = Uint16ArrayCtor;
-		exports$11.Uint32ArrayCtor = Uint32ArrayCtor;
-		exports$11.Uint8ArrayCtor = Uint8ArrayCtor;
-		exports$11.Uint8ClampedArrayCtor = Uint8ClampedArrayCtor;
+		exports.ArrayBufferCtor = ArrayBufferCtor;
+		exports.ArrayBufferIsView = ArrayBufferIsView;
+		exports.ArrayCtor = ArrayCtor;
+		exports.ArrayFrom = ArrayFrom;
+		exports.ArrayFromAsync = ArrayFromAsync;
+		exports.ArrayIsArray = ArrayIsArray;
+		exports.ArrayOf = ArrayOf;
+		exports.ArrayPrototypeAt = ArrayPrototypeAt;
+		exports.ArrayPrototypeConcat = ArrayPrototypeConcat;
+		exports.ArrayPrototypeCopyWithin = ArrayPrototypeCopyWithin;
+		exports.ArrayPrototypeEntries = ArrayPrototypeEntries;
+		exports.ArrayPrototypeEvery = ArrayPrototypeEvery;
+		exports.ArrayPrototypeFill = ArrayPrototypeFill;
+		exports.ArrayPrototypeFilter = ArrayPrototypeFilter;
+		exports.ArrayPrototypeFind = ArrayPrototypeFind;
+		exports.ArrayPrototypeFindIndex = ArrayPrototypeFindIndex;
+		exports.ArrayPrototypeFindLast = ArrayPrototypeFindLast;
+		exports.ArrayPrototypeFindLastIndex = ArrayPrototypeFindLastIndex;
+		exports.ArrayPrototypeFlat = ArrayPrototypeFlat;
+		exports.ArrayPrototypeFlatMap = ArrayPrototypeFlatMap;
+		exports.ArrayPrototypeForEach = ArrayPrototypeForEach;
+		exports.ArrayPrototypeIncludes = ArrayPrototypeIncludes;
+		exports.ArrayPrototypeIndexOf = ArrayPrototypeIndexOf;
+		exports.ArrayPrototypeJoin = ArrayPrototypeJoin;
+		exports.ArrayPrototypeKeys = ArrayPrototypeKeys;
+		exports.ArrayPrototypeLastIndexOf = ArrayPrototypeLastIndexOf;
+		exports.ArrayPrototypeMap = ArrayPrototypeMap;
+		exports.ArrayPrototypePop = ArrayPrototypePop;
+		exports.ArrayPrototypePush = ArrayPrototypePush;
+		exports.ArrayPrototypeReduce = ArrayPrototypeReduce;
+		exports.ArrayPrototypeReduceRight = ArrayPrototypeReduceRight;
+		exports.ArrayPrototypeReverse = ArrayPrototypeReverse;
+		exports.ArrayPrototypeShift = ArrayPrototypeShift;
+		exports.ArrayPrototypeSlice = ArrayPrototypeSlice;
+		exports.ArrayPrototypeSome = ArrayPrototypeSome;
+		exports.ArrayPrototypeSort = ArrayPrototypeSort;
+		exports.ArrayPrototypeSplice = ArrayPrototypeSplice;
+		exports.ArrayPrototypeToLocaleString = ArrayPrototypeToLocaleString;
+		exports.ArrayPrototypeToReversed = ArrayPrototypeToReversed;
+		exports.ArrayPrototypeToSorted = ArrayPrototypeToSorted;
+		exports.ArrayPrototypeToSpliced = ArrayPrototypeToSpliced;
+		exports.ArrayPrototypeToString = ArrayPrototypeToString;
+		exports.ArrayPrototypeUnshift = ArrayPrototypeUnshift;
+		exports.ArrayPrototypeValues = ArrayPrototypeValues;
+		exports.ArrayPrototypeWith = ArrayPrototypeWith;
+		exports.AtomicsWait = AtomicsWait;
+		exports.DataViewCtor = DataViewCtor;
+		exports.Float32ArrayCtor = Float32ArrayCtor;
+		exports.Float64ArrayCtor = Float64ArrayCtor;
+		exports.Int16ArrayCtor = Int16ArrayCtor;
+		exports.Int32ArrayCtor = Int32ArrayCtor;
+		exports.Int8ArrayCtor = Int8ArrayCtor;
+		exports.IteratorPrototypeNext = IteratorPrototypeNext;
+		exports.IteratorPrototypeReturn = IteratorPrototypeReturn;
+		exports.Uint16ArrayCtor = Uint16ArrayCtor;
+		exports.Uint32ArrayCtor = Uint32ArrayCtor;
+		exports.Uint8ArrayCtor = Uint8ArrayCtor;
+		exports.Uint8ClampedArrayCtor = Uint8ClampedArrayCtor;
 	}));
-	var require_object = /* @__PURE__ */ __commonJSMin(((exports$12) => {
-		Object.defineProperty(exports$12, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_object = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `Object` static methods and prototype methods. Annex
 		*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
@@ -1536,42 +1536,42 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const ObjectPrototypeDefineSetter = require_primordials_uncurry.uncurryThis(objectProto.__defineSetter__);
 		const ObjectPrototypeLookupGetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupGetter__);
 		const ObjectPrototypeLookupSetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupSetter__);
-		exports$12.ObjectAssign = ObjectAssign;
-		exports$12.ObjectCreate = ObjectCreate;
-		exports$12.ObjectCtor = ObjectCtor;
-		exports$12.ObjectDefineProperties = ObjectDefineProperties;
-		exports$12.ObjectDefineProperty = ObjectDefineProperty;
-		exports$12.ObjectEntries = ObjectEntries;
-		exports$12.ObjectFreeze = ObjectFreeze;
-		exports$12.ObjectFromEntries = ObjectFromEntries;
-		exports$12.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
-		exports$12.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
-		exports$12.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
-		exports$12.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
-		exports$12.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
-		exports$12.ObjectHasOwn = ObjectHasOwn;
-		exports$12.ObjectIs = ObjectIs;
-		exports$12.ObjectIsExtensible = ObjectIsExtensible;
-		exports$12.ObjectIsFrozen = ObjectIsFrozen;
-		exports$12.ObjectIsSealed = ObjectIsSealed;
-		exports$12.ObjectKeys = ObjectKeys;
-		exports$12.ObjectPreventExtensions = ObjectPreventExtensions;
-		exports$12.ObjectPrototype = ObjectPrototype;
-		exports$12.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
-		exports$12.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
-		exports$12.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
-		exports$12.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
-		exports$12.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
-		exports$12.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
-		exports$12.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
-		exports$12.ObjectPrototypeToString = ObjectPrototypeToString;
-		exports$12.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
-		exports$12.ObjectSeal = ObjectSeal;
-		exports$12.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
-		exports$12.ObjectValues = ObjectValues;
+		exports.ObjectAssign = ObjectAssign;
+		exports.ObjectCreate = ObjectCreate;
+		exports.ObjectCtor = ObjectCtor;
+		exports.ObjectDefineProperties = ObjectDefineProperties;
+		exports.ObjectDefineProperty = ObjectDefineProperty;
+		exports.ObjectEntries = ObjectEntries;
+		exports.ObjectFreeze = ObjectFreeze;
+		exports.ObjectFromEntries = ObjectFromEntries;
+		exports.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
+		exports.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
+		exports.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
+		exports.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
+		exports.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
+		exports.ObjectHasOwn = ObjectHasOwn;
+		exports.ObjectIs = ObjectIs;
+		exports.ObjectIsExtensible = ObjectIsExtensible;
+		exports.ObjectIsFrozen = ObjectIsFrozen;
+		exports.ObjectIsSealed = ObjectIsSealed;
+		exports.ObjectKeys = ObjectKeys;
+		exports.ObjectPreventExtensions = ObjectPreventExtensions;
+		exports.ObjectPrototype = ObjectPrototype;
+		exports.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
+		exports.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
+		exports.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
+		exports.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
+		exports.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
+		exports.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
+		exports.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
+		exports.ObjectPrototypeToString = ObjectPrototypeToString;
+		exports.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
+		exports.ObjectSeal = ObjectSeal;
+		exports.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
+		exports.ObjectValues = ObjectValues;
 	}));
-	var require_reflect = /* @__PURE__ */ __commonJSMin(((exports$13) => {
-		Object.defineProperty(exports$13, Symbol.toStringTag, { value: "Module" });
+	var require_reflect = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to `Reflect.*`. **IMPORTANT**: do not destructure on
 		*   `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
@@ -1590,19 +1590,19 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const ReflectPreventExtensions = Reflect.preventExtensions;
 		const ReflectSet = Reflect.set;
 		const ReflectSetPrototypeOf = Reflect.setPrototypeOf;
-		exports$13.ReflectApply = ReflectApply;
-		exports$13.ReflectConstruct = ReflectConstruct;
-		exports$13.ReflectDefineProperty = ReflectDefineProperty;
-		exports$13.ReflectDeleteProperty = ReflectDeleteProperty;
-		exports$13.ReflectGet = ReflectGet;
-		exports$13.ReflectGetOwnPropertyDescriptor = ReflectGetOwnPropertyDescriptor;
-		exports$13.ReflectGetPrototypeOf = ReflectGetPrototypeOf;
-		exports$13.ReflectHas = ReflectHas;
-		exports$13.ReflectIsExtensible = ReflectIsExtensible;
-		exports$13.ReflectOwnKeys = ReflectOwnKeys;
-		exports$13.ReflectPreventExtensions = ReflectPreventExtensions;
-		exports$13.ReflectSet = ReflectSet;
-		exports$13.ReflectSetPrototypeOf = ReflectSetPrototypeOf;
+		exports.ReflectApply = ReflectApply;
+		exports.ReflectConstruct = ReflectConstruct;
+		exports.ReflectDefineProperty = ReflectDefineProperty;
+		exports.ReflectDeleteProperty = ReflectDeleteProperty;
+		exports.ReflectGet = ReflectGet;
+		exports.ReflectGetOwnPropertyDescriptor = ReflectGetOwnPropertyDescriptor;
+		exports.ReflectGetPrototypeOf = ReflectGetPrototypeOf;
+		exports.ReflectHas = ReflectHas;
+		exports.ReflectIsExtensible = ReflectIsExtensible;
+		exports.ReflectOwnKeys = ReflectOwnKeys;
+		exports.ReflectPreventExtensions = ReflectPreventExtensions;
+		exports.ReflectSet = ReflectSet;
+		exports.ReflectSetPrototypeOf = ReflectSetPrototypeOf;
 	}));
 	/**
 	* @file Object utility functions for type checking and immutable object
@@ -1656,9 +1656,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		}
 		return value_;
 	}
-	var require_url$1 = /* @__PURE__ */ __commonJSMin(((exports$14) => {
-		Object.defineProperty(exports$14, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `URL`, `URLSearchParams`, and the
 		*   `URLSearchParams.prototype` methods.
@@ -1690,26 +1690,26 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		* @unused No internal or Socket consumers; exercised only by its unit tests.
 		*/
 		const URLSearchParamsPrototypeSet = require_primordials_uncurry.uncurryThis(URLSearchParams.prototype.set);
-		exports$14.URLCtor = URLCtor;
-		exports$14.URLSearchParamsCtor = URLSearchParamsCtor;
-		exports$14.URLSearchParamsPrototypeAppend = URLSearchParamsPrototypeAppend;
-		exports$14.URLSearchParamsPrototypeDelete = URLSearchParamsPrototypeDelete;
-		exports$14.URLSearchParamsPrototypeForEach = URLSearchParamsPrototypeForEach;
-		exports$14.URLSearchParamsPrototypeGet = URLSearchParamsPrototypeGet;
-		exports$14.URLSearchParamsPrototypeGetAll = URLSearchParamsPrototypeGetAll;
-		exports$14.URLSearchParamsPrototypeHas = URLSearchParamsPrototypeHas;
-		exports$14.URLSearchParamsPrototypeSet = URLSearchParamsPrototypeSet;
+		exports.URLCtor = URLCtor;
+		exports.URLSearchParamsCtor = URLSearchParamsCtor;
+		exports.URLSearchParamsPrototypeAppend = URLSearchParamsPrototypeAppend;
+		exports.URLSearchParamsPrototypeDelete = URLSearchParamsPrototypeDelete;
+		exports.URLSearchParamsPrototypeForEach = URLSearchParamsPrototypeForEach;
+		exports.URLSearchParamsPrototypeGet = URLSearchParamsPrototypeGet;
+		exports.URLSearchParamsPrototypeGetAll = URLSearchParamsPrototypeGetAll;
+		exports.URLSearchParamsPrototypeHas = URLSearchParamsPrototypeHas;
+		exports.URLSearchParamsPrototypeSet = URLSearchParamsPrototypeSet;
 	}));
-	var require_number = /* @__PURE__ */ __commonJSMin(((exports$15) => {
-		Object.defineProperty(exports$15, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_number = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to `Number`, its constants, predicates, and parse
 		*   helpers. Predicates prefer the smol fast-path (`node:smol-primordial`);
 		*   static `parseFloat` / `parseInt` use the FastOneByteString-typed bindings
 		*   for ASCII inputs and fall back to stock `Number.parse*` otherwise.
 		*/
-		const smolPrimordial = require_primordial$1().getSmolPrimordial();
+		const smolPrimordial = require_primordial().getSmolPrimordial();
 		const NumberCtor = Number;
 		const NumberEPSILON = Number.EPSILON;
 		const NumberMAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER;
@@ -1732,27 +1732,27 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const NumberPrototypeToPrecision = require_primordials_uncurry.uncurryThis(Number.prototype.toPrecision);
 		const NumberPrototypeToString = require_primordials_uncurry.uncurryThis(Number.prototype.toString);
 		const NumberPrototypeValueOf = require_primordials_uncurry.uncurryThis(Number.prototype.valueOf);
-		exports$15.NumberCtor = NumberCtor;
-		exports$15.NumberEPSILON = NumberEPSILON;
-		exports$15.NumberIsFinite = NumberIsFinite;
-		exports$15.NumberIsInteger = NumberIsInteger;
-		exports$15.NumberIsNaN = NumberIsNaN;
-		exports$15.NumberIsSafeInteger = NumberIsSafeInteger;
-		exports$15.NumberMAX_SAFE_INTEGER = NumberMAX_SAFE_INTEGER;
-		exports$15.NumberMAX_VALUE = NumberMAX_VALUE;
-		exports$15.NumberMIN_SAFE_INTEGER = NumberMIN_SAFE_INTEGER;
-		exports$15.NumberMIN_VALUE = NumberMIN_VALUE;
-		exports$15.NumberNEGATIVE_INFINITY = NumberNEGATIVE_INFINITY;
-		exports$15.NumberPOSITIVE_INFINITY = NumberPOSITIVE_INFINITY;
-		exports$15.NumberParseFloat = NumberParseFloat;
-		exports$15.NumberParseInt = NumberParseInt;
-		exports$15.NumberPrototypeToExponential = NumberPrototypeToExponential;
-		exports$15.NumberPrototypeToFixed = NumberPrototypeToFixed;
-		exports$15.NumberPrototypeToPrecision = NumberPrototypeToPrecision;
-		exports$15.NumberPrototypeToString = NumberPrototypeToString;
-		exports$15.NumberPrototypeValueOf = NumberPrototypeValueOf;
+		exports.NumberCtor = NumberCtor;
+		exports.NumberEPSILON = NumberEPSILON;
+		exports.NumberIsFinite = NumberIsFinite;
+		exports.NumberIsInteger = NumberIsInteger;
+		exports.NumberIsNaN = NumberIsNaN;
+		exports.NumberIsSafeInteger = NumberIsSafeInteger;
+		exports.NumberMAX_SAFE_INTEGER = NumberMAX_SAFE_INTEGER;
+		exports.NumberMAX_VALUE = NumberMAX_VALUE;
+		exports.NumberMIN_SAFE_INTEGER = NumberMIN_SAFE_INTEGER;
+		exports.NumberMIN_VALUE = NumberMIN_VALUE;
+		exports.NumberNEGATIVE_INFINITY = NumberNEGATIVE_INFINITY;
+		exports.NumberPOSITIVE_INFINITY = NumberPOSITIVE_INFINITY;
+		exports.NumberParseFloat = NumberParseFloat;
+		exports.NumberParseInt = NumberParseInt;
+		exports.NumberPrototypeToExponential = NumberPrototypeToExponential;
+		exports.NumberPrototypeToFixed = NumberPrototypeToFixed;
+		exports.NumberPrototypeToPrecision = NumberPrototypeToPrecision;
+		exports.NumberPrototypeToString = NumberPrototypeToString;
+		exports.NumberPrototypeValueOf = NumberPrototypeValueOf;
 	}));
-	var import_url = require_url$1();
+	var import_url = require_url();
 	var import_number = require_number();
 	/**
 	* Check if string contains only whitespace characters.
@@ -2042,8 +2042,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		if (length === 2 && (0, import_string.StringPrototypeCharCodeAt)(segment, 0) === 46 && (0, import_string.StringPrototypeCharCodeAt)(segment, 1) === 46) return false;
 		return !isBlank(segment);
 	}
-	var require_json = /* @__PURE__ */ __commonJSMin(((exports$16) => {
-		Object.defineProperty(exports$16, Symbol.toStringTag, { value: "Module" });
+	var require_json = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to `JSON.parse` / `JSON.stringify`. Captured at module
 		*   load so prototype-pollution attacks (e.g. monkey-patching `JSON.parse` to
@@ -2052,15 +2052,15 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*/
 		const JSONParse = JSON.parse;
 		const JSONStringify = JSON.stringify;
-		exports$16.JSONParse = JSONParse;
-		exports$16.JSONStringify = JSONStringify;
+		exports.JSONParse = JSONParse;
+		exports.JSONStringify = JSONStringify;
 	}));
 	/**
 	* @file URL encoding functions for PURL components. Provides special handling
 	*   for names, namespaces, versions, qualifiers, and subpaths.
 	*/
-	var import_globals = (/* @__PURE__ */ __commonJSMin(((exports$17) => {
-		Object.defineProperty(exports$17, Symbol.toStringTag, { value: "Module" });
+	var import_globals = (/* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to top-level globals that don't fit a larger
 		*   primordials leaf — primitive constructors (`Boolean`, `BigInt`), `Proxy`,
@@ -2080,17 +2080,17 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const btoa = globalThis.btoa;
 		const decodeURIComponent = globalThis.decodeURIComponent;
 		const encodeURIComponent = globalThis.encodeURIComponent;
-		exports$17.BigIntCtor = BigIntCtor;
-		exports$17.BooleanCtor = BooleanCtor;
-		exports$17.InfinityValue = InfinityValue;
-		exports$17.NaNValue = NaNValue;
-		exports$17.ProxyCtor = ProxyCtor;
-		exports$17.SharedArrayBufferCtor = SharedArrayBufferCtor;
-		exports$17.atob = atob;
-		exports$17.btoa = btoa;
-		exports$17.decodeURIComponent = decodeURIComponent;
-		exports$17.encodeURIComponent = encodeURIComponent;
-		exports$17.globalThis = capturedGlobalThis;
+		exports.BigIntCtor = BigIntCtor;
+		exports.BooleanCtor = BooleanCtor;
+		exports.InfinityValue = InfinityValue;
+		exports.NaNValue = NaNValue;
+		exports.ProxyCtor = ProxyCtor;
+		exports.SharedArrayBufferCtor = SharedArrayBufferCtor;
+		exports.atob = atob;
+		exports.btoa = btoa;
+		exports.decodeURIComponent = decodeURIComponent;
+		exports.encodeURIComponent = encodeURIComponent;
+		exports.globalThis = capturedGlobalThis;
 	})))();
 	const encodeComponent = import_globals.encodeURIComponent;
 	const REUSED_SEARCH_PARAMS = new import_url.URLSearchParamsCtor();
@@ -2693,8 +2693,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		lowerName(purl);
 		return purl;
 	}
-	var require_math = /* @__PURE__ */ __commonJSMin(((exports$18) => {
-		Object.defineProperty(exports$18, Symbol.toStringTag, { value: "Module" });
+	var require_math = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to `Math` constants and methods. Methods prefer the
 		*   smol fast-path (`node:smol-primordial`) when available — V8 Fast API typed
@@ -2702,7 +2702,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		*   stock `Math.X` since they are pre-computed scalar values with no fast-path
 		*   benefit.
 		*/
-		const smolPrimordial = require_primordial$1().getSmolPrimordial();
+		const smolPrimordial = require_primordial().getSmolPrimordial();
 		const MathE = Math.E;
 		const MathLN2 = Math.LN2;
 		const MathLN10 = Math.LN10;
@@ -2747,54 +2747,54 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const MathTan = smolPrimordial?.mathTan ?? Math.tan;
 		const MathTanh = smolPrimordial?.mathTanh ?? Math.tanh;
 		const MathTrunc = smolPrimordial?.mathTrunc ?? Math.trunc;
-		exports$18.MathAbs = MathAbs;
-		exports$18.MathAcos = MathAcos;
-		exports$18.MathAcosh = MathAcosh;
-		exports$18.MathAsin = MathAsin;
-		exports$18.MathAsinh = MathAsinh;
-		exports$18.MathAtan = MathAtan;
-		exports$18.MathAtan2 = MathAtan2;
-		exports$18.MathAtanh = MathAtanh;
-		exports$18.MathCbrt = MathCbrt;
-		exports$18.MathCeil = MathCeil;
-		exports$18.MathClz32 = MathClz32;
-		exports$18.MathCos = MathCos;
-		exports$18.MathCosh = MathCosh;
-		exports$18.MathE = MathE;
-		exports$18.MathExp = MathExp;
-		exports$18.MathExpm1 = MathExpm1;
-		exports$18.MathF16round = MathF16round;
-		exports$18.MathFloor = MathFloor;
-		exports$18.MathFround = MathFround;
-		exports$18.MathHypot = MathHypot;
-		exports$18.MathImul = MathImul;
-		exports$18.MathLN10 = MathLN10;
-		exports$18.MathLN2 = MathLN2;
-		exports$18.MathLOG10E = MathLOG10E;
-		exports$18.MathLOG2E = MathLOG2E;
-		exports$18.MathLog = MathLog;
-		exports$18.MathLog10 = MathLog10;
-		exports$18.MathLog1p = MathLog1p;
-		exports$18.MathLog2 = MathLog2;
-		exports$18.MathMax = MathMax;
-		exports$18.MathMin = MathMin;
-		exports$18.MathPI = MathPI;
-		exports$18.MathPow = MathPow;
-		exports$18.MathRandom = MathRandom;
-		exports$18.MathRound = MathRound;
-		exports$18.MathSQRT1_2 = MathSQRT1_2;
-		exports$18.MathSQRT2 = MathSQRT2;
-		exports$18.MathSign = MathSign;
-		exports$18.MathSin = MathSin;
-		exports$18.MathSinh = MathSinh;
-		exports$18.MathSqrt = MathSqrt;
-		exports$18.MathTan = MathTan;
-		exports$18.MathTanh = MathTanh;
-		exports$18.MathTrunc = MathTrunc;
+		exports.MathAbs = MathAbs;
+		exports.MathAcos = MathAcos;
+		exports.MathAcosh = MathAcosh;
+		exports.MathAsin = MathAsin;
+		exports.MathAsinh = MathAsinh;
+		exports.MathAtan = MathAtan;
+		exports.MathAtan2 = MathAtan2;
+		exports.MathAtanh = MathAtanh;
+		exports.MathCbrt = MathCbrt;
+		exports.MathCeil = MathCeil;
+		exports.MathClz32 = MathClz32;
+		exports.MathCos = MathCos;
+		exports.MathCosh = MathCosh;
+		exports.MathE = MathE;
+		exports.MathExp = MathExp;
+		exports.MathExpm1 = MathExpm1;
+		exports.MathF16round = MathF16round;
+		exports.MathFloor = MathFloor;
+		exports.MathFround = MathFround;
+		exports.MathHypot = MathHypot;
+		exports.MathImul = MathImul;
+		exports.MathLN10 = MathLN10;
+		exports.MathLN2 = MathLN2;
+		exports.MathLOG10E = MathLOG10E;
+		exports.MathLOG2E = MathLOG2E;
+		exports.MathLog = MathLog;
+		exports.MathLog10 = MathLog10;
+		exports.MathLog1p = MathLog1p;
+		exports.MathLog2 = MathLog2;
+		exports.MathMax = MathMax;
+		exports.MathMin = MathMin;
+		exports.MathPI = MathPI;
+		exports.MathPow = MathPow;
+		exports.MathRandom = MathRandom;
+		exports.MathRound = MathRound;
+		exports.MathSQRT1_2 = MathSQRT1_2;
+		exports.MathSQRT2 = MathSQRT2;
+		exports.MathSign = MathSign;
+		exports.MathSin = MathSin;
+		exports.MathSinh = MathSinh;
+		exports.MathSqrt = MathSqrt;
+		exports.MathTan = MathTan;
+		exports.MathTanh = MathTanh;
+		exports.MathTrunc = MathTrunc;
 	}));
-	var require_buffer$1 = /* @__PURE__ */ __commonJSMin(((exports$19) => {
-		Object.defineProperty(exports$19, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry$1();
+	var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
 		/**
 		* @file Safe references to Node's `Buffer` global. `Buffer` is a Node-only
 		*   global; in browsers and in Deno without a compatibility shim the captured
@@ -2814,17 +2814,17 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		const BufferPrototypeSlice = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.slice) : void 0;
 		const BufferPrototypeToString = BufferCtor ? require_primordials_uncurry.uncurryThis(BufferCtor.prototype.toString) : void 0;
 		/* c8 ignore stop */
-		exports$19.BufferAlloc = BufferAlloc;
-		exports$19.BufferAllocUnsafe = BufferAllocUnsafe;
-		exports$19.BufferAllocUnsafeSlow = BufferAllocUnsafeSlow;
-		exports$19.BufferByteLength = BufferByteLength;
-		exports$19.BufferConcat = BufferConcat;
-		exports$19.BufferCtor = BufferCtor;
-		exports$19.BufferFrom = BufferFrom;
-		exports$19.BufferIsBuffer = BufferIsBuffer;
-		exports$19.BufferIsEncoding = BufferIsEncoding;
-		exports$19.BufferPrototypeSlice = BufferPrototypeSlice;
-		exports$19.BufferPrototypeToString = BufferPrototypeToString;
+		exports.BufferAlloc = BufferAlloc;
+		exports.BufferAllocUnsafe = BufferAllocUnsafe;
+		exports.BufferAllocUnsafeSlow = BufferAllocUnsafeSlow;
+		exports.BufferByteLength = BufferByteLength;
+		exports.BufferConcat = BufferConcat;
+		exports.BufferCtor = BufferCtor;
+		exports.BufferFrom = BufferFrom;
+		exports.BufferIsBuffer = BufferIsBuffer;
+		exports.BufferIsEncoding = BufferIsEncoding;
+		exports.BufferPrototypeSlice = BufferPrototypeSlice;
+		exports.BufferPrototypeToString = BufferPrototypeToString;
 	}));
 	/**
 	* Validate Cargo package URL. Cargo packages must not have a `namespace`.
@@ -3272,8 +3272,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 		if (repoUrl !== void 0 && (0, import_string.StringPrototypeIncludes)(repoUrl, "databricks")) lowerName(purl);
 		return purl;
 	}
-	var require_legacy_names = /* @__PURE__ */ __commonJSMin(((exports$20, module$2) => {
-		module$2.exports = [
+	var require_legacy_names = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+		module.exports = [
 			"@antoinerey/comp-Fetch",
 			"@antoinerey/comp-VideoPlayer",
 			"@beisen/Accordion",
@@ -8320,7 +8320,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin(((exports) => {
 			}
 		}
 	};
-	var import_buffer = require_buffer$1();
+	var import_buffer = require_buffer();
 	/**
 	* @file URL decoding functionality for PURL components. Provides proper error
 	*   handling for invalid encoded strings.
@@ -10038,7 +10038,7 @@ function findInPath(tool) {
 	});
 }
 
-var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_runtime$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
 	* @file Runtime environment detection constants. All checks use only
@@ -10067,9 +10067,9 @@ var require_runtime = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.IS_WORKER = IS_WORKER;
 }));
 
-var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_os = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const nodeOs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("os") : void 0;
+	const nodeOs = require_runtime$1().IS_NODE ? /*@__PURE__*/ __require("os") : void 0;
 	function getNodeOs() {
 		return nodeOs;
 	}
@@ -10084,9 +10084,9 @@ var require_os = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getNodeOs = getNodeOs;
 }));
 
-var require_fs = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_fs = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const nodeFs = require_runtime().IS_NODE ? /*@__PURE__*/ __require("fs") : void 0;
+	const nodeFs = require_runtime$1().IS_NODE ? /*@__PURE__*/ __require("fs") : void 0;
 	function getNodeFs() {
 		return nodeFs;
 	}
@@ -10107,7 +10107,7 @@ var require_fs = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getNodeFs = getNodeFs;
 }));
 
-var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_platform = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_node_os = require_os();
 	const require_node_fs = require_fs();
@@ -10232,9 +10232,9 @@ var require_platform = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isWin32 = isWin32;
 }));
 
-var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_module$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_constants_runtime = require_runtime();
+	const require_constants_runtime = require_runtime$1();
 	let module$1 = __require("module");
 	/**
 	* @file Accessors for `node:module` that work across runtimes. Ambient
@@ -10345,9 +10345,9 @@ var require_module = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.requireFrom = requireFrom;
 }));
 
-var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_detect$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_node_module = require_module();
+	const require_node_module = require_module$1();
 	/**
 	* @file Smol detection + lazy-loader for `node:smol-util`. Two
 	*   responsibilities:
@@ -10418,7 +10418,7 @@ var require_detect = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.isSmol = isSmol;
 }));
 
-var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_uncurry$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
 	* @file `uncurryThis` and the cluster of helpers built atop it. Mirrors
@@ -10431,7 +10431,7 @@ var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*   or `Reflect` here. tsgo has a bug that mis-transpiles destructured exports.
 	*   See: https://github.com/SocketDev/socket-packageurl-js/issues/3.
 	*/
-	const smolUtil = require_detect().getSmolUtil();
+	const smolUtil = require_detect$1().getSmolUtil();
 	const { apply, bind, call } = Function.prototype;
 	const uncurryThis = smolUtil?.uncurryThis ?? bind.bind(call);
 	const applyBind = smolUtil?.applyBind ?? bind.bind(apply);
@@ -10462,9 +10462,9 @@ var require_uncurry = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.weakRefSafe = weakRefSafe;
 }));
 
-var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_primordial$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_node_module = require_module();
+	const require_node_module = require_module$1();
 	/**
 	* @file Lazy-loader for socket-btm's `node:smol-primordial` binding.
 	*   `node:smol-primordial` provides V8 Fast API typed implementations of Math.*
@@ -10498,9 +10498,9 @@ var require_primordial = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getSmolPrimordial = getSmolPrimordial;
 }));
 
-var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_string$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
+	const require_primordials_uncurry = require_uncurry$1();
 	/**
 	* @file Safe references to `String` static methods and prototype methods.
 	*   `StringPrototypeCharCodeAt` prefers the smol Fast API binding for ASCII
@@ -10530,7 +10530,7 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	*   `src/socketsecurity/primordial/primordial_binding.cc:41-72` for the
 	*   canonical design statement.
 	*/
-	const smolPrimordial = require_primordial().getSmolPrimordial();
+	const smolPrimordial = require_primordial$1().getSmolPrimordial();
 	const StringCtor = String;
 	const StringFromCharCode = String.fromCharCode;
 	const StringFromCodePoint = String.fromCodePoint;
@@ -10617,9 +10617,9 @@ var require_string = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.smolStringCharCodeAt = smolStringCharCodeAt;
 }));
 
-var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_url$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_constants_runtime = require_runtime();
+	const require_constants_runtime = require_runtime$1();
 	let cachedUrl;
 	/**
 	* @unused No internal or Socket consumers; exercised only by its unit tests.
@@ -10631,9 +10631,9 @@ var require_url = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.getNodeUrl = getNodeUrl;
 }));
 
-var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_buffer$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
+	const require_primordials_uncurry = require_uncurry$1();
 	/**
 	* @file Safe references to Node's `Buffer` global. `Buffer` is a Node-only
 	*   global; in browsers and in Deno without a compatibility shim the captured
@@ -10666,7 +10666,7 @@ var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.BufferPrototypeToString = BufferPrototypeToString;
 }));
 
-var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_encoding = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	/**
 	* @file Character encoding and character code constants. Exports the default
@@ -10691,12 +10691,12 @@ var require_encoding = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.UTF8 = UTF8;
 }));
 
-var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_shared = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
-	const require_primordials_string = require_string();
-	const require_node_url = require_url();
-	const require_primordials_buffer = require_buffer();
+	const require_primordials_string = require_string$1();
+	const require_node_url = require_url$1();
+	const require_primordials_buffer = require_buffer$1();
 	const require_constants_encoding = require_encoding();
 	/**
 	* @file Shared internals for the `paths/` module — the leaf-level primitives
@@ -10963,10 +10963,10 @@ var require_shared = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.slashRegExp = slashRegExp;
 }));
 
-var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_conversion = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
-	const require_primordials_string = require_string();
+	const require_primordials_string = require_string$1();
 	const require_paths_shared = require_shared();
 	/**
 	* @file Path conversion utilities — MSYS↔native bridging and string-shape
@@ -11076,9 +11076,9 @@ var require_conversion = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.trimLeadingDotSlash = trimLeadingDotSlash;
 }));
 
-var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_regexp$1 = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-	const require_primordials_uncurry = require_uncurry();
+	const require_primordials_uncurry = require_uncurry$1();
 	/**
 	* @file Safe references to `RegExp` and its prototype methods. `RegExp.escape`
 	*   is ES2025; the primordial is typed `Function | undefined` so older runtimes
@@ -11101,13 +11101,13 @@ var require_regexp = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.RegExpPrototypeTest = RegExpPrototypeTest;
 }));
 
-var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_predicates = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
-	const require_primordials_string = require_string();
+	const require_primordials_string = require_string$1();
 	require_encoding();
 	const require_paths_shared = require_shared();
-	const require_primordials_regexp = require_regexp();
+	const require_primordials_regexp = require_regexp$1();
 	/**
 	* @file Path predicates — `is*` checks for path shape and kind. Split out of
 	*   `paths/normalize.ts` for file-size hygiene. Pure boolean predicates over
@@ -11344,7 +11344,7 @@ var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	function separatorWrappedSubstring(pathLike) {
 		if (!isSeparatorWrapped(pathLike)) return;
 		const filepath = require_paths_shared.pathLikeToString(pathLike);
-		return `/${require_primordials_string.StringPrototypeSlice(filepath, 1, -1).replaceAll("\\", "/")}/`;
+		return `/${require_paths_shared.normalizePath(require_primordials_string.StringPrototypeSlice(filepath, 1, -1))}/`;
 	}
 	exports.isAbsolute = isAbsolute;
 	exports.isNodeModules = isNodeModules;
@@ -11358,10 +11358,10 @@ var require_predicates = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.separatorWrappedSubstring = separatorWrappedSubstring;
 }));
 
-var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_resolve = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_constants_platform = require_platform();
-	const require_primordials_string = require_string();
+	const require_primordials_string = require_string$1();
 	require_encoding();
 	const require_paths_shared = require_shared();
 	const require_paths_predicates = require_predicates();
@@ -11522,7 +11522,7 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	exports.resolve = resolve;
 }));
 
-var require_normalize = /* @__PURE__ */ __commonJSMin(((exports) => {
+var require_normalize = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 	const require_paths_shared = require_shared();
 	const require_paths_conversion = require_conversion();
