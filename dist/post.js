@@ -497,9 +497,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			ALPM: "alpm",
 			APK: "apk",
 			BITBUCKET: "bitbucket",
-			COCOAPODS: "cocoapods",
 			CARGO: "cargo",
 			CHROME: "chrome",
+			COCOAPODS: "cocoapods",
 			COMPOSER: "composer",
 			CONAN: "conan",
 			CONDA: "conda",
@@ -591,12 +591,12 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		* Note: Chrome extensions have `window` in popup contexts but not in service
 		* workers — check `IS_SERVICE_WORKER` for that case.
 		*/
-		const IS_BROWSER = typeof window !== "undefined" && typeof document !== "undefined";
+		const IS_BROWSER = typeof globalThis !== "undefined" && "window" in globalThis && typeof globalThis.window !== "undefined" && "document" in globalThis && typeof globalThis.document !== "undefined";
 		/**
 		* True when running inside a Web Worker / Chrome MV3 service worker. `self` is
 		* defined without `window` in worker contexts.
 		*/
-		const IS_WORKER = typeof self !== "undefined" && typeof window === "undefined" && typeof document === "undefined";
+		const IS_WORKER = "self" in globalThis && typeof globalThis.self !== "undefined" && !("window" in globalThis) && !("document" in globalThis);
 		exports.IS_BROWSER = IS_BROWSER;
 		exports.IS_NODE = IS_NODE;
 		exports.IS_WORKER = IS_WORKER;
@@ -726,12 +726,14 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		*      registers any `node:smol-*` builtins.
 		*   2. `getSmolUtil()` — lazy-loader for the `node:smol-util` binding, which
 		*      provides native `uncurryThis` and `applyBind` (single V8 dispatch via
-		*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction adapter
-		*      + `Function.prototype.call` trampoline that the JS form
-		*      `bind.bind(call)(fn)` hits twice per invocation). ~2x faster on hot
-		*      uncurried-call sites. `getSmolUtil()` returns `undefined` on stock Node
-		*      + non-Node runtimes. Result is cached across calls; the lazy-loader
-		*      follows the same shape as `src/node/fs.ts` etc.
+		*      `args.Data()` + `v8::Function::Call`, skipping the BoundFunction
+		*      adapter
+		*
+		*   - `Function.prototype.call` trampoline that the JS form `bind.bind(call)(fn)`
+		*     hits twice per invocation). ~2x faster on hot uncurried-call sites.
+		*     `getSmolUtil()` returns `undefined` on stock Node
+		*   - non-Node runtimes. Result is cached across calls; the lazy-loader follows
+		*     the same shape as `src/node/fs.ts` etc.
 		*
 		* @see https://github.com/SocketDev/socket-btm — socket-btm builds
 		*   the smol binary that exposes the `node:smol-util` binding.
@@ -769,7 +771,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		*
 		* @example
 		*   ;```ts
-		*   import { isSmol } from '@socketsecurity/lib/smol/detect'
+		*   import { isSmol } from '@socketsecurity/lib/exe/smol/detect'
 		*
 		*   if (isSmol()) {
 		*     // running on the smol binary; native fast paths available
@@ -826,9 +828,88 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.uncurryThis = uncurryThis;
 		exports.weakRefSafe = weakRefSafe;
 	}));
+	var require_object = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_uncurry = require_uncurry();
+		/**
+		* @file Safe references to `Object` static methods and prototype methods. Annex
+		*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
+		*   are exposed alongside the canonical static methods — implementations exist
+		*   in V8, SpiderMonkey, and JavaScriptCore even though the spec calls them
+		*   "normative optional".
+		*/
+		const ObjectCtor = Object;
+		const ObjectAssign = Object.assign;
+		const ObjectCreate = Object.create;
+		const ObjectDefineProperties = Object.defineProperties;
+		const ObjectDefineProperty = Object.defineProperty;
+		const ObjectEntries = Object.entries;
+		const ObjectFreeze = Object.freeze;
+		const ObjectFromEntries = Object.fromEntries;
+		const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+		const ObjectGetOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
+		const ObjectGetOwnPropertyNames = Object.getOwnPropertyNames;
+		const ObjectGetOwnPropertySymbols = Object.getOwnPropertySymbols;
+		const ObjectGetPrototypeOf = Object.getPrototypeOf;
+		const ObjectHasOwn = Object.hasOwn;
+		const ObjectIs = Object.is;
+		const ObjectIsExtensible = Object.isExtensible;
+		const ObjectIsFrozen = Object.isFrozen;
+		const ObjectIsSealed = Object.isSealed;
+		const ObjectKeys = Object.keys;
+		const ObjectPreventExtensions = Object.preventExtensions;
+		const ObjectSeal = Object.seal;
+		const ObjectSetPrototypeOf = Object.setPrototypeOf;
+		const ObjectValues = Object.values;
+		const ObjectPrototype = Object.prototype;
+		const ObjectPrototypeHasOwnProperty = require_primordials_uncurry.uncurryThis(Object.prototype.hasOwnProperty);
+		const ObjectPrototypeIsPrototypeOf = require_primordials_uncurry.uncurryThis(Object.prototype.isPrototypeOf);
+		const ObjectPrototypePropertyIsEnumerable = require_primordials_uncurry.uncurryThis(Object.prototype.propertyIsEnumerable);
+		const ObjectPrototypeToString = require_primordials_uncurry.uncurryThis(Object.prototype.toString);
+		const ObjectPrototypeValueOf = require_primordials_uncurry.uncurryThis(Object.prototype.valueOf);
+		const objectProto = Object.prototype;
+		const ObjectPrototypeDefineGetter = require_primordials_uncurry.uncurryThis(objectProto.__defineGetter__);
+		const ObjectPrototypeDefineSetter = require_primordials_uncurry.uncurryThis(objectProto.__defineSetter__);
+		const ObjectPrototypeLookupGetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupGetter__);
+		const ObjectPrototypeLookupSetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupSetter__);
+		exports.ObjectAssign = ObjectAssign;
+		exports.ObjectCreate = ObjectCreate;
+		exports.ObjectCtor = ObjectCtor;
+		exports.ObjectDefineProperties = ObjectDefineProperties;
+		exports.ObjectDefineProperty = ObjectDefineProperty;
+		exports.ObjectEntries = ObjectEntries;
+		exports.ObjectFreeze = ObjectFreeze;
+		exports.ObjectFromEntries = ObjectFromEntries;
+		exports.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
+		exports.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
+		exports.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
+		exports.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
+		exports.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
+		exports.ObjectHasOwn = ObjectHasOwn;
+		exports.ObjectIs = ObjectIs;
+		exports.ObjectIsExtensible = ObjectIsExtensible;
+		exports.ObjectIsFrozen = ObjectIsFrozen;
+		exports.ObjectIsSealed = ObjectIsSealed;
+		exports.ObjectKeys = ObjectKeys;
+		exports.ObjectPreventExtensions = ObjectPreventExtensions;
+		exports.ObjectPrototype = ObjectPrototype;
+		exports.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
+		exports.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
+		exports.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
+		exports.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
+		exports.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
+		exports.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
+		exports.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
+		exports.ObjectPrototypeToString = ObjectPrototypeToString;
+		exports.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
+		exports.ObjectSeal = ObjectSeal;
+		exports.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
+		exports.ObjectValues = ObjectValues;
+	}));
 	var require_map_set = /* @__PURE__ */ __commonJSMin(((exports) => {
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		const require_primordials_uncurry = require_uncurry();
+		const require_primordials_object = require_object();
 		const require_primordials_error = require_error();
 		/**
 		* @file Safe references to `Map`, `Set`, `WeakMap`, `WeakSet`, and `WeakRef`.
@@ -867,6 +948,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const SetPrototypeSymmetricDifference = require_primordials_uncurry.uncurryThis(Set.prototype.symmetricDifference);
 		const SetPrototypeUnion = require_primordials_uncurry.uncurryThis(Set.prototype.union);
 		const SetPrototypeValues = require_primordials_uncurry.uncurryThis(Set.prototype.values);
+		const SetPrototypeSizeGetter = require_primordials_uncurry.uncurryThis(require_primordials_object.ObjectGetOwnPropertyDescriptor(Set.prototype, "size").get);
 		const WeakMapPrototypeDelete = require_primordials_uncurry.uncurryThis(WeakMap.prototype.delete);
 		const WeakMapPrototypeGet = require_primordials_uncurry.uncurryThis(WeakMap.prototype.get);
 		const WeakMapPrototypeGetOrInsert = WeakMap.prototype.getOrInsert === void 0 ? weakMapGetOrInsertFallback : require_primordials_uncurry.uncurryThis(WeakMap.prototype.getOrInsert);
@@ -925,6 +1007,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.SetPrototypeIsSubsetOf = SetPrototypeIsSubsetOf;
 		exports.SetPrototypeIsSupersetOf = SetPrototypeIsSupersetOf;
 		exports.SetPrototypeKeys = SetPrototypeKeys;
+		exports.SetPrototypeSizeGetter = SetPrototypeSizeGetter;
 		exports.SetPrototypeSymmetricDifference = SetPrototypeSymmetricDifference;
 		exports.SetPrototypeUnion = SetPrototypeUnion;
 		exports.SetPrototypeValues = SetPrototypeValues;
@@ -1044,12 +1127,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const StringPrototypeAt = require_primordials_uncurry.uncurryThis(String.prototype.at);
 		const StringPrototypeCharAt = require_primordials_uncurry.uncurryThis(String.prototype.charAt);
 		const smolCharCodeAt = smolPrimordial?.stringCharCodeAt;
-		/* c8 ignore start - smol Node fast path unreachable on stock Node test runner */
-		const StringPrototypeCharCodeAt = smolCharCodeAt ? (s, i) => {
+		/* c8 ignore start - the smol Fast API binding ships only on socket-btm's smol Node binary, so this body cannot run under the stock-Node runner */
+		function smolStringCharCodeAt(s, i) {
 			const code = smolCharCodeAt(s, i);
 			return code === -1 ? NaN : code;
-		} : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
+		}
 		/* c8 ignore stop */
+		const StringPrototypeCharCodeAt = smolCharCodeAt ? smolStringCharCodeAt : require_primordials_uncurry.uncurryThis(String.prototype.charCodeAt);
 		const StringPrototypeCodePointAt = require_primordials_uncurry.uncurryThis(String.prototype.codePointAt);
 		const StringPrototypeConcat = require_primordials_uncurry.uncurryThis(String.prototype.concat);
 		const StringPrototypeEndsWith = require_primordials_uncurry.uncurryThis(String.prototype.endsWith);
@@ -1119,6 +1203,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.StringPrototypeTrimStart = StringPrototypeTrimStart;
 		exports.StringPrototypeValueOf = StringPrototypeValueOf;
 		exports.StringRaw = StringRaw;
+		exports.smolStringCharCodeAt = smolStringCharCodeAt;
 	}));
 	var import_purl = require_purl();
 	var import_error = require_error();
@@ -1169,7 +1254,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		if (regex === void 0) {
 			if (pattern.length > MAX_PATTERN_LENGTH) return false;
 			if (countWildcards(pattern) > MAX_WILDCARDS_PER_PATTERN) return false;
-			regex = new import_regexp.RegExpCtor(`^${(0, import_string.StringPrototypeReplace)((0, import_string.StringPrototypeReplace)((0, import_string.StringPrototypeReplace)((0, import_string.StringPrototypeReplace)(pattern, /[.+^${}()|[\]\\]/g, "\\$&"), /\*/g, ".*"), /\?/g, "."), /(?:\.\*)+/g, ".*")}$`);
+			const regexPattern = (0, import_string.StringPrototypeReplace)((0, import_string.StringPrototypeReplace)((0, import_string.StringPrototypeReplace)(pattern, /[.+^${}()|[\]\\]/g, "\\$&"), /\*/g, ".*"), /\?/g, ".");
+			regex = new import_regexp.RegExpCtor(`^${(0, import_string.StringPrototypeReplace)(regexPattern, /(?:\.\*)+/g, ".*")}$`);
 			if (wildcardRegexCache.size >= WILDCARD_CACHE_MAX) wildcardRegexCache.delete(wildcardRegexCache.keys().next().value);
 			wildcardRegexCache.set(pattern, regex);
 		} else {
@@ -1326,6 +1412,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const { typePattern, namespacePattern, namePattern, versionPattern } = parsed;
 		return matchComponent(typePattern, purl.type ?? "") && matchComponent(namespacePattern ?? "", purl.namespace ?? "") && matchComponent(namePattern, purl.name ?? "") && matchComponent(versionPattern ?? "", purl.version ?? "");
 	}
+	function createWildcardMatcher(pattern) {
+		return pattern && ((0, import_string.StringPrototypeIncludes)(pattern, "*") || (0, import_string.StringPrototypeIncludes)(pattern, "?")) ? (value) => matchWildcard(pattern, value) : void 0;
+	}
 	/**
 	* Create a reusable matcher function from a pattern. More efficient for testing
 	* multiple `purl`s against the same pattern.
@@ -1347,15 +1436,15 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const parsed = parsePattern(pattern);
 		if (!parsed) return () => false;
 		const { typePattern, namespacePattern, namePattern, versionPattern } = parsed;
-		const typeMatcher = typePattern && ((0, import_string.StringPrototypeIncludes)(typePattern, "*") || (0, import_string.StringPrototypeIncludes)(typePattern, "?")) ? (value) => matchWildcard(typePattern, value) : void 0;
-		const namespaceMatcher = namespacePattern && ((0, import_string.StringPrototypeIncludes)(namespacePattern, "*") || (0, import_string.StringPrototypeIncludes)(namespacePattern, "?")) && namespacePattern ? (value) => matchWildcard(namespacePattern, value) : void 0;
-		const nameMatcher = namePattern && ((0, import_string.StringPrototypeIncludes)(namePattern, "*") || (0, import_string.StringPrototypeIncludes)(namePattern, "?")) ? (value) => matchWildcard(namePattern, value) : void 0;
-		const versionMatcher = versionPattern && ((0, import_string.StringPrototypeIncludes)(versionPattern, "*") || (0, import_string.StringPrototypeIncludes)(versionPattern, "?")) && versionPattern ? (value) => matchWildcard(versionPattern, value) : void 0;
+		const typeMatcher = createWildcardMatcher(typePattern);
+		const namespaceMatcher = createWildcardMatcher(namespacePattern);
+		const nameMatcher = createWildcardMatcher(namePattern);
+		const versionMatcher = createWildcardMatcher(versionPattern);
 		return (_purl) => {
 			return matchComponent(typePattern, _purl.type ?? "", typeMatcher) && matchComponent(namespacePattern ?? "", _purl.namespace ?? "", namespaceMatcher) && matchComponent(namePattern, _purl.name ?? "", nameMatcher) && matchComponent(versionPattern ?? "", _purl.version ?? "", versionMatcher);
 		};
 	}
-	var require_array = /* @__PURE__ */ __commonJSMin(((exports) => {
+	var require_array$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		const require_primordials_uncurry = require_uncurry();
 		/**
@@ -1492,84 +1581,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.Uint8ArrayCtor = Uint8ArrayCtor;
 		exports.Uint8ClampedArrayCtor = Uint8ClampedArrayCtor;
 	}));
-	var require_object = /* @__PURE__ */ __commonJSMin(((exports) => {
-		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-		const require_primordials_uncurry = require_uncurry();
-		/**
-		* @file Safe references to `Object` static methods and prototype methods. Annex
-		*   B legacy accessor methods (`__defineGetter__`, `__lookupGetter__`, etc.)
-		*   are exposed alongside the canonical static methods — implementations exist
-		*   in V8, SpiderMonkey, and JavaScriptCore even though the spec calls them
-		*   "normative optional".
-		*/
-		const ObjectCtor = Object;
-		const ObjectAssign = Object.assign;
-		const ObjectCreate = Object.create;
-		const ObjectDefineProperties = Object.defineProperties;
-		const ObjectDefineProperty = Object.defineProperty;
-		const ObjectEntries = Object.entries;
-		const ObjectFreeze = Object.freeze;
-		const ObjectFromEntries = Object.fromEntries;
-		const ObjectGetOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-		const ObjectGetOwnPropertyDescriptors = Object.getOwnPropertyDescriptors;
-		const ObjectGetOwnPropertyNames = Object.getOwnPropertyNames;
-		const ObjectGetOwnPropertySymbols = Object.getOwnPropertySymbols;
-		const ObjectGetPrototypeOf = Object.getPrototypeOf;
-		const ObjectHasOwn = Object.hasOwn;
-		const ObjectIs = Object.is;
-		const ObjectIsExtensible = Object.isExtensible;
-		const ObjectIsFrozen = Object.isFrozen;
-		const ObjectIsSealed = Object.isSealed;
-		const ObjectKeys = Object.keys;
-		const ObjectPreventExtensions = Object.preventExtensions;
-		const ObjectSeal = Object.seal;
-		const ObjectSetPrototypeOf = Object.setPrototypeOf;
-		const ObjectValues = Object.values;
-		const ObjectPrototype = Object.prototype;
-		const ObjectPrototypeHasOwnProperty = require_primordials_uncurry.uncurryThis(Object.prototype.hasOwnProperty);
-		const ObjectPrototypeIsPrototypeOf = require_primordials_uncurry.uncurryThis(Object.prototype.isPrototypeOf);
-		const ObjectPrototypePropertyIsEnumerable = require_primordials_uncurry.uncurryThis(Object.prototype.propertyIsEnumerable);
-		const ObjectPrototypeToString = require_primordials_uncurry.uncurryThis(Object.prototype.toString);
-		const ObjectPrototypeValueOf = require_primordials_uncurry.uncurryThis(Object.prototype.valueOf);
-		const objectProto = Object.prototype;
-		const ObjectPrototypeDefineGetter = require_primordials_uncurry.uncurryThis(objectProto.__defineGetter__);
-		const ObjectPrototypeDefineSetter = require_primordials_uncurry.uncurryThis(objectProto.__defineSetter__);
-		const ObjectPrototypeLookupGetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupGetter__);
-		const ObjectPrototypeLookupSetter = require_primordials_uncurry.uncurryThis(objectProto.__lookupSetter__);
-		exports.ObjectAssign = ObjectAssign;
-		exports.ObjectCreate = ObjectCreate;
-		exports.ObjectCtor = ObjectCtor;
-		exports.ObjectDefineProperties = ObjectDefineProperties;
-		exports.ObjectDefineProperty = ObjectDefineProperty;
-		exports.ObjectEntries = ObjectEntries;
-		exports.ObjectFreeze = ObjectFreeze;
-		exports.ObjectFromEntries = ObjectFromEntries;
-		exports.ObjectGetOwnPropertyDescriptor = ObjectGetOwnPropertyDescriptor;
-		exports.ObjectGetOwnPropertyDescriptors = ObjectGetOwnPropertyDescriptors;
-		exports.ObjectGetOwnPropertyNames = ObjectGetOwnPropertyNames;
-		exports.ObjectGetOwnPropertySymbols = ObjectGetOwnPropertySymbols;
-		exports.ObjectGetPrototypeOf = ObjectGetPrototypeOf;
-		exports.ObjectHasOwn = ObjectHasOwn;
-		exports.ObjectIs = ObjectIs;
-		exports.ObjectIsExtensible = ObjectIsExtensible;
-		exports.ObjectIsFrozen = ObjectIsFrozen;
-		exports.ObjectIsSealed = ObjectIsSealed;
-		exports.ObjectKeys = ObjectKeys;
-		exports.ObjectPreventExtensions = ObjectPreventExtensions;
-		exports.ObjectPrototype = ObjectPrototype;
-		exports.ObjectPrototypeDefineGetter = ObjectPrototypeDefineGetter;
-		exports.ObjectPrototypeDefineSetter = ObjectPrototypeDefineSetter;
-		exports.ObjectPrototypeHasOwnProperty = ObjectPrototypeHasOwnProperty;
-		exports.ObjectPrototypeIsPrototypeOf = ObjectPrototypeIsPrototypeOf;
-		exports.ObjectPrototypeLookupGetter = ObjectPrototypeLookupGetter;
-		exports.ObjectPrototypeLookupSetter = ObjectPrototypeLookupSetter;
-		exports.ObjectPrototypePropertyIsEnumerable = ObjectPrototypePropertyIsEnumerable;
-		exports.ObjectPrototypeToString = ObjectPrototypeToString;
-		exports.ObjectPrototypeValueOf = ObjectPrototypeValueOf;
-		exports.ObjectSeal = ObjectSeal;
-		exports.ObjectSetPrototypeOf = ObjectSetPrototypeOf;
-		exports.ObjectValues = ObjectValues;
-	}));
 	var require_reflect = /* @__PURE__ */ __commonJSMin(((exports) => {
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
@@ -1608,7 +1619,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* @file Object utility functions for type checking and immutable object
 	*   creation. Provides object validation and recursive freezing utilities.
 	*/
-	var import_array = require_array();
+	var import_array$1 = require_array$1();
 	var import_object = require_object();
 	var import_reflect = require_reflect();
 	/**
@@ -1619,6 +1630,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	function isObject(value) {
 		return value !== null && typeof value === "object";
 	}
+	function isUnfrozenObject(value) {
+		return value !== null && (typeof value === "object" || typeof value === "function") && !(0, import_object.ObjectIsFrozen)(value);
+	}
 	/**
 	* Recursively freeze an object and all nested objects. Uses breadth-first
 	* traversal with a queue for memory efficiency.
@@ -1626,7 +1640,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* @throws {Error} When object graph too large or circular reference detected.
 	*/
 	function recursiveFreeze(value_) {
-		if (value_ === null || !(typeof value_ === "object" || typeof value_ === "function") || (0, import_object.ObjectIsFrozen)(value_)) return value_;
+		if (!isUnfrozenObject(value_)) return value_;
 		const queue = [value_];
 		const visited = new import_map_set.WeakSetCtor();
 		visited.add(value_);
@@ -1636,9 +1650,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			if (pos === 1e6) throw new import_error.ErrorCtor("Object graph too large (exceeds 1,000,000 items).");
 			const obj = queue[pos++];
 			(0, import_object.ObjectFreeze)(obj);
-			if ((0, import_array.ArrayIsArray)(obj)) for (let i = 0, { length } = obj; i < length; i += 1) {
+			if ((0, import_array$1.ArrayIsArray)(obj)) for (let i = 0, { length } = obj; i < length; i += 1) {
 				const item = obj[i];
-				if (item !== null && (typeof item === "object" || typeof item === "function") && !(0, import_object.ObjectIsFrozen)(item) && !visited.has(item)) {
+				if (isUnfrozenObject(item) && !visited.has(item)) {
 					visited.add(item);
 					queue[queueLength++] = item;
 				}
@@ -1647,7 +1661,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 				const keys = (0, import_reflect.ReflectOwnKeys)(obj);
 				for (let i = 0, { length } = keys; i < length; i += 1) {
 					const propValue = obj[keys[i]];
-					if (propValue !== null && (typeof propValue === "object" || typeof propValue === "function") && !(0, import_object.ObjectIsFrozen)(propValue) && !visited.has(propValue)) {
+					if (isUnfrozenObject(propValue) && !visited.has(propValue)) {
 						visited.add(propValue);
 						queue[queueLength++] = propValue;
 					}
@@ -1724,9 +1738,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const NumberIsSafeInteger = smolPrimordial?.numberIsSafeInteger ?? Number.isSafeInteger;
 		const NumberParseFloat = smolPrimordial?.numberParseFloat ?? Number.parseFloat;
 		const smolParseInt10 = smolPrimordial?.numberParseInt10;
-		/* c8 ignore start - smol fast-path branch only reachable on socket-btm smol Node binary */
-		const NumberParseInt = smolParseInt10 ? (s, radix) => radix === void 0 || radix === 10 ? smolParseInt10(s) : Number.parseInt(s, radix) : Number.parseInt;
+		const stockParseInt = Number.parseInt;
+		/* c8 ignore start - the smol Fast API binding ships only on socket-btm's smol Node binary, so this body cannot run under the stock-Node runner */
+		function smolNumberParseInt(s, radix) {
+			return radix === void 0 || radix === 10 ? smolParseInt10(s) : stockParseInt(s, radix);
+		}
 		/* c8 ignore stop */
+		const NumberParseInt = smolParseInt10 ? smolNumberParseInt : stockParseInt;
 		const NumberPrototypeToExponential = require_primordials_uncurry.uncurryThis(Number.prototype.toExponential);
 		const NumberPrototypeToFixed = require_primordials_uncurry.uncurryThis(Number.prototype.toFixed);
 		const NumberPrototypeToPrecision = require_primordials_uncurry.uncurryThis(Number.prototype.toPrecision);
@@ -1751,6 +1769,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.NumberPrototypeToPrecision = NumberPrototypeToPrecision;
 		exports.NumberPrototypeToString = NumberPrototypeToString;
 		exports.NumberPrototypeValueOf = NumberPrototypeValueOf;
+		exports.smolNumberParseInt = smolNumberParseInt;
 	}));
 	var import_url = require_url();
 	var import_number = require_number();
@@ -1758,11 +1777,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* Check if string contains only whitespace characters.
 	*/
 	function isBlank(str) {
-		for (let i = 0, { length } = str; i < length; i += 1) {
-			const code = (0, import_string.StringPrototypeCharCodeAt)(str, i);
-			if (!(code === 32 || code === 9 || code === 10 || code === 11 || code === 12 || code === 13 || code === 160 || code === 5760 || code === 8192 || code === 8193 || code === 8194 || code === 8195 || code === 8196 || code === 8197 || code === 8198 || code === 8199 || code === 8200 || code === 8201 || code === 8202 || code === 8232 || code === 8233 || code === 8239 || code === 8287 || code === 12288 || code === 65279)) return false;
-		}
-		return true;
+		return (0, import_regexp.RegExpPrototypeTest)(/^\s*$/, str);
 	}
 	/**
 	* Check if value is a non-empty string.
@@ -1823,6 +1838,16 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		}
 		return fromIndex ? result + (0, import_string.StringPrototypeSlice)(str, fromIndex) : str;
 	}
+	function isUnicodeInjectionCharCode(code) {
+		return code === 8203 || code === 8204 || code === 8205 || code === 8206 || code === 8207 || code === 8234 || code === 8235 || code === 8236 || code === 8237 || code === 8238 || code === 8288 || code === 65279 || code === 65532 || code === 65533;
+	}
+	function isAsciiInjectionPrefix(code) {
+		if (code === 32 || code === 33 || code === 34 || code === 35 || code === 36 || code === 37 || code === 38 || code === 39 || code === 40 || code === 41 || code === 42 || code === 59) return true;
+		return false;
+	}
+	function isAsciiInjectionSuffix(code) {
+		return code === 60 || code === 61 || code === 62 || code === 63 || code === 91 || code === 92 || code === 93 || code === 96 || code === 123 || code === 124 || code === 125 || code === 126 || code === 127;
+	}
 	/**
 	* Test whether a character code is an injection-dangerous character.
 	*
@@ -1839,11 +1864,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*    (`0x7f`)
 	*/
 	function isInjectionCharCode(code) {
-		if (code <= 31) return true;
-		if (code === 32 || code === 33 || code === 34 || code === 35 || code === 36 || code === 37 || code === 38 || code === 39 || code === 40 || code === 41 || code === 42 || code === 59 || code === 60 || code === 61 || code === 62 || code === 63 || code === 91 || code === 92 || code === 93 || code === 96 || code === 123 || code === 124 || code === 125 || code === 126 || code === 127) return true;
-		if (code >= 128 && code <= 159) return true;
-		if (code === 8203 || code === 8204 || code === 8205 || code === 8206 || code === 8207 || code === 8234 || code === 8235 || code === 8236 || code === 8237 || code === 8238 || code === 8288 || code === 65279 || code === 65532 || code === 65533) return true;
-		return false;
+		return code <= 31 || isAsciiInjectionPrefix(code) || isAsciiInjectionSuffix(code) || code >= 128 && code <= 159 || isUnicodeInjectionCharCode(code);
 	}
 	/**
 	* Test whether a character code enables command execution.
@@ -1861,8 +1882,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		if (code <= 31 && code !== 9) return true;
 		if (code === 36 || code === 59 || code === 60 || code === 62 || code === 92 || code === 96 || code === 124 || code === 127) return true;
 		if (code >= 128 && code <= 159) return true;
-		if (code === 8203 || code === 8204 || code === 8205 || code === 8206 || code === 8207 || code === 8234 || code === 8235 || code === 8236 || code === 8237 || code === 8238 || code === 8288 || code === 65279 || code === 65532 || code === 65533) return true;
-		return false;
+		return isUnicodeInjectionCharCode(code);
 	}
 	/**
 	* Find the first command injection character in a string. Like
@@ -1997,7 +2017,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		let qualifiers;
 		for (const { 0: key, 1: value } of qualifiersToEntries(rawQualifiers)) {
 			if (typeof key !== "string") continue;
-			const trimmed = (0, import_string.StringPrototypeTrim)(typeof value === "string" ? value : typeof value === "number" || typeof value === "boolean" ? `${value}` : "");
+			const strValue = typeof value === "string" ? value : typeof value === "number" || typeof value === "boolean" ? `${value}` : "";
+			const trimmed = (0, import_string.StringPrototypeTrim)(strValue);
 			if (trimmed.length === 0) continue;
 			if (qualifiers === void 0) qualifiers = (0, import_object.ObjectCreate)(null);
 			qualifiers[(0, import_string.StringPrototypeToLowerCase)(key)] = trimmed;
@@ -2055,11 +2076,176 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.JSONParse = JSONParse;
 		exports.JSONStringify = JSONStringify;
 	}));
-	/**
-	* @file URL encoding functions for PURL components. Provides special handling
-	*   for names, namespaces, versions, qualifiers, and subpaths.
-	*/
-	var import_globals = (/* @__PURE__ */ __commonJSMin(((exports) => {
+	var require_math = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		/**
+		* @file Safe references to `Math` constants and methods. Methods prefer the
+		*   smol fast-path (`node:smol-primordial`) when available — V8 Fast API typed
+		*   implementations TurboFan inlines into JIT'd callers. Constants stay as the
+		*   stock `Math.X` since they are pre-computed scalar values with no fast-path
+		*   benefit.
+		*/
+		const smolPrimordial = require_primordial().getSmolPrimordial();
+		const MathE = Math.E;
+		const MathLN2 = Math.LN2;
+		const MathLN10 = Math.LN10;
+		const MathLOG2E = Math.LOG2E;
+		const MathLOG10E = Math.LOG10E;
+		const MathPI = Math.PI;
+		const MathSQRT1_2 = Math.SQRT1_2;
+		const MathSQRT2 = Math.SQRT2;
+		const MathAbs = smolPrimordial?.mathAbs ?? Math.abs;
+		const MathAcos = smolPrimordial?.mathAcos ?? Math.acos;
+		const MathAcosh = smolPrimordial?.mathAcosh ?? Math.acosh;
+		const MathAsin = smolPrimordial?.mathAsin ?? Math.asin;
+		const MathAsinh = smolPrimordial?.mathAsinh ?? Math.asinh;
+		const MathAtan = smolPrimordial?.mathAtan ?? Math.atan;
+		const MathAtan2 = smolPrimordial?.mathAtan2 ?? Math.atan2;
+		const MathAtanh = smolPrimordial?.mathAtanh ?? Math.atanh;
+		const MathCbrt = smolPrimordial?.mathCbrt ?? Math.cbrt;
+		const MathCeil = smolPrimordial?.mathCeil ?? Math.ceil;
+		const MathClz32 = smolPrimordial?.mathClz32 ?? Math.clz32;
+		const MathCos = smolPrimordial?.mathCos ?? Math.cos;
+		const MathCosh = smolPrimordial?.mathCosh ?? Math.cosh;
+		const MathExp = smolPrimordial?.mathExp ?? Math.exp;
+		const MathExpm1 = smolPrimordial?.mathExpm1 ?? Math.expm1;
+		const MathF16round = Math.f16round;
+		const MathFloor = smolPrimordial?.mathFloor ?? Math.floor;
+		const MathFround = smolPrimordial?.mathFround ?? Math.fround;
+		const MathHypot = smolPrimordial?.mathHypot ?? Math.hypot;
+		const MathImul = smolPrimordial?.mathImul ?? Math.imul;
+		const MathLog = smolPrimordial?.mathLog ?? Math.log;
+		const MathLog1p = smolPrimordial?.mathLog1p ?? Math.log1p;
+		const MathLog2 = smolPrimordial?.mathLog2 ?? Math.log2;
+		const MathLog10 = smolPrimordial?.mathLog10 ?? Math.log10;
+		const MathMax = Math.max;
+		const MathMin = Math.min;
+		const MathPow = smolPrimordial?.mathPow ?? Math.pow;
+		const MathRandom = Math.random;
+		const MathRound = smolPrimordial?.mathRound ?? Math.round;
+		const MathSign = smolPrimordial?.mathSign ?? Math.sign;
+		const MathSin = smolPrimordial?.mathSin ?? Math.sin;
+		const MathSinh = smolPrimordial?.mathSinh ?? Math.sinh;
+		const MathSqrt = smolPrimordial?.mathSqrt ?? Math.sqrt;
+		const MathTan = smolPrimordial?.mathTan ?? Math.tan;
+		const MathTanh = smolPrimordial?.mathTanh ?? Math.tanh;
+		const MathTrunc = smolPrimordial?.mathTrunc ?? Math.trunc;
+		exports.MathAbs = MathAbs;
+		exports.MathAcos = MathAcos;
+		exports.MathAcosh = MathAcosh;
+		exports.MathAsin = MathAsin;
+		exports.MathAsinh = MathAsinh;
+		exports.MathAtan = MathAtan;
+		exports.MathAtan2 = MathAtan2;
+		exports.MathAtanh = MathAtanh;
+		exports.MathCbrt = MathCbrt;
+		exports.MathCeil = MathCeil;
+		exports.MathClz32 = MathClz32;
+		exports.MathCos = MathCos;
+		exports.MathCosh = MathCosh;
+		exports.MathE = MathE;
+		exports.MathExp = MathExp;
+		exports.MathExpm1 = MathExpm1;
+		exports.MathF16round = MathF16round;
+		exports.MathFloor = MathFloor;
+		exports.MathFround = MathFround;
+		exports.MathHypot = MathHypot;
+		exports.MathImul = MathImul;
+		exports.MathLN10 = MathLN10;
+		exports.MathLN2 = MathLN2;
+		exports.MathLOG10E = MathLOG10E;
+		exports.MathLOG2E = MathLOG2E;
+		exports.MathLog = MathLog;
+		exports.MathLog10 = MathLog10;
+		exports.MathLog1p = MathLog1p;
+		exports.MathLog2 = MathLog2;
+		exports.MathMax = MathMax;
+		exports.MathMin = MathMin;
+		exports.MathPI = MathPI;
+		exports.MathPow = MathPow;
+		exports.MathRandom = MathRandom;
+		exports.MathRound = MathRound;
+		exports.MathSQRT1_2 = MathSQRT1_2;
+		exports.MathSQRT2 = MathSQRT2;
+		exports.MathSign = MathSign;
+		exports.MathSin = MathSin;
+		exports.MathSinh = MathSinh;
+		exports.MathSqrt = MathSqrt;
+		exports.MathTan = MathTan;
+		exports.MathTanh = MathTanh;
+		exports.MathTrunc = MathTrunc;
+	}));
+	var require_array = /* @__PURE__ */ __commonJSMin(((exports) => {
+		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+		const require_primordials_error = require_error();
+		const require_primordials_number = require_number();
+		const require_primordials_array = require_array$1();
+		const require_primordials_math = require_math();
+		/**
+		* @file Shims for the ES2023 change-array-by-copy methods, both Node 20.
+		*   Only the two the tree consumes are here: `toSorted` and `toReversed`.
+		*   Both produce a DENSE result. Reading a hole yields undefined rather than
+		*   propagating the hole, and `toSorted` places every undefined at the end
+		*   regardless of the comparator, which is the part a `[...arr].sort(cmp)`
+		*   rewrite gets right only by accident and a `filter(Boolean)` rewrite gets
+		*   wrong outright.
+		*/
+		const MAX_SAFE_LENGTH = 2 ** 53 - 1;
+		/**
+		* The native `Array.prototype.toReversed`, or undefined below Node 20.
+		*/
+		const arrayToReversedNative = typeof require_primordials_array.ArrayCtor.prototype.toReversed === "function" ? (arr) => arr.toReversed() : void 0;
+		/**
+		* `Array.prototype.toReversed` shim.
+		*
+		* Walks the source backwards by index rather than reversing in place, so the
+		* input is never mutated and the output is dense.
+		*/
+		function arrayToReversedShim(arr) {
+			const length = toLength(arr.length);
+			const out = new require_primordials_array.ArrayCtor(length);
+			for (let i = 0; i < length; i += 1) out[i] = arr[length - i - 1];
+			return out;
+		}
+		const arrayToReversed = arrayToReversedNative ?? arrayToReversedShim;
+		/**
+		* The native `Array.prototype.toSorted`, or undefined below Node 20.
+		*/
+		const arrayToSortedNative = typeof require_primordials_array.ArrayCtor.prototype.toSorted === "function" ? (arr, comparator) => arr.toSorted(comparator) : void 0;
+		/**
+		* `Array.prototype.toSorted` shim.
+		*
+		* The comparator is validated BEFORE any element is read, so a bad comparator
+		* throws on an empty array too. `sort` then supplies the rest of the observable
+		* contract: a stable order, and undefined last whatever the comparator says.
+		*/
+		function arrayToSortedShim(arr, comparator) {
+			if (comparator !== void 0 && typeof comparator !== "function") throw new require_primordials_error.TypeErrorCtor("The comparator must be a function or undefined");
+			const length = toLength(arr.length);
+			const out = new require_primordials_array.ArrayCtor(length);
+			for (let i = 0; i < length; i += 1) out[i] = arr[i];
+			return require_primordials_array.ArrayPrototypeSort(out, comparator);
+		}
+		const arrayToSorted = arrayToSortedNative ?? arrayToSortedShim;
+		/**
+		* The spec's ToLength: a length is clamped to a non-negative integer under
+		* 2^53-1. Without it a `length` of -1 or NaN reaches `new Array(length)` and
+		* throws a RangeError where the spec produces an empty array.
+		*/
+		function toLength(value) {
+			const n = require_primordials_number.NumberCtor(value);
+			if (require_primordials_number.NumberIsNaN(n) || n <= 0) return 0;
+			return require_primordials_math.MathMin(require_primordials_math.MathFloor(n), MAX_SAFE_LENGTH);
+		}
+		exports.arrayToReversed = arrayToReversed;
+		exports.arrayToReversedNative = arrayToReversedNative;
+		exports.arrayToReversedShim = arrayToReversedShim;
+		exports.arrayToSorted = arrayToSorted;
+		exports.arrayToSortedNative = arrayToSortedNative;
+		exports.arrayToSortedShim = arrayToSortedShim;
+		exports.toLength = toLength;
+	}));
+	var require_globals = /* @__PURE__ */ __commonJSMin(((exports) => {
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		/**
 		* @file Safe references to top-level globals that don't fit a larger
@@ -2091,7 +2277,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		exports.decodeURIComponent = decodeURIComponent;
 		exports.encodeURIComponent = encodeURIComponent;
 		exports.globalThis = capturedGlobalThis;
-	})))();
+	}));
+	/**
+	* @file URL encoding functions for PURL components. Provides special handling
+	*   for names, namespaces, versions, qualifiers, and subpaths.
+	*/
+	var import_array = require_array();
+	var import_globals = require_globals();
 	const encodeComponent = import_globals.encodeURIComponent;
 	const REUSED_SEARCH_PARAMS = new import_url.URLSearchParamsCtor();
 	const REUSED_SEARCH_PARAMS_KEY = "_";
@@ -2100,22 +2292,34 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* Encode package name component for URL.
 	*/
 	function encodeName(name) {
-		return isNonEmptyString(name) ? (0, import_string.StringPrototypeReplaceAll)(encodeComponent(name), "%3A", ":") : "";
+		return isNonEmptyString(name) ? (0, import_string.StringPrototypeReplaceAll)(encodePurlComponent(name), "%3A", ":") : "";
 	}
 	/**
 	* Encode package namespace component for URL.
 	*/
 	function encodeNamespace(namespace) {
-		return isNonEmptyString(namespace) ? (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encodeComponent(namespace), "%3A", ":"), "%2F", "/") : "";
+		return isNonEmptyString(namespace) ? (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encodePurlComponent(namespace), "%3A", ":"), "%2F", "/") : "";
+	}
+	function encodePurlComponent(value) {
+		return (0, import_string.StringPrototypeReplaceAll)(encodeComponent(value), /[!'()*]/g, (character) => {
+			switch (character) {
+				case "!": return "%21";
+				case "'": return "%27";
+				case "(": return "%28";
+				case ")": return "%29";
+				default: return "%2A";
+			}
+		});
 	}
 	/**
 	* Encode qualifier parameter key or value.
 	*/
 	function encodeQualifierParam(param) {
 		if (isNonEmptyString(param)) {
-			const value = prepareValueForSearchParams(param);
+			const value = param;
 			REUSED_SEARCH_PARAMS.set(REUSED_SEARCH_PARAMS_KEY, value);
-			return normalizeSearchParamsEncoding((0, import_string.StringPrototypeSlice)(REUSED_SEARCH_PARAMS.toString(), REUSED_SEARCH_PARAMS_OFFSET));
+			const search = REUSED_SEARCH_PARAMS.toString();
+			return normalizeSearchParamsEncoding((0, import_string.StringPrototypeSlice)(search, REUSED_SEARCH_PARAMS_OFFSET));
 		}
 		return "";
 	}
@@ -2124,11 +2328,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*/
 	function encodeQualifiers(qualifiers) {
 		if (isObject(qualifiers)) {
-			const qualifiersKeys = (0, import_array.ArrayPrototypeToSorted)((0, import_object.ObjectKeys)(qualifiers));
+			const qualifiersKeys = (0, import_array.arrayToSorted)((0, import_object.ObjectKeys)(qualifiers));
 			const searchParams = new import_url.URLSearchParamsCtor();
 			for (let i = 0, { length } = qualifiersKeys; i < length; i += 1) {
 				const key = qualifiersKeys[i];
-				const value = prepareValueForSearchParams(qualifiers[key]);
+				const value = String(qualifiers[key]);
 				searchParams.set(key, value);
 			}
 			return normalizeSearchParamsEncoding(searchParams.toString());
@@ -2139,13 +2343,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* Encode subpath component for URL.
 	*/
 	function encodeSubpath(subpath) {
-		return isNonEmptyString(subpath) ? (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encodeComponent(subpath), "%2F", "/"), "%3A", ":") : "";
+		return isNonEmptyString(subpath) ? (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encodePurlComponent(subpath), "%2F", "/"), "%3A", ":") : "";
 	}
 	/**
 	* Encode package version component for URL.
 	*/
 	function encodeVersion(version) {
-		return isNonEmptyString(version) ? (0, import_string.StringPrototypeReplaceAll)(encodeComponent(version), "%3A", ":") : "";
+		return isNonEmptyString(version) ? (0, import_string.StringPrototypeReplaceAll)(encodePurlComponent(version), "%3A", ":") : "";
 	}
 	/**
 	* Normalize `URLSearchParams` output for qualifier encoding.
@@ -2159,29 +2363,26 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* inside a value — they are not in the spec's no-encode set there.
 	*/
 	function normalizeSearchParamsEncoding(encoded) {
+		encoded = (0, import_string.StringPrototypeReplaceAll)(encoded, "*", "%2A");
 		if ((0, import_string.StringPrototypeIndexOf)(encoded, "%") === -1 && (0, import_string.StringPrototypeIndexOf)(encoded, "+") === -1) return encoded;
-		return (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encoded, "%2520", "%20"), "+", "%2B"), "%3A", ":"), "%7E", "~");
-	}
-	/**
-	* Prepare string value for `URLSearchParams` encoding.
-	*/
-	function prepareValueForSearchParams(value) {
-		return (0, import_string.StringPrototypeReplaceAll)(String(value), " ", "%20");
+		return (0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)((0, import_string.StringPrototypeReplaceAll)(encoded, "+", "%20"), "%3A", ":"), "%7E", "~");
 	}
 	/**
 	* @file Helper function for creating namespace objects. Organizes helper
 	*   functions by property names with configurable defaults and sorting.
 	*/
 	/**
-	* Create namespace object organizing helpers by property names.
+	* Create namespace object organizing helpers by property names. Callers
+	* (PurlType, PurlComponent) each pass an open, growing key domain, so the
+	* generic namespace inverter below stays Record-typed rather than branded.
 	*/
 	function createHelpersNamespaceObject(helpers, options_ = {}) {
 		const { comparator, ...defaults } = {
 			__proto__: null,
 			...options_
 		};
-		const helperNames = (0, import_array.ArrayPrototypeToSorted)((0, import_object.ObjectKeys)(helpers));
-		const propNames = (0, import_array.ArrayPrototypeToSorted)([...new import_map_set.SetCtor((0, import_array.ArrayPrototypeFlatMap)((0, import_object.ObjectValues)(helpers), (helper) => (0, import_object.ObjectKeys)(helper)))], comparator);
+		const helperNames = (0, import_array.arrayToSorted)((0, import_object.ObjectKeys)(helpers));
+		const propNames = (0, import_array.arrayToSorted)([...new import_map_set.SetCtor((0, import_array$1.ArrayPrototypeFlatMap)((0, import_object.ObjectValues)(helpers), (helper) => (0, import_object.ObjectKeys)(helper)))], comparator);
 		const nsObject = (0, import_object.ObjectCreate)(null);
 		for (let i = 0, { length } = propNames; i < length; i += 1) {
 			const propName = propNames[i];
@@ -2350,6 +2551,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* @file Validation functions for PURL components. Ensures compliance with
 	*   Package URL specification requirements and constraints.
 	*/
+	function getQualifierKeys(qualifiersObj) {
+		const keysProperty = qualifiersObj["keys"];
+		return typeof keysProperty === "function" ? (0, import_reflect.ReflectApply)(keysProperty, qualifiersObj, []) : (0, import_object.ObjectKeys)(qualifiersObj);
+	}
+	function isPurlTypeCharacter(code) {
+		return code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 46 || code === 45;
+	}
 	/**
 	* Validate package name component.
 	*
@@ -2402,7 +2610,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		if (!validateStartsWithoutNumber("qualifier", key, opts)) return false;
 		for (let i = 0, { length } = key; i < length; i += 1) {
 			const code = (0, import_string.StringPrototypeCharCodeAt)(key, i);
-			if (!(code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 46 || code === 45 || code === 95)) {
+			if (!(isPurlTypeCharacter(code) || code === 95)) {
 				if (throws) throw new PurlError(`qualifier key "${key}" must match [a-z0-9.\\-_]`);
 				return false;
 			}
@@ -2418,13 +2626,12 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const opts = options;
 		const { throws = false } = opts ?? {};
 		if (qualifiers === null || qualifiers === void 0) return true;
-		if (typeof qualifiers !== "object" || (0, import_array.ArrayIsArray)(qualifiers)) {
+		if (typeof qualifiers !== "object" || (0, import_array$1.ArrayIsArray)(qualifiers)) {
 			if (throws) throw new PurlError("\"qualifiers\" must be a plain object");
 			return false;
 		}
 		const qualifiersObj = qualifiers;
-		const keysProperty = qualifiersObj["keys"];
-		const keysIterable = typeof keysProperty === "function" ? (0, import_reflect.ReflectApply)(keysProperty, qualifiersObj, []) : (0, import_object.ObjectKeys)(qualifiers);
+		const keysIterable = getQualifierKeys(qualifiersObj);
 		for (const key of keysIterable) {
 			if (typeof key !== "string") {
 				if (throws) throw new PurlError("qualifier key must be a string");
@@ -2432,18 +2639,21 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			}
 			if (!validateQualifierKey(key, opts)) return false;
 			const value = typeof qualifiersObj[key] === "string" ? qualifiersObj[key] : void 0;
-			if (value !== void 0) {
-				const MAX_QUALIFIER_VALUE_LENGTH = 65536;
-				if (value.length > MAX_QUALIFIER_VALUE_LENGTH) {
-					if (throws) throw new PurlError(`qualifier "${key}" value exceeds maximum length of ${MAX_QUALIFIER_VALUE_LENGTH} characters`);
-					return false;
-				}
-				const code = findCommandInjectionCharCode(value);
-				if (code !== -1) {
-					if (throws) throw new PurlInjectionError("purl", `qualifier "${key}"`, code, formatInjectionChar(code));
-					return false;
-				}
-			}
+			if (value !== void 0 && !validateQualifierValue(key, value, opts)) return false;
+		}
+		return true;
+	}
+	function validateQualifierValue(key, value, options) {
+		const { throws = false } = options ?? {};
+		const MAX_QUALIFIER_VALUE_LENGTH = 65536;
+		if (value.length > MAX_QUALIFIER_VALUE_LENGTH) {
+			if (throws) throw new PurlError(`qualifier "${key}" value exceeds maximum length of ${MAX_QUALIFIER_VALUE_LENGTH} characters`);
+			return false;
+		}
+		const code = findCommandInjectionCharCode(value);
+		if (code !== -1) {
+			if (throws) throw new PurlInjectionError("purl", `qualifier "${key}"`, code, formatInjectionChar(code));
+			return false;
 		}
 		return true;
 	}
@@ -2481,8 +2691,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		if (!validateRequired("type", type, opts) || !validateStrings("type", type, opts) || !validateStartsWithoutNumber("type", type, opts)) return false;
 		for (let i = 0, { length } = type; i < length; i += 1) {
 			const code = (0, import_string.StringPrototypeCharCodeAt)(type, i);
-			if (!(code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 46 || code === 45)) {
-				if (throws) throw new PurlError(`type "${type}" must match [A-Za-z0-9.\\-]`);
+			if (!isPurlTypeCharacter(code) || i === 0 && (code === 46 || code === 45)) {
+				if (throws) throw new PurlError(`type "${type}" must match [A-Za-z][A-Za-z0-9.\\-]*`);
 				return false;
 			}
 		}
@@ -2532,6 +2742,18 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		version: 3
 	};
 	/**
+	* Compare two component names for sorting.
+	*/
+	function componentComparator(compA, compB) {
+		return componentSortOrder(compA) - componentSortOrder(compB);
+	}
+	/**
+	* Get numeric sort order for component name.
+	*/
+	function componentSortOrder(comp) {
+		return componentSortOrderLookup[comp] ?? 8;
+	}
+	/**
 	* Encode PURL component value to string.
 	*/
 	function PurlComponentEncoder(comp) {
@@ -2548,18 +2770,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*/
 	function PurlComponentValidator(_comp, _options) {
 		return true;
-	}
-	/**
-	* Compare two component names for sorting.
-	*/
-	function componentComparator(compA, compB) {
-		return componentSortOrder(compA) - componentSortOrder(compB);
-	}
-	/**
-	* Get numeric sort order for component name.
-	*/
-	function componentSortOrder(comp) {
-		return componentSortOrderLookup[comp] ?? 8;
 	}
 	const PurlComponent = createHelpersNamespaceObject({
 		encode: {
@@ -2693,105 +2903,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		lowerName(purl);
 		return purl;
 	}
-	var require_math = /* @__PURE__ */ __commonJSMin(((exports) => {
-		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
-		/**
-		* @file Safe references to `Math` constants and methods. Methods prefer the
-		*   smol fast-path (`node:smol-primordial`) when available — V8 Fast API typed
-		*   implementations TurboFan inlines into JIT'd callers. Constants stay as the
-		*   stock `Math.X` since they are pre-computed scalar values with no fast-path
-		*   benefit.
-		*/
-		const smolPrimordial = require_primordial().getSmolPrimordial();
-		const MathE = Math.E;
-		const MathLN2 = Math.LN2;
-		const MathLN10 = Math.LN10;
-		const MathLOG2E = Math.LOG2E;
-		const MathLOG10E = Math.LOG10E;
-		const MathPI = Math.PI;
-		const MathSQRT1_2 = Math.SQRT1_2;
-		const MathSQRT2 = Math.SQRT2;
-		const MathAbs = smolPrimordial?.mathAbs ?? Math.abs;
-		const MathAcos = smolPrimordial?.mathAcos ?? Math.acos;
-		const MathAcosh = smolPrimordial?.mathAcosh ?? Math.acosh;
-		const MathAsin = smolPrimordial?.mathAsin ?? Math.asin;
-		const MathAsinh = smolPrimordial?.mathAsinh ?? Math.asinh;
-		const MathAtan = smolPrimordial?.mathAtan ?? Math.atan;
-		const MathAtan2 = smolPrimordial?.mathAtan2 ?? Math.atan2;
-		const MathAtanh = smolPrimordial?.mathAtanh ?? Math.atanh;
-		const MathCbrt = smolPrimordial?.mathCbrt ?? Math.cbrt;
-		const MathCeil = smolPrimordial?.mathCeil ?? Math.ceil;
-		const MathClz32 = smolPrimordial?.mathClz32 ?? Math.clz32;
-		const MathCos = smolPrimordial?.mathCos ?? Math.cos;
-		const MathCosh = smolPrimordial?.mathCosh ?? Math.cosh;
-		const MathExp = smolPrimordial?.mathExp ?? Math.exp;
-		const MathExpm1 = smolPrimordial?.mathExpm1 ?? Math.expm1;
-		const MathF16round = Math.f16round;
-		const MathFloor = smolPrimordial?.mathFloor ?? Math.floor;
-		const MathFround = smolPrimordial?.mathFround ?? Math.fround;
-		const MathHypot = smolPrimordial?.mathHypot ?? Math.hypot;
-		const MathImul = smolPrimordial?.mathImul ?? Math.imul;
-		const MathLog = smolPrimordial?.mathLog ?? Math.log;
-		const MathLog1p = smolPrimordial?.mathLog1p ?? Math.log1p;
-		const MathLog2 = smolPrimordial?.mathLog2 ?? Math.log2;
-		const MathLog10 = smolPrimordial?.mathLog10 ?? Math.log10;
-		const MathMax = Math.max;
-		const MathMin = Math.min;
-		const MathPow = smolPrimordial?.mathPow ?? Math.pow;
-		const MathRandom = Math.random;
-		const MathRound = smolPrimordial?.mathRound ?? Math.round;
-		const MathSign = smolPrimordial?.mathSign ?? Math.sign;
-		const MathSin = smolPrimordial?.mathSin ?? Math.sin;
-		const MathSinh = smolPrimordial?.mathSinh ?? Math.sinh;
-		const MathSqrt = smolPrimordial?.mathSqrt ?? Math.sqrt;
-		const MathTan = smolPrimordial?.mathTan ?? Math.tan;
-		const MathTanh = smolPrimordial?.mathTanh ?? Math.tanh;
-		const MathTrunc = smolPrimordial?.mathTrunc ?? Math.trunc;
-		exports.MathAbs = MathAbs;
-		exports.MathAcos = MathAcos;
-		exports.MathAcosh = MathAcosh;
-		exports.MathAsin = MathAsin;
-		exports.MathAsinh = MathAsinh;
-		exports.MathAtan = MathAtan;
-		exports.MathAtan2 = MathAtan2;
-		exports.MathAtanh = MathAtanh;
-		exports.MathCbrt = MathCbrt;
-		exports.MathCeil = MathCeil;
-		exports.MathClz32 = MathClz32;
-		exports.MathCos = MathCos;
-		exports.MathCosh = MathCosh;
-		exports.MathE = MathE;
-		exports.MathExp = MathExp;
-		exports.MathExpm1 = MathExpm1;
-		exports.MathF16round = MathF16round;
-		exports.MathFloor = MathFloor;
-		exports.MathFround = MathFround;
-		exports.MathHypot = MathHypot;
-		exports.MathImul = MathImul;
-		exports.MathLN10 = MathLN10;
-		exports.MathLN2 = MathLN2;
-		exports.MathLOG10E = MathLOG10E;
-		exports.MathLOG2E = MathLOG2E;
-		exports.MathLog = MathLog;
-		exports.MathLog10 = MathLog10;
-		exports.MathLog1p = MathLog1p;
-		exports.MathLog2 = MathLog2;
-		exports.MathMax = MathMax;
-		exports.MathMin = MathMin;
-		exports.MathPI = MathPI;
-		exports.MathPow = MathPow;
-		exports.MathRandom = MathRandom;
-		exports.MathRound = MathRound;
-		exports.MathSQRT1_2 = MathSQRT1_2;
-		exports.MathSQRT2 = MathSQRT2;
-		exports.MathSign = MathSign;
-		exports.MathSin = MathSin;
-		exports.MathSinh = MathSinh;
-		exports.MathSqrt = MathSqrt;
-		exports.MathTan = MathTan;
-		exports.MathTanh = MathTanh;
-		exports.MathTrunc = MathTrunc;
-	}));
+	function brewNormalize(purl) {
+		lowerNamespace(purl);
+		lowerName(purl);
+		return purl;
+	}
 	var require_buffer = /* @__PURE__ */ __commonJSMin(((exports) => {
 		Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 		const require_primordials_uncurry = require_uncurry();
@@ -2939,14 +3055,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		return purl;
 	}
 	/**
-	* Validate CPAN package URL. CPAN `namespace` (author/publisher ID) is
-	* required and must be uppercase; `name` is a distribution name and must not
-	* contain the module-style `::` separator.
+	* Validate CPAN package URL. CPAN `namespace` (author/publisher ID) is optional
+	* and must be uppercase when present; `name` is a distribution name and must
+	* not contain the module-style `::` separator.
 	*/
 	function cpanValidate(purl, options) {
 		const { throws = false } = options ?? {};
 		const { namespace } = purl;
-		if (!validateRequiredByType("cpan", "namespace", namespace, { throws })) return false;
 		if (namespace && namespace !== (0, import_string.StringPrototypeToUpperCase)(namespace)) {
 			if (throws) throw new PurlError("cpan \"namespace\" component must be UPPERCASE");
 			return false;
@@ -3020,6 +3135,10 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*/
 	function normalize$18(purl) {
 		return purl;
+	}
+	function gitValidate(purl, options) {
+		const { throws = false } = options ?? {};
+		return validateRequiredByType("git", "namespace", purl.namespace, { throws }) && validateNoInjectionByType("git", "namespace", purl.namespace, { throws }) && validateNoInjectionByType("git", "name", purl.name, { throws });
 	}
 	/**
 	* @file GitHub PURL normalization and validation.
@@ -3179,11 +3298,17 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* @file Hugging Face PURL normalization.
 	*   https://github.com/package-url/purl-spec/blob/main/PURL-TYPES.rst#huggingface.
 	*/
-	/**
-	* Normalize Hugging Face package URL. Lowercases `version` only.
-	*/
+	function huggingfaceValidate(purl, options) {
+		const { throws = false } = options ?? {};
+		const repositoryType = purl.qualifiers?.["type"];
+		if (repositoryType !== void 0 && repositoryType !== "model" && repositoryType !== "dataset" && repositoryType !== "space") {
+			if (throws) throw new PurlError("huggingface \"type\" qualifier must be model, dataset, or space");
+			return false;
+		}
+		return validateNoInjectionByType("huggingface", "namespace", purl.namespace, { throws }) && validateNoInjectionByType("huggingface", "name", purl.name, { throws });
+	}
 	function normalize$14(purl) {
-		lowerVersion(purl);
+		if (purl.version && (0, import_regexp.RegExpPrototypeTest)(/^[\da-fA-F]{40}$/, purl.version)) lowerVersion(purl);
 		return purl;
 	}
 	/**
@@ -6291,46 +6416,16 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		const id = getNpmId(purl);
 		const code0 = (0, import_string.StringPrototypeCharCodeAt)(id, 0);
 		const compName = hasNs ? "namespace" : "name";
-		if (code0 === 46) {
-			if (throws) throw new PurlError(`npm "${compName}" component cannot start with a period`);
-			return false;
-		}
-		if (code0 === 95) {
-			if (throws) throw new PurlError(`npm "${compName}" component cannot start with an underscore`);
-			return false;
-		}
-		/* v8 ignore start -- Unreachable: space chars are caught by injection validator above. */
-		if ((0, import_string.StringPrototypeTrim)(name) !== name) {
-			if (throws) throw new PurlError("npm \"name\" component cannot contain leading or trailing spaces");
-			return false;
-		}
-		/* v8 ignore stop */
-		if (encodeComponent(name) !== name) {
-			if (throws) throw new PurlError(`npm "name" component can only contain URL-friendly characters`);
-			return false;
-		}
-		if (hasNs) {
-			/* v8 ignore start -- Unreachable: space chars are caught by injection validator above. */
-			if ((namespace !== void 0 ? (0, import_string.StringPrototypeTrim)(namespace) : namespace) !== namespace) {
-				if (throws) throw new PurlError("npm \"namespace\" component cannot contain leading or trailing spaces");
-				return false;
-			}
-			/* v8 ignore stop */
-			if (code0 !== 64) {
-				if (throws) throw new PurlError(`npm "namespace" component must start with an "@" character`);
-				return false;
-			}
-			const namespaceWithoutAtSign = (0, import_string.StringPrototypeSlice)(namespace, 1);
-			if (encodeComponent(namespaceWithoutAtSign) !== namespaceWithoutAtSign) {
-				if (throws) throw new PurlError(`npm "namespace" component can only contain URL-friendly characters`);
-				return false;
-			}
-		}
+		if (!validateNpmName(name, code0, compName, { throws })) return false;
+		if (hasNs && !validateNpmNamespace(namespace, code0, { throws })) return false;
 		const loweredId = (0, import_string.StringPrototypeToLowerCase)(id);
 		if (loweredId === "favicon.ico" || loweredId === "node_modules") {
 			if (throws) throw new PurlError(`npm "${compName}" component of "${loweredId}" is not allowed`);
 			return false;
 		}
+		return validateModernNpmName(id, loweredId, name, { throws });
+	}
+	function validateModernNpmName(id, loweredId, name, { throws }) {
 		if (!isNpmLegacyName(id)) {
 			if (id.length > 214) {
 				if (throws)
@@ -6354,6 +6449,45 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 				throw new PurlError("npm \"name\" component can not be a core module name");
 				return false;
 			}
+		}
+		return true;
+	}
+	function validateNpmName(name, code0, compName, { throws }) {
+		if (code0 === 46) {
+			if (throws) throw new PurlError(`npm "${compName}" component cannot start with a period`);
+			return false;
+		}
+		if (code0 === 95) {
+			if (throws) throw new PurlError(`npm "${compName}" component cannot start with an underscore`);
+			return false;
+		}
+		/* v8 ignore start -- Unreachable: space chars are caught by injection validator above. */
+		if ((0, import_string.StringPrototypeTrim)(name) !== name) {
+			if (throws) throw new PurlError("npm \"name\" component cannot contain leading or trailing spaces");
+			return false;
+		}
+		/* v8 ignore stop */
+		if (encodeComponent(name) !== name) {
+			if (throws) throw new PurlError(`npm "name" component can only contain URL-friendly characters`);
+			return false;
+		}
+		return true;
+	}
+	function validateNpmNamespace(namespace, code0, { throws }) {
+		/* v8 ignore start -- Unreachable: space chars are caught by injection validator above. */
+		if ((namespace !== void 0 ? (0, import_string.StringPrototypeTrim)(namespace) : namespace) !== namespace) {
+			if (throws) throw new PurlError("npm \"namespace\" component cannot contain leading or trailing spaces");
+			return false;
+		}
+		/* v8 ignore stop */
+		if (code0 !== 64) {
+			if (throws) throw new PurlError(`npm "namespace" component must start with an "@" character`);
+			return false;
+		}
+		const namespaceWithoutAtSign = (0, import_string.StringPrototypeSlice)(namespace, 1);
+		if (encodeComponent(namespaceWithoutAtSign) !== namespaceWithoutAtSign) {
+			if (throws) throw new PurlError(`npm "namespace" component can only contain URL-friendly characters`);
+			return false;
 		}
 		return true;
 	}
@@ -6644,12 +6778,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*   `name`, `version` normalization and validation.
 	*/
 	/**
-	* Default normalizer for PURL types without specific normalization rules.
-	*/
-	function PurlTypNormalizer(purl) {
-		return purl;
-	}
-	/**
 	* Default validator for PURL types without specific validation rules. Rejects
 	* injection characters in `name` and `namespace` components. This ensures all
 	* types get injection protection by default, and that includes any newly added
@@ -6672,12 +6800,19 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		}
 		return true;
 	}
+	/**
+	* Default normalizer for PURL types without specific normalization rules.
+	*/
+	function PurlTypNormalizer(purl) {
+		return purl;
+	}
 	const PurlType = createHelpersNamespaceObject({
 		normalize: {
 			alpm: normalize$27,
 			apk: normalize$26,
 			bitbucket: normalize$25,
 			bitnami: normalize$24,
+			brew: brewNormalize,
 			"chrome-extension": normalize$23,
 			composer: normalize$22,
 			conda: normalize$21,
@@ -6715,11 +6850,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			cran: cranValidate,
 			docker: dockerValidate,
 			gem: gemValidate,
+			git: gitValidate,
 			github: githubValidate,
 			gitlab: gitlabValidate,
 			golang: golangValidate,
 			hackage: hackageValidate,
 			hex: hexValidate,
+			huggingface: huggingfaceValidate,
 			julia: juliaValidate,
 			maven: mavenValidate,
 			mlflow: mlflowValidate,
@@ -6914,7 +7051,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			for (let i = 0; i < results.length; i++) {
 				const result = results[i];
 				if (result.isErr()) return result;
-				(0, import_array.ArrayPrototypePush)(values, result.value);
+				(0, import_array$1.ArrayPrototypePush)(values, result.value);
 			}
 			return ok(values);
 		},
@@ -7040,17 +7177,17 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* empty segments that must be removed.
 	*/
 	function filterSegments(pathname) {
-		return (0, import_array.ArrayPrototypeFilter)((0, import_string.StringPrototypeSplit)(pathname, "/"), (s) => s.length > 0);
+		return (0, import_array$1.ArrayPrototypeFilter)((0, import_string.StringPrototypeSplit)(pathname, "/"), (s) => s.length > 0);
 	}
 	/**
 	* Safely construct a `PackageURL`, returning `undefined` if construction fails.
 	*/
-	function tryCreatePurl(type, namespace, name, version) {
+	function tryCreatePurl(type, namespace, name, version, qualifiers) {
 		/* v8 ignore start -- PackageURL is always registered at module load time. */
 		if (!cachedPackageURL$1) return;
 		/* v8 ignore stop */
 		try {
-			return new cachedPackageURL$1(type, namespace, name, version, void 0, void 0);
+			return new cachedPackageURL$1(type, namespace, name, version, qualifiers, void 0);
 		} catch {
 			/* v8 ignore start -- Defensive: validation error in PackageURL constructor. */
 			return;
@@ -7281,13 +7418,14 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	function fromMavenSiteUrl(url) {
 		const segments = filterSegments(url.pathname);
 		if (segments.length < 4 || segments[0] !== "maven2") return;
-		const parts = (0, import_array.ArrayPrototypeSlice)(segments, 1);
+		const parts = (0, import_array$1.ArrayPrototypeSlice)(segments, 1);
 		/* v8 ignore start -- Defensive: the length>=4 guard above ensures parts>=3. */
 		if (parts.length < 3) return;
 		/* v8 ignore stop */
 		const version = parts[parts.length - 1];
 		const name = parts[parts.length - 2];
-		const namespace = (0, import_array.ArrayPrototypeJoin)((0, import_array.ArrayPrototypeSlice)(parts, 0, -2), ".");
+		const groupParts = (0, import_array$1.ArrayPrototypeSlice)(parts, 0, -2);
+		const namespace = (0, import_array$1.ArrayPrototypeJoin)(groupParts, ".");
 		/* v8 ignore start -- Defensive: filterSegments yields non-empty segments. */
 		if (!namespace || !name) return;
 		/* v8 ignore stop */
@@ -7405,6 +7543,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	* Parse GitHub URLs (`github.com`).
 	*
 	* Handles: - `/owner/repo` - `/owner/repo/tree/ref` - `/owner/repo/commit/sha`
+	*
 	* - `/owner/repo/releases/tag/tagname`
 	*/
 	function fromGitHubUrl(url) {
@@ -7633,8 +7772,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*/
 	const HUGGINGFACE_RESERVED = (0, import_object.ObjectFreeze)(new import_map_set.SetCtor([
 		"docs",
-		"spaces",
-		"datasets",
 		"tasks",
 		"blog",
 		"pricing",
@@ -7645,14 +7782,19 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	]));
 	function fromHuggingfaceUrl(url) {
 		const segments = filterSegments(url.pathname);
-		if (segments.length < 2) return;
+		const repositoryType = segments[0] === "datasets" ? "dataset" : segments[0] === "spaces" ? "space" : void 0;
+		const offset = repositoryType ? 1 : 0;
+		if (segments.length < offset + 2) return;
 		if (HUGGINGFACE_RESERVED.has(segments[0])) return;
-		const namespace = segments[0];
-		const name = segments[1];
-		let version;
-		if (segments[2] === "tree" && segments[3]) version = segments[3];
-		else if (segments[2] === "commit" && segments[3]) version = segments[3];
-		return tryCreatePurl("huggingface", namespace, name, version);
+		try {
+			const namespace = (0, import_globals.decodeURIComponent)(segments[offset]);
+			const name = (0, import_globals.decodeURIComponent)(segments[offset + 1]);
+			const action = segments[offset + 2];
+			const revision = segments[offset + 3];
+			return tryCreatePurl("huggingface", namespace, name, revision && (action === "blob" || action === "commit" || action === "resolve" || action === "tree") ? (0, import_globals.decodeURIComponent)(revision) : void 0, repositoryType ? { type: repositoryType } : void 0);
+		} catch {
+			return;
+		}
 	}
 	/**
 	* Parse LuaRocks URLs (`luarocks.org`). Pattern: `/modules/namespace/name`,
@@ -7763,6 +7905,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	const REPOSITORY_URL_TYPES = (0, import_object.ObjectFreeze)(new import_map_set.SetCtor([
 		"bioconductor",
 		"bitbucket",
+		"brew",
 		"cargo",
 		"chrome",
 		"clojars",
@@ -7780,7 +7923,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		"golang",
 		"hackage",
 		"hex",
-		"homebrew",
 		"huggingface",
 		"luarocks",
 		"maven",
@@ -7802,6 +7944,263 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		fromGolangDownloadUrl,
 		fromCargoDownloadUrl
 	]);
+	const DOWNLOAD_URL_FACTORIES = (0, import_object.ObjectFreeze)(new import_map_set.MapCtor([
+		["npm", {
+			type: "tarball",
+			getUrl({ name, namespace, version }) {
+				return `https://registry.npmjs.org/${namespace ? `${namespace}/${name}` : name}/-/${name}-${version}.tgz`;
+			}
+		}],
+		["pypi", {
+			type: "wheel",
+			getUrl({ name }) {
+				return `https://pypi.org/simple/${name}/`;
+			}
+		}],
+		["maven", {
+			type: "jar",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return `https://repo1.maven.org/maven2/${(0, import_string.StringPrototypeReplace)(namespace, /\./g, "/")}/${name}/${version}/${name}-${version}.jar`;
+			}
+		}],
+		["gem", {
+			type: "gem",
+			getUrl({ name, version }) {
+				return `https://rubygems.org/downloads/${name}-${version}.gem`;
+			}
+		}],
+		["cargo", {
+			type: "tarball",
+			getUrl({ name, version }) {
+				return `https://crates.io/api/v1/crates/${name}/${version}/download`;
+			}
+		}],
+		["nuget", {
+			type: "zip",
+			getUrl({ name, version }) {
+				return `https://nuget.org/packages/${name}/${version}/download`;
+			}
+		}],
+		["composer", {
+			type: "other",
+			getUrl({ name, namespace }) {
+				if (!namespace) return;
+				return `https://repo.packagist.org/p2/${namespace}/${name}.json`;
+			}
+		}],
+		["hex", {
+			type: "tarball",
+			getUrl({ name, version }) {
+				return `https://repo.hex.pm/tarballs/${name}-${version}.tar`;
+			}
+		}],
+		["pub", {
+			type: "tarball",
+			getUrl({ name, version }) {
+				return `https://pub.dev/packages/${name}/versions/${version}.tar.gz`;
+			}
+		}],
+		["conda", {
+			type: "tarball",
+			getUrl({ name, version, purl }) {
+				return `https://anaconda.org/${purl["qualifiers"]?.["channel"] ?? "conda-forge"}/${name}/${version}/download`;
+			}
+		}],
+		["golang", {
+			type: "zip",
+			getUrl({ name, namespace, version }) {
+				if (!namespace || !name) return;
+				return `https://proxy.golang.org/${encodeGolangProxyPath(namespace)}/${encodeGolangProxyPath(name)}/@v/${encodeGolangProxyPath(version)}.zip`;
+			}
+		}]
+	]));
+	const REPOSITORY_URL_FACTORIES = (0, import_object.ObjectFreeze)(new import_map_set.MapCtor([
+		["bioconductor", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://bioconductor.org/packages/${name}`;
+			}
+		}],
+		["bitbucket", {
+			type: "git",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return version ? `https://bitbucket.org/${namespace}/${name}/src/${version}` : `https://bitbucket.org/${namespace}/${name}`;
+			}
+		}],
+		["cargo", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://crates.io/crates/${name}`;
+			}
+		}],
+		["chrome", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://chromewebstore.google.com/detail/${name}`;
+			}
+		}],
+		["clojars", {
+			type: "web",
+			getUrl({ name, namespace }) {
+				return `https://clojars.org/${namespace ? `${namespace}/` : ""}${name}`;
+			}
+		}],
+		["cocoapods", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://cocoapods.org/pods/${name}`;
+			}
+		}],
+		["composer", {
+			type: "web",
+			getUrl({ name, namespace }) {
+				return `https://packagist.org/packages/${namespace ? `${namespace}/` : ""}${name}`;
+			}
+		}],
+		["conan", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://conan.io/center/recipes/${name}`;
+			}
+		}],
+		["conda", {
+			type: "web",
+			getUrl({ name, purl }) {
+				return `https://anaconda.org/${purl["qualifiers"]?.["channel"] ?? "conda-forge"}/${name}`;
+			}
+		}],
+		["cpan", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				return namespace && version ? `https://metacpan.org/release/${namespace}/${name}-${version}` : `https://metacpan.org/dist/${name}`;
+			}
+		}],
+		["deno", {
+			type: "web",
+			getUrl({ name, version }) {
+				return version ? `https://deno.land/x/${name}@${version}` : `https://deno.land/x/${name}`;
+			}
+		}],
+		["docker", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				const versionSuffix = version ? `?tab=tags&name=${version}` : "";
+				if (!namespace || namespace === "library") return `https://hub.docker.com/_/${name}${versionSuffix}`;
+				return `https://hub.docker.com/r/${namespace}/${name}${versionSuffix}`;
+			}
+		}],
+		["elm", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return version ? `https://package.elm-lang.org/packages/${namespace}/${name}/${version}` : `https://package.elm-lang.org/packages/${namespace}/${name}/latest`;
+			}
+		}],
+		["gem", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://rubygems.org/gems/${name}`;
+			}
+		}],
+		["github", {
+			type: "git",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return version ? `https://github.com/${namespace}/${name}/tree/${version}` : `https://github.com/${namespace}/${name}`;
+			}
+		}],
+		["gitlab", {
+			type: "git",
+			getUrl({ name, namespace }) {
+				if (!namespace) return;
+				return `https://gitlab.com/${namespace}/${name}`;
+			}
+		}],
+		["golang", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return version ? `https://pkg.go.dev/${namespace}/${name}@${version}` : `https://pkg.go.dev/${namespace}/${name}`;
+			}
+		}],
+		["hackage", {
+			type: "web",
+			getUrl({ name, version }) {
+				return version ? `https://hackage.haskell.org/package/${name}-${version}` : `https://hackage.haskell.org/package/${name}`;
+			}
+		}],
+		["hex", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://hex.pm/packages/${name}`;
+			}
+		}],
+		["brew", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://formulae.brew.sh/formula/${name}`;
+			}
+		}],
+		["huggingface", {
+			type: "web",
+			getUrl({ name, namespace, purl }) {
+				const repositoryType = purl.qualifiers?.["type"];
+				return `https://huggingface.co/${repositoryType === "dataset" ? "datasets/" : repositoryType === "space" ? "spaces/" : ""}${namespace ? `${(0, import_globals.encodeURIComponent)(namespace)}/` : ""}${(0, import_globals.encodeURIComponent)(name)}`;
+			}
+		}],
+		["luarocks", {
+			type: "web",
+			getUrl({ name, namespace }) {
+				return `https://luarocks.org/modules/${namespace ? `${namespace}/` : ""}${name}`;
+			}
+		}],
+		["maven", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				if (!namespace) return;
+				return version ? `https://search.maven.org/artifact/${namespace}/${name}/${version}/jar` : `https://search.maven.org/artifact/${namespace}/${name}`;
+			}
+		}],
+		["npm", {
+			type: "web",
+			getUrl({ name, namespace, version }) {
+				return version ? `https://www.npmjs.com/package/${namespace ? `${namespace}/` : ""}${name}/v/${version}` : `https://www.npmjs.com/package/${namespace ? `${namespace}/` : ""}${name}`;
+			}
+		}],
+		["nuget", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://nuget.org/packages/${name}/`;
+			}
+		}],
+		["pub", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://pub.dev/packages/${name}`;
+			}
+		}],
+		["pypi", {
+			type: "web",
+			getUrl({ name }) {
+				return `https://pypi.org/project/${name}/`;
+			}
+		}],
+		["swift", {
+			type: "git",
+			getUrl({ name, namespace }) {
+				if (!namespace) return;
+				return `https://github.com/${namespace}/${name}`;
+			}
+		}],
+		["vscode", {
+			type: "web",
+			getUrl({ name, namespace }) {
+				return `https://marketplace.visualstudio.com/items?itemName=${namespace ? `${namespace}.` : ""}${name}`;
+			}
+		}]
+	]));
 	/**
 	* Parse a package distribution URL or path into a `PackageURL`, trying each
 	* ecosystem's distribution parser in turn. Such a path is a registry artifact
@@ -8114,59 +8513,18 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		static toDownloadUrl(purl) {
 			const { name, namespace, type, version } = purl;
 			if (!version) return;
-			switch (type) {
-				case "npm": return {
-					type: "tarball",
-					url: `https://registry.npmjs.org/${namespace ? `${namespace}/${name}` : name}/-/${name}-${version}.tgz`
-				};
-				case "pypi": return {
-					type: "wheel",
-					url: `https://pypi.org/simple/${name}/`
-				};
-				case "maven":
-					if (!namespace) return;
-					return {
-						type: "jar",
-						url: `https://repo1.maven.org/maven2/${(0, import_string.StringPrototypeReplace)(namespace, /\./g, "/")}/${name}/${version}/${name}-${version}.jar`
-					};
-				case "gem": return {
-					type: "gem",
-					url: `https://rubygems.org/downloads/${name}-${version}.gem`
-				};
-				case "cargo": return {
-					type: "tarball",
-					url: `https://crates.io/api/v1/crates/${name}/${version}/download`
-				};
-				case "nuget": return {
-					type: "zip",
-					url: `https://nuget.org/packages/${name}/${version}/download`
-				};
-				case "composer":
-					if (!namespace) return;
-					return {
-						type: "other",
-						url: `https://repo.packagist.org/p2/${namespace}/${name}.json`
-					};
-				case "hex": return {
-					type: "tarball",
-					url: `https://repo.hex.pm/tarballs/${name}-${version}.tar`
-				};
-				case "pub": return {
-					type: "tarball",
-					url: `https://pub.dev/packages/${name}/versions/${version}.tar.gz`
-				};
-				case "conda": return {
-					type: "tarball",
-					url: `https://anaconda.org/${purl["qualifiers"]?.["channel"] ?? "conda-forge"}/${name}/${version}/download`
-				};
-				case "golang":
-					if (!namespace || !name) return;
-					return {
-						type: "zip",
-						url: `https://proxy.golang.org/${encodeGolangProxyPath(namespace)}/${encodeGolangProxyPath(name)}/@v/${encodeGolangProxyPath(version)}.zip`
-					};
-				default: return;
-			}
+			const factory = DOWNLOAD_URL_FACTORIES.get(type);
+			const url = factory?.getUrl({
+				name,
+				namespace,
+				version,
+				purl
+			});
+			if (url === void 0) return;
+			return {
+				type: factory.type,
+				url
+			};
 		}
 		/**
 		* Convert a `PackageURL` to a repository URL if possible.
@@ -8178,146 +8536,18 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		static toRepositoryUrl(purl) {
 			const { name, namespace, type } = purl;
 			const { version } = purl;
-			switch (type) {
-				case "bioconductor": return {
-					type: "web",
-					url: `https://bioconductor.org/packages/${name}`
-				};
-				case "bitbucket":
-					if (!namespace) return;
-					return {
-						type: "git",
-						url: version ? `https://bitbucket.org/${namespace}/${name}/src/${version}` : `https://bitbucket.org/${namespace}/${name}`
-					};
-				case "cargo": return {
-					type: "web",
-					url: `https://crates.io/crates/${name}`
-				};
-				case "chrome": return {
-					type: "web",
-					url: `https://chromewebstore.google.com/detail/${name}`
-				};
-				case "clojars": return {
-					type: "web",
-					url: `https://clojars.org/${namespace ? `${namespace}/` : ""}${name}`
-				};
-				case "cocoapods": return {
-					type: "web",
-					url: `https://cocoapods.org/pods/${name}`
-				};
-				case "composer": return {
-					type: "web",
-					url: `https://packagist.org/packages/${namespace ? `${namespace}/` : ""}${name}`
-				};
-				case "conan": return {
-					type: "web",
-					url: `https://conan.io/center/recipes/${name}`
-				};
-				case "conda": return {
-					type: "web",
-					url: `https://anaconda.org/${purl["qualifiers"]?.["channel"] ?? "conda-forge"}/${name}`
-				};
-				case "cpan": return {
-					type: "web",
-					url: namespace && version ? `https://metacpan.org/release/${namespace}/${name}-${version}` : `https://metacpan.org/dist/${name}`
-				};
-				case "deno": return {
-					type: "web",
-					url: version ? `https://deno.land/x/${name}@${version}` : `https://deno.land/x/${name}`
-				};
-				case "docker": {
-					const versionSuffix = version ? `?tab=tags&name=${version}` : "";
-					if (!namespace || namespace === "library") return {
-						type: "web",
-						url: `https://hub.docker.com/_/${name}${versionSuffix}`
-					};
-					return {
-						type: "web",
-						url: `https://hub.docker.com/r/${namespace}/${name}${versionSuffix}`
-					};
-				}
-				case "elm":
-					if (!namespace) return;
-					return {
-						type: "web",
-						url: version ? `https://package.elm-lang.org/packages/${namespace}/${name}/${version}` : `https://package.elm-lang.org/packages/${namespace}/${name}/latest`
-					};
-				case "gem": return {
-					type: "web",
-					url: `https://rubygems.org/gems/${name}`
-				};
-				case "github":
-					if (!namespace) return;
-					return {
-						type: "git",
-						url: version ? `https://github.com/${namespace}/${name}/tree/${version}` : `https://github.com/${namespace}/${name}`
-					};
-				case "gitlab":
-					if (!namespace) return;
-					return {
-						type: "git",
-						url: `https://gitlab.com/${namespace}/${name}`
-					};
-				case "golang":
-					if (!namespace) return;
-					return {
-						type: "web",
-						url: version ? `https://pkg.go.dev/${namespace}/${name}@${version}` : `https://pkg.go.dev/${namespace}/${name}`
-					};
-				case "hackage": return {
-					type: "web",
-					url: version ? `https://hackage.haskell.org/package/${name}-${version}` : `https://hackage.haskell.org/package/${name}`
-				};
-				case "hex": return {
-					type: "web",
-					url: `https://hex.pm/packages/${name}`
-				};
-				case "homebrew": return {
-					type: "web",
-					url: `https://formulae.brew.sh/formula/${name}`
-				};
-				case "huggingface": return {
-					type: "web",
-					url: `https://huggingface.co/${namespace ? `${namespace}/` : ""}${name}`
-				};
-				case "luarocks": return {
-					type: "web",
-					url: `https://luarocks.org/modules/${namespace ? `${namespace}/` : ""}${name}`
-				};
-				case "maven":
-					if (!namespace) return;
-					return {
-						type: "web",
-						url: version ? `https://search.maven.org/artifact/${namespace}/${name}/${version}/jar` : `https://search.maven.org/artifact/${namespace}/${name}`
-					};
-				case "npm": return {
-					type: "web",
-					url: version ? `https://www.npmjs.com/package/${namespace ? `${namespace}/` : ""}${name}/v/${version}` : `https://www.npmjs.com/package/${namespace ? `${namespace}/` : ""}${name}`
-				};
-				case "nuget": return {
-					type: "web",
-					url: `https://nuget.org/packages/${name}/`
-				};
-				case "pub": return {
-					type: "web",
-					url: `https://pub.dev/packages/${name}`
-				};
-				case "pypi": return {
-					type: "web",
-					url: `https://pypi.org/project/${name}/`
-				};
-				case "swift":
-					if (!namespace) return;
-					return {
-						type: "git",
-						url: `https://github.com/${namespace}/${name}`
-					};
-				case "vscode": return {
-					type: "web",
-					url: `https://marketplace.visualstudio.com/items?itemName=${namespace ? `${namespace}.` : ""}${name}`
-				};
-				default: return;
-			}
+			const factory = REPOSITORY_URL_FACTORIES.get(type);
+			const url = factory?.getUrl({
+				name,
+				namespace,
+				version,
+				purl
+			});
+			if (url === void 0) return;
+			return {
+				type: factory.type,
+				url
+			};
 		}
 	};
 	var import_buffer = require_buffer();
@@ -8366,6 +8596,54 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	*/
 	const OTHER_SCHEME_PATTERN = /^[a-zA-Z][a-zA-Z0-9+.-]{0,255}:\/\//;
 	const PURL_LIKE_PATTERN = /^[a-zA-Z0-9+.-]{1,256}\//;
+	function findPurlVersionIndex(pathname, rawType, firstSlashIndex) {
+		/* v8 ignore start -- npm vs non-npm path logic both tested but V8 sees extra branches. */
+		let atSignIndex = rawType === "npm" ? (0, import_string.StringPrototypeIndexOf)(pathname, "@", firstSlashIndex + 2) : (0, import_string.StringPrototypeLastIndexOf)(pathname, "@");
+		/* v8 ignore stop */
+		if (atSignIndex !== -1 && atSignIndex < (0, import_string.StringPrototypeLastIndexOf)(pathname, "/")) atSignIndex = -1;
+		return atSignIndex;
+	}
+	function parsePurlQualifiers(url) {
+		let rawQualifiers;
+		if (url.searchParams.size !== 0) {
+			const search = (0, import_string.StringPrototypeSlice)(url.search, 1);
+			const searchParams = new import_url.URLSearchParamsCtor();
+			const entries = (0, import_string.StringPrototypeSplit)(search, "&");
+			for (let i = 0, { length } = entries; i < length; i += 1) {
+				const entry = entries[i];
+				const eqIndex = (0, import_string.StringPrototypeIndexOf)(entry, "=");
+				const key = eqIndex === -1 ? entry : (0, import_string.StringPrototypeSlice)(entry, 0, eqIndex);
+				if (key.length === 0) throw new PurlError("qualifier key must not be empty");
+				const value = decodePurlComponent("qualifiers", eqIndex === -1 ? "" : (0, import_string.StringPrototypeSlice)(entry, eqIndex + 1));
+				/* v8 ignore next -- URLSearchParams.append has internal V8 branches we can't control. */ searchParams.append(key, value);
+			}
+			rawQualifiers = searchParams;
+		}
+		return rawQualifiers;
+	}
+	function parsePurlUrl(purlStr) {
+		const colonIndex = (0, import_string.StringPrototypeIndexOf)(purlStr, ":");
+		let url;
+		let hasAuth = false;
+		if (colonIndex !== -1) try {
+			const beforeColon = (0, import_string.StringPrototypeSlice)(purlStr, 0, colonIndex);
+			const afterColon = (0, import_string.StringPrototypeSlice)(purlStr, colonIndex + 1);
+			const trimmedAfterColon = trimLeadingSlashes(afterColon);
+			url = new import_url.URLCtor(`${beforeColon}:${trimmedAfterColon}`);
+			/* v8 ignore start - V8 coverage sees multiple branch paths that can't all be tested. */
+			if (afterColon.length !== trimmedAfterColon.length) {
+				const authorityStart = (0, import_string.StringPrototypeIndexOf)(afterColon, "//") + 2;
+				const authorityEnd = (0, import_string.StringPrototypeIndexOf)(afterColon, "/", authorityStart);
+				const authority = authorityEnd === -1 ? (0, import_string.StringPrototypeSlice)(afterColon, authorityStart) : (0, import_string.StringPrototypeSlice)(afterColon, authorityStart, authorityEnd);
+				hasAuth = (0, import_string.StringPrototypeIncludes)(authority, "@");
+			}
+		} catch (e) {
+			throw new PurlError("failed to parse as URL", { cause: e });
+		}
+		/* v8 ignore next -- Tested: colonIndex === -1 (url undefined) case, but V8 can't see both branches. */ if (url?.protocol !== "pkg:") throw new PurlError("missing required \"pkg\" scheme component");
+		if (hasAuth) throw new PurlError("cannot contain a \"user:pass@host:port\"");
+		return url;
+	}
 	/**
 	* Parse a purl string into its components without constructing a `PackageURL`.
 	*/
@@ -8386,28 +8664,10 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			const looksLikePurl = (0, import_regexp.RegExpPrototypeTest)(PURL_LIKE_PATTERN, purlStr);
 			if (!hasOtherScheme && looksLikePurl) return parseString(`pkg:${purlStr}`);
 		}
-		const colonIndex = (0, import_string.StringPrototypeIndexOf)(purlStr, ":");
-		let url;
-		let hasAuth = false;
-		if (colonIndex !== -1) try {
-			const beforeColon = (0, import_string.StringPrototypeSlice)(purlStr, 0, colonIndex);
-			const afterColon = (0, import_string.StringPrototypeSlice)(purlStr, colonIndex + 1);
-			const trimmedAfterColon = trimLeadingSlashes(afterColon);
-			url = new import_url.URLCtor(`${beforeColon}:${trimmedAfterColon}`);
-			/* v8 ignore start - V8 coverage sees multiple branch paths that can't all be tested. */
-			if (afterColon.length !== trimmedAfterColon.length) {
-				const authorityStart = (0, import_string.StringPrototypeIndexOf)(afterColon, "//") + 2;
-				const authorityEnd = (0, import_string.StringPrototypeIndexOf)(afterColon, "/", authorityStart);
-				hasAuth = (0, import_string.StringPrototypeIncludes)(authorityEnd === -1 ? (0, import_string.StringPrototypeSlice)(afterColon, authorityStart) : (0, import_string.StringPrototypeSlice)(afterColon, authorityStart, authorityEnd), "@");
-			}
-		} catch (e) {
-			throw new PurlError("failed to parse as URL", { cause: e });
-		}
-		/* v8 ignore next -- Tested: colonIndex === -1 (url undefined) case, but V8 can't see both branches. */ if (url?.protocol !== "pkg:") throw new PurlError("missing required \"pkg\" scheme component");
-		if (hasAuth) throw new PurlError("cannot contain a \"user:pass@host:port\"");
+		const url = parsePurlUrl(purlStr);
 		const { pathname } = url;
 		const firstSlashIndex = (0, import_string.StringPrototypeIndexOf)(pathname, "/");
-		const rawType = decodePurlComponent("type", firstSlashIndex === -1 ? pathname : (0, import_string.StringPrototypeSlice)(pathname, 0, firstSlashIndex));
+		const rawType = firstSlashIndex === -1 ? pathname : (0, import_string.StringPrototypeSlice)(pathname, 0, firstSlashIndex);
 		if (firstSlashIndex < 1) return [
 			rawType,
 			void 0,
@@ -8417,10 +8677,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			void 0
 		];
 		let rawVersion;
-		/* v8 ignore start -- npm vs non-npm path logic both tested but V8 sees extra branches. */
-		let atSignIndex = rawType === "npm" ? (0, import_string.StringPrototypeIndexOf)(pathname, "@", firstSlashIndex + 2) : (0, import_string.StringPrototypeLastIndexOf)(pathname, "@");
-		/* v8 ignore stop */
-		if (atSignIndex !== -1 && atSignIndex < (0, import_string.StringPrototypeLastIndexOf)(pathname, "/")) atSignIndex = -1;
+		const atSignIndex = findPurlVersionIndex(pathname, rawType, firstSlashIndex);
 		const beforeVersion = (0, import_string.StringPrototypeSlice)(pathname, rawType.length + 1, atSignIndex === -1 ? pathname.length : atSignIndex);
 		if (atSignIndex !== -1) rawVersion = decodePurlComponent("version", (0, import_string.StringPrototypeSlice)(pathname, atSignIndex + 1));
 		let rawNamespace;
@@ -8431,21 +8688,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			rawName = decodePurlComponent("name", (0, import_string.StringPrototypeSlice)(beforeVersion, lastSlashIndex + 1));
 			rawNamespace = decodePurlComponent("namespace", (0, import_string.StringPrototypeSlice)(beforeVersion, 0, lastSlashIndex));
 		}
-		let rawQualifiers;
-		if (url.searchParams.size !== 0) {
-			const search = (0, import_string.StringPrototypeSlice)(url.search, 1);
-			const searchParams = new import_url.URLSearchParamsCtor();
-			const entries = (0, import_string.StringPrototypeSplit)(search, "&");
-			for (let i = 0, { length } = entries; i < length; i += 1) {
-				const entry = entries[i];
-				const eqIndex = (0, import_string.StringPrototypeIndexOf)(entry, "=");
-				const key = eqIndex === -1 ? entry : (0, import_string.StringPrototypeSlice)(entry, 0, eqIndex);
-				if (key.length === 0) throw new PurlError("qualifier key must not be empty");
-				const value = decodePurlComponent("qualifiers", eqIndex === -1 ? "" : (0, import_string.StringPrototypeSlice)(entry, eqIndex + 1));
-				/* v8 ignore next -- URLSearchParams.append has internal V8 branches we can't control. */ searchParams.append(key, value);
-			}
-			rawQualifiers = searchParams;
-		}
+		const rawQualifiers = parsePurlQualifiers(url);
 		let rawSubpath;
 		const { hash } = url;
 		if (hash.length !== 0) rawSubpath = decodePurlComponent("subpath", (0, import_string.StringPrototypeSlice)(hash, 1));
@@ -8515,7 +8758,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		} catch (e) {
 			throw new import_error.SyntaxErrorCtor("Failed to parse PackageURL from JSON", { cause: e });
 		}
-		if (!parsed || typeof parsed !== "object" || (0, import_array.ArrayIsArray)(parsed)) throw new import_error.ErrorCtor("JSON must parse to an object.");
+		if (!parsed || typeof parsed !== "object" || (0, import_array$1.ArrayIsArray)(parsed)) throw new import_error.ErrorCtor("JSON must parse to an object.");
 		const parsedRecord = parsed;
 		return fromObject({
 			__proto__: null,
@@ -8641,8 +8884,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		type;
 		version;
 		constructor(rawType, rawNamespace, rawName, rawVersion, rawQualifiers, rawSubpath) {
-			const type = isNonEmptyString(rawType) ? normalizeType(rawType) : rawType;
-			validateType(type, THROWS_OPTIONS);
+			const trimmedType = typeof rawType === "string" ? (0, import_string.StringPrototypeTrim)(rawType) : rawType;
+			validateType(trimmedType, THROWS_OPTIONS);
+			const type = normalizeType(trimmedType);
 			const namespace = isNonEmptyString(rawNamespace) ? normalizeNamespace(rawNamespace) : rawNamespace;
 			validateNamespace(namespace, THROWS_OPTIONS);
 			const name = isNonEmptyString(rawName) ? normalizeName(rawName) : rawName;
@@ -8659,11 +8903,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			if (version !== void 0) this.version = version;
 			this.qualifiers = qualifiers ?? void 0;
 			if (subpath !== void 0) this.subpath = subpath;
-			const typeHelpers = PurlType[type];
-			const normalize = typeHelpers?.["normalize"] ?? PurlTypNormalizer;
-			const validate = typeHelpers?.["validate"] ?? PurlTypeValidator;
-			normalize(this);
-			validate(this, THROWS_OPTIONS);
+			normalizePurlByType(this, type);
 		}
 		/**
 		* Convert `PackageURL` to object for `JSON.stringify` compatibility.
@@ -8859,6 +9099,13 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	registerPackageURL(PackageURL);
 	registerPackageURLForUrlConverter(PackageURL);
 	registerPackageURLStatics(PackageURL);
+	function normalizePurlByType(purl, type) {
+		const typeHelpers = PurlType[type];
+		const normalize = typeHelpers?.["normalize"] ?? PurlTypNormalizer;
+		const validate = typeHelpers?.["validate"] ?? PurlTypeValidator;
+		normalize(purl);
+		validate(purl, THROWS_OPTIONS);
+	}
 	/**
 	* @file Static factory methods for `PurlBuilder` — one method per known
 	*   package type. Kept separate from the instance API to stay under the
@@ -9208,9 +9455,10 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		* Set the package namespace for the `PackageURL`.
 		*
 		* The namespace represents different concepts depending on the package type:
+		*
 		* - `npm`: organization or scope (e.g., `'@angular'` for `'@angular/core'`) -
-		* `maven`: `groupId` (e.g., `'org.apache.commons'`) - `pypi`: typically
-		* unused.
+		*   `maven`: `groupId` (e.g., `'org.apache.commons'`) - `pypi`: typically
+		*   unused.
 		*/
 		namespace(namespace) {
 			this._namespace = namespace;
@@ -9284,7 +9532,7 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			if (purl.version !== void 0) builder._version = purl.version;
 			if (purl.qualifiers !== void 0) {
 				const qualifiersObj = purl.qualifiers;
-				builder._qualifiers = (0, import_object.ObjectFromEntries)((0, import_array.ArrayPrototypeMap)((0, import_object.ObjectEntries)(qualifiersObj), ([key, value]) => [key, String(value)]));
+				builder._qualifiers = (0, import_object.ObjectFromEntries)((0, import_array$1.ArrayPrototypeMap)((0, import_object.ObjectEntries)(qualifiersObj), ([key, value]) => [key, String(value)]));
 			}
 			if (purl.subpath !== void 0) builder._subpath = purl.subpath;
 			return builder;
@@ -9316,6 +9564,95 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		static rpm = rpm;
 		static swift = swift;
 	};
+	/**
+	* @file `gitDepToPurl(dep)` — convert a git dependency, in any npm-ecosystem
+	*   spelling, into a PackageURL. Hosted remotes map to their own purl type;
+	*   anything else becomes `pkg:generic` carrying a `vcs_url` qualifier.
+	*/
+	const HOST_RULES = [
+		{
+			type: "github",
+			hosts: ["github.com"],
+			shorthand: "github:"
+		},
+		{
+			type: "gitlab",
+			hosts: ["gitlab.com"],
+			shorthand: "gitlab:"
+		},
+		{
+			type: "bitbucket",
+			hosts: ["bitbucket.org"],
+			shorthand: "bitbucket:"
+		}
+	];
+	/**
+	* Returns undefined when no owner/repo can be recovered, so a malformed remote
+	* yields nothing rather than a purl that points somewhere wrong.
+	*/
+	function gitDepToPurl(dep) {
+		const raw = dep.url.trim();
+		if (!raw) return;
+		const version = dep.commit || void 0;
+		const shorthandRule = ruleForShorthand(raw);
+		if (shorthandRule) {
+			const path = raw.slice(shorthandRule.shorthand.length);
+			const slash = path.indexOf("/");
+			if (slash <= 0 || slash === path.length - 1) return;
+			return new PackageURL(shorthandRule.type, path.slice(0, slash), trimRepo(path.slice(slash + 1)), version, void 0, void 0);
+		}
+		const url = stripGitProtocol(raw);
+		const parts = ownerRepoFromGitUrl(url);
+		if (!parts) return;
+		const hostRule = ruleForHost(hostOf(url));
+		if (hostRule) return new PackageURL(hostRule.type, parts.owner, parts.repo, version, void 0, void 0);
+		return new PackageURL("generic", void 0, parts.repo, version, { [PurlQualifierNames.VcsUrl]: raw }, void 0);
+	}
+	function hostOf(url) {
+		try {
+			return new URL(url).hostname.toLowerCase();
+		} catch {
+			const at = url.indexOf("@");
+			const colon = url.indexOf(":", at + 1);
+			return at >= 0 && colon > at ? url.slice(at + 1, colon).toLowerCase() : "";
+		}
+	}
+	/**
+	* Owner and repo from a remote URL, covering the `https://host/o/r`, scp-like
+	* `git@host:o/r`, and `ssh://git@host/o/r` shapes.
+	*/
+	function ownerRepoFromGitUrl(url) {
+		const match = /[:/]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/.exec(url.trim());
+		if (!match) return;
+		return {
+			owner: match[1],
+			repo: trimRepo(match[2])
+		};
+	}
+	function ruleForHost(host) {
+		for (let i = 0, { length } = HOST_RULES; i < length; i += 1) {
+			const rule = HOST_RULES[i];
+			if (rule.hosts.includes(host)) return rule;
+		}
+	}
+	function ruleForShorthand(url) {
+		for (let i = 0, { length } = HOST_RULES; i < length; i += 1) {
+			const rule = HOST_RULES[i];
+			if (url.startsWith(rule.shorthand)) return rule;
+		}
+	}
+	/**
+	* Strip the git-specific protocol prefixes purl has no place for.
+	*/
+	function stripGitProtocol(url) {
+		if (url.startsWith("git+")) return url.slice(4);
+		if (url.startsWith("git://")) return `https://${url.slice(6)}`;
+		return url;
+	}
+	function trimRepo(repo) {
+		const noSlash = repo.endsWith("/") ? repo.slice(0, -1) : repo;
+		return noSlash.endsWith(".git") ? noSlash.slice(0, -4) : noSlash;
+	}
 	/**
 	* @file Split a raw ecosystem package name into its PURL `namespace` and `name`
 	*   components per the package-url type rules
@@ -9459,6 +9796,20 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	]);
 	const DIGITS_ONLY = /^\d+$/;
 	const regexSemverNumberedGroups = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+	function comparePrereleaseIdentifiers(ai, bi) {
+		const aNum = (0, import_regexp.RegExpPrototypeTest)(DIGITS_ONLY, ai);
+		const bNum = (0, import_regexp.RegExpPrototypeTest)(DIGITS_ONLY, bi);
+		if (aNum && bNum) {
+			const diff = Number(ai) - Number(bi);
+			if (diff !== 0) return diff < 0 ? -1 : 1;
+		} else if (aNum) return -1;
+		else if (bNum) return 1;
+		else {
+			if (ai < bi) return -1;
+			if (ai > bi) return 1;
+		}
+		return 0;
+	}
 	/**
 	* Compare two prerelease identifier arrays per semver spec. Returns `-1`, `0`,
 	* or `1`.
@@ -9472,17 +9823,8 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			const ai = a[i];
 			const bi = b[i];
 			if (ai === bi) continue;
-			const aNum = (0, import_regexp.RegExpPrototypeTest)(DIGITS_ONLY, ai);
-			const bNum = (0, import_regexp.RegExpPrototypeTest)(DIGITS_ONLY, bi);
-			if (aNum && bNum) {
-				const diff = Number(ai) - Number(bi);
-				if (diff !== 0) return diff < 0 ? -1 : 1;
-			} else if (aNum) return -1;
-			else if (bNum) return 1;
-			else {
-				if (ai < bi) return -1;
-				if (ai > bi) return 1;
-			}
+			const comparison = comparePrereleaseIdentifiers(ai, bi);
+			if (comparison !== 0) return comparison;
 		}
 		if (a.length !== b.length) return a.length < b.length ? -1 : 1;
 		return 0;
@@ -9570,21 +9912,101 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 		"swift"
 	]));
 	const WHITESPACE_PATTERN = /\s/;
+	const VERS_TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9.-]*$/;
+	const VERS_RAW_VERSION_PATTERN = /^[\x21-\x7e]+$/;
+	const VERS_DECODED_VERSION_PATTERN = /^[\x20-\x7e]+$/;
+	const VERS_RESERVED_VERSION_PATTERN = /[!*<=>]/;
 	const RANGE_COMPARATORS = (0, import_object.ObjectFreeze)(new import_map_set.SetCtor([
 		"<",
 		"<=",
 		">",
 		">="
 	]));
-	const VERS_QUOTE_PATTERN = /[!*<=>|]/g;
+	const VERS_QUOTE_PATTERN = /[ !%*<=>|]/g;
 	const VERS_QUOTE_MAP = (0, import_object.ObjectFreeze)(new import_map_set.MapCtor([
+		[" ", "%20"],
 		["!", "%21"],
+		["%", "%25"],
 		["*", "%2A"],
 		["<", "%3C"],
 		["=", "%3D"],
 		[">", "%3E"],
 		["|", "%7C"]
 	]));
+	function containsVersRange(constraints, version) {
+		const ranges = getVersRangeConstraints(constraints);
+		if (ranges.length === 0) return false;
+		for (let i = 0, { length } = ranges; i < length; i += 1) {
+			const c = ranges[i];
+			const cmp = compareSemver(version, c.version);
+			if (c.comparator === ">" || c.comparator === ">=") {
+				if (c.comparator === ">=" ? cmp < 0 : cmp <= 0) {
+					const next = ranges[i + 1];
+					if (next && (next.comparator === "<" || next.comparator === "<=")) i += 1;
+					continue;
+				}
+				const next = ranges[i + 1];
+				if (matchesVersUpperBound(next, version)) return true;
+				i += 1;
+			} else {
+				const cmpVal = compareSemver(version, c.version);
+				if (c.comparator === "<" && cmpVal < 0) return true;
+				if (c.comparator === "<=" && cmpVal <= 0) return true;
+			}
+		}
+		return false;
+	}
+	function decodeVersVersion(version) {
+		if (!(0, import_regexp.RegExpPrototypeTest)(VERS_RAW_VERSION_PATTERN, version) || (0, import_regexp.RegExpPrototypeTest)(VERS_RESERVED_VERSION_PATTERN, version)) throw new PurlError("vers version must use printable ascii and percent-encode reserved characters");
+		let decoded = version;
+		if ((0, import_string.StringPrototypeIncludes)(version, "%")) try {
+			decoded = (0, import_globals.decodeURIComponent)(version);
+		} catch {
+			throw new PurlError("vers version has invalid percent-encoding");
+		}
+		if (!(0, import_regexp.RegExpPrototypeTest)(VERS_DECODED_VERSION_PATTERN, decoded)) throw new PurlError("vers version must contain printable ascii; only encoded space is permitted whitespace");
+		return decoded;
+	}
+	function getVersRangeConstraints(constraints) {
+		const ranges = [];
+		for (let i = 0, { length } = constraints; i < length; i += 1) {
+			const c = constraints[i];
+			if (c.comparator !== "!=" && c.comparator !== "=") (0, import_array$1.ArrayPrototypePush)(ranges, c);
+		}
+		return ranges;
+	}
+	function matchesVersUpperBound(next, version) {
+		if (!next) return true;
+		const cmpNext = compareSemver(version, next.version);
+		if (next.comparator === "<" && cmpNext < 0) return true;
+		if (next.comparator === "<=" && cmpNext <= 0) return true;
+		return false;
+	}
+	function matchVersEquality(constraints, version) {
+		for (let i = 0, { length } = constraints; i < length; i += 1) {
+			const c = constraints[i];
+			if (c.comparator === "!=" && compareSemver(version, c.version) === 0) return false;
+		}
+		for (let i = 0, { length } = constraints; i < length; i += 1) {
+			const c = constraints[i];
+			if (c.comparator === "=" && compareSemver(version, c.version) === 0) return true;
+		}
+	}
+	function parseVersConstraints(rawConstraints, constraints) {
+		for (let i = 0, { length } = rawConstraints; i < length; i += 1) {
+			const raw = rawConstraints[i];
+			if ((0, import_string.StringPrototypeStartsWith)(raw, "=")) throw new PurlError("vers equality must use a bare version without an explicit comparator");
+			const constraint = parseConstraint(raw);
+			if (constraint.comparator === "*") {
+				(0, import_array$1.ArrayPrototypePush)(constraints, constraint);
+				continue;
+			}
+			(0, import_array$1.ArrayPrototypePush)(constraints, (0, import_object.ObjectFreeze)({
+				...constraint,
+				version: decodeVersVersion(constraint.version)
+			}));
+		}
+	}
 	/**
 	* URL-quote the separator/comparator characters of a version for canonical
 	* VERS serialization.
@@ -9592,20 +10014,6 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	function quoteVersVersion(version) {
 		return (0, import_string.StringPrototypeReplace)(version, VERS_QUOTE_PATTERN, (ch) => VERS_QUOTE_MAP.get(ch));
 	}
-	/**
-	* Enforce the VERS canonical-form rules (spec: "Normalized, canonical
-	* representation and validation") — a VERS string must arrive already
-	* canonical; tools error instead of normalizing:
-	*
-	* 1. Versions are unique across all constraints, regardless of comparator.
-	* 2. Constraints are sorted by version (verifiable only for schemes with a
-	*    comparator — the semver schemes here).
-	* 3. Ignoring `!=` constraints, an `=` constraint may be followed only by `=`,
-	*    `>`, or `>=`.
-	* 4. Ignoring `=` and `!=` constraints, the remaining comparators alternate: a
-	*    lower bound (`>`/`>=`) is followed by an upper bound (`<`/`<=`) and vice
-	*    versa.
-	*/
 	function validateCanonicalConstraints(scheme, constraints) {
 		const seenVersions = new import_map_set.SetCtor();
 		for (let i = 0, { length } = constraints; i < length; i += 1) {
@@ -9620,6 +10028,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			if (prev.comparator === "*" || c.comparator === "*") continue;
 			if (compareSemver(c.version, prev.version) < 0) throw new PurlError(`vers constraints must be sorted by version: "${c.version}" follows "${prev.version}"`);
 		}
+		validateVersComparatorOrder(constraints);
+	}
+	function validateVersComparatorOrder(constraints) {
 		let prevComparator;
 		for (let i = 0, { length } = constraints; i < length; i += 1) {
 			const { comparator } = constraints[i];
@@ -9636,6 +10047,12 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 				if ((prevRange === ">" || prevRange === ">=") === isLower) throw new PurlError(`vers range comparators must alternate between lower and upper bounds: "${comparator}" follows "${prevRange}"`);
 			}
 			prevRange = comparator;
+		}
+	}
+	function validateVersSemverConstraints(scheme, constraints) {
+		if (SEMVER_SCHEMES.has(scheme)) for (let i = 0, { length } = constraints; i < length; i += 1) {
+			const c = constraints[i];
+			if (c.comparator !== "*" && !isSemverString(c.version)) throw new PurlError(`invalid semver version "${c.version}" in VERS constraint`);
 		}
 	}
 	/**
@@ -9664,27 +10081,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			this.constraints = (0, import_object.ObjectFreeze)(constraints);
 			(0, import_object.ObjectFreeze)(this);
 		}
-		/**
-		* Parse a VERS string.
-		*
-		* @param versStr - VERS string (e.g., `'vers:npm/>=1.0.0|<2.0.0'`)
-		*
-		* @returns `Vers` instance
-		*
-		* @throws {PurlError} If the string is not a valid VERS
-		*/
 		static parse(versStr) {
 			return Vers.fromString(versStr);
 		}
-		/**
-		* Parse a VERS string.
-		*
-		* @param versStr - VERS string (e.g., `'vers:npm/>=1.0.0|<2.0.0'`)
-		*
-		* @returns `Vers` instance
-		*
-		* @throws {PurlError} If the string is not a valid VERS
-		*/
 		static fromString(versStr) {
 			if (typeof versStr !== "string" || versStr.length === 0) throw new PurlError("vers string is required");
 			if (!(0, import_string.StringPrototypeStartsWith)(versStr, "vers:")) throw new PurlError("vers string must start with \"vers:\" scheme");
@@ -9692,31 +10091,20 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			const remainder = (0, import_string.StringPrototypeSlice)(versStr, 5);
 			const slashIndex = (0, import_string.StringPrototypeIndexOf)(remainder, "/");
 			if (slashIndex === -1 || slashIndex === 0) throw new PurlError("vers string must contain a version scheme before \"/\"");
-			const scheme = (0, import_string.StringPrototypeToLowerCase)((0, import_string.StringPrototypeSlice)(remainder, 0, slashIndex));
+			const rawScheme = (0, import_string.StringPrototypeSlice)(remainder, 0, slashIndex);
+			if (!(0, import_regexp.RegExpPrototypeTest)(VERS_TYPE_PATTERN, rawScheme)) throw new PurlError("vers type must start with an ascii letter and contain only letters, numbers, dots, or dashes");
+			const scheme = (0, import_string.StringPrototypeToLowerCase)(rawScheme);
 			const constraintsStr = (0, import_string.StringPrototypeSlice)(remainder, slashIndex + 1);
 			if (constraintsStr.length === 0) throw new PurlError("vers string must contain at least one constraint");
 			const rawConstraints = (0, import_string.StringPrototypeSplit)(constraintsStr, "|");
 			const MAX_CONSTRAINTS = 1e3;
 			if (rawConstraints.length > MAX_CONSTRAINTS) throw new PurlError(`vers exceeds maximum of ${MAX_CONSTRAINTS} constraints`);
 			const constraints = [];
-			for (let i = 0, { length } = rawConstraints; i < length; i += 1) {
-				const constraint = parseConstraint(rawConstraints[i]);
-				if (constraint.comparator !== "*" && (0, import_string.StringPrototypeIncludes)(constraint.version, "%")) {
-					(0, import_array.ArrayPrototypePush)(constraints, {
-						...constraint,
-						version: (0, import_globals.decodeURIComponent)(constraint.version)
-					});
-					continue;
-				}
-				(0, import_array.ArrayPrototypePush)(constraints, constraint);
-			}
+			parseVersConstraints(rawConstraints, constraints);
 			if (constraints.length > 1) {
 				for (let i = 0, { length } = constraints; i < length; i += 1) if (constraints[i].comparator === "*") throw new PurlError("wildcard \"*\" must be the only constraint");
 			}
-			if (SEMVER_SCHEMES.has(scheme)) for (let i = 0, { length } = constraints; i < length; i += 1) {
-				const c = constraints[i];
-				if (c.comparator !== "*" && !isSemverString(c.version)) throw new PurlError(`invalid semver version "${c.version}" in VERS constraint`);
-			}
+			validateVersSemverConstraints(scheme, constraints);
 			validateCanonicalConstraints(scheme, constraints);
 			return new Vers(scheme, constraints);
 		}
@@ -9735,54 +10123,9 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			if (!SEMVER_SCHEMES.has(this.scheme)) throw new PurlError(`unsupported VERS scheme "${this.scheme}" for containment check`);
 			const { constraints } = this;
 			if (constraints.length === 1 && constraints[0].comparator === "*") return true;
-			for (let i = 0, { length } = constraints; i < length; i += 1) {
-				const c = constraints[i];
-				if (c.comparator === "!=" && compareSemver(version, c.version) === 0) return false;
-			}
-			for (let i = 0, { length } = constraints; i < length; i += 1) {
-				const c = constraints[i];
-				if (c.comparator === "=" && compareSemver(version, c.version) === 0) return true;
-			}
-			const ranges = [];
-			for (let i = 0, { length } = constraints; i < length; i += 1) {
-				const c = constraints[i];
-				if (c.comparator !== "!=" && c.comparator !== "=") (0, import_array.ArrayPrototypePush)(ranges, c);
-			}
-			if (ranges.length === 0) return false;
-			for (let i = 0, { length } = ranges; i < length; i += 1) {
-				const c = ranges[i];
-				const cmp = compareSemver(version, c.version);
-				if (c.comparator === ">=") {
-					if (cmp < 0) {
-						const next = ranges[i + 1];
-						if (next && (next.comparator === "<" || next.comparator === "<=")) i += 1;
-						continue;
-					}
-					const next = ranges[i + 1];
-					if (!next) return true;
-					const cmpNext = compareSemver(version, next.version);
-					if (next.comparator === "<" && cmpNext < 0) return true;
-					if (next.comparator === "<=" && cmpNext <= 0) return true;
-					i += 1;
-				} else if (c.comparator === ">") {
-					if (cmp <= 0) {
-						const next = ranges[i + 1];
-						if (next && (next.comparator === "<" || next.comparator === "<=")) i += 1;
-						continue;
-					}
-					const next = ranges[i + 1];
-					if (!next) return true;
-					const cmpNext = compareSemver(version, next.version);
-					if (next.comparator === "<" && cmpNext < 0) return true;
-					if (next.comparator === "<=" && cmpNext <= 0) return true;
-					i += 1;
-				} else {
-					const cmpVal = compareSemver(version, c.version);
-					if (c.comparator === "<" && cmpVal < 0) return true;
-					if (c.comparator === "<=" && cmpVal <= 0) return true;
-				}
-			}
-			return false;
+			const equalityMatch = matchVersEquality(constraints, version);
+			if (equalityMatch !== void 0) return equalityMatch;
+			return containsVersRange(constraints, version);
 		}
 		/**
 		* Serialize to canonical VERS string.
@@ -9791,11 +10134,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 			const parts = [];
 			for (let i = 0, { length } = this.constraints; i < length; i += 1) {
 				const c = this.constraints[i];
-				if (c.comparator === "*") (0, import_array.ArrayPrototypePush)(parts, "*");
-				else if (c.comparator === "=") (0, import_array.ArrayPrototypePush)(parts, quoteVersVersion(c.version));
-				else (0, import_array.ArrayPrototypePush)(parts, `${c.comparator}${quoteVersVersion(c.version)}`);
+				if (c.comparator === "*") (0, import_array$1.ArrayPrototypePush)(parts, "*");
+				else if (c.comparator === "=") (0, import_array$1.ArrayPrototypePush)(parts, quoteVersVersion(c.version));
+				else (0, import_array$1.ArrayPrototypePush)(parts, `${c.comparator}${quoteVersVersion(c.version)}`);
 			}
-			return `vers:${this.scheme}/${(0, import_array.ArrayPrototypeJoin)(parts, "|")}`;
+			return `vers:${this.scheme}/${(0, import_array$1.ArrayPrototypeJoin)(parts, "|")}`;
 		}
 	};
 	/*!
@@ -9846,9 +10189,11 @@ var require_dist = /* @__PURE__ */ __commonJSMin$1(((exports) => {
 	exports.err = err;
 	exports.findInjectionCharCode = findInjectionCharCode;
 	exports.formatInjectionChar = formatInjectionChar;
+	exports.gitDepToPurl = gitDepToPurl;
 	exports.isResolvableVersion = isResolvableVersion;
 	exports.matchesPurl = matchesPurl;
 	exports.ok = ok;
+	exports.ownerRepoFromGitUrl = ownerRepoFromGitUrl;
 	exports.parseNpmSpecifier = parseNpmSpecifier;
 	exports.splitPurlPackageName = splitPurlPackageName;
 	exports.stringify = stringify;
