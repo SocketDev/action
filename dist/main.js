@@ -22414,11 +22414,12 @@ async function createFirewallShims(firewallBinaryPath, edition) {
 	}
 	addPath(shimDir);
 	if (runnerPath === void 0) process.env.PATH = shimDir;
+	exportVariable("SFW_SHIM_DIR", shimDir);
 	saveState(FIREWALL_SHIM_STATE_KEY, {
 		commands,
+		completedCommands: shimmed,
 		directory: shimDir
 	});
-	exportVariable("SFW_SHIM_DIR", shimDir);
 	info(`created shims for: ${shimmed.join(", ")}`);
 }
 function firewallCommandPath(filename) {
