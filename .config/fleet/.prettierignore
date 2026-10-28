@@ -51,7 +51,7 @@
 **/bootstrap/fleet.d.mts
 # The SessionStart fetch-kernel's declaration emit, from the same generator.
 
-# The rolldown-bundled fleet oxlint plugin (scripts/fleet/build-oxlint-bundle.mts
+# The rolldown-bundled fleet oxlint plugin (scripts/fleet/build/oxlint-bundle.mts
 # output) — generated + gitignored; oxfmt would fight the bundler output. The
 # `.config/fleet/**` glob above does not reach it (the whole-tree walk's matcher skips
 # the dotdir `.config`), so it needs an explicit line — twin of isNeverGated() in

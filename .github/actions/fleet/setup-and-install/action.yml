@@ -84,6 +84,25 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Move temporary files to the fast hosted Windows volume
+      if: runner.os == 'Windows' && runner.environment == 'github-hosted'
+      shell: pwsh
+      run: | # zizmor: ignore[github-env] - writes fixed TEMP/TMP names from validated GitHub-hosted RUNNER_TEMP on D:, with no requester input.
+        $ErrorActionPreference = 'Stop'
+        $runnerTemp = [System.IO.Path]::GetFullPath($env:RUNNER_TEMP)
+        if ([System.IO.Path]::GetPathRoot($runnerTemp) -ine 'D:\') {
+          Write-Output "Fast temp volume D: unavailable; keeping RUNNER_TEMP=$runnerTemp"
+          exit 0
+        }
+        $temp = Join-Path $runnerTemp 'tmp'
+        New-Item -ItemType Directory -Force -Path $temp | Out-Null
+        "TEMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8NoBOM
+        "TMP=$temp" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8NoBOM
+        $drive = Get-PSDrive -Name D
+        Write-Output "RUNNER_TEMP=$runnerTemp"
+        Write-Output "TEMP=$temp"
+        Write-Output "D_FREE_GB=$([math]::Round($drive.Free / 1GB, 2))"
+
     - name: Checkout
       uses: ./.github/actions/fleet/checkout
       with:

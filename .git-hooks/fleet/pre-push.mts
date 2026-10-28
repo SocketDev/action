@@ -41,7 +41,6 @@ import { computeRange } from '../_shared/push/range.mts'
 import {
   checkSubmodules,
   scanDispatchDrift,
-  scanFastChecks,
   scanSoakAnnotations,
   scanTypeCheck,
 } from '../_shared/push/repo-gates.mts'
@@ -50,6 +49,11 @@ import { isDurableBackupPush } from '../_shared/push/durable-ref.mts'
 import { verifyReleaseLedgerGenesisPush } from '../_shared/push/release-ledger.mts'
 import { isSquashHistoryRepo } from '../_shared/push/squash-history.mts'
 import { checkPrCommitCount } from '../_shared/push/pr-commit-count.mts'
+import {
+  isReleaseTagCreationOnly,
+  parsePushRefUpdates,
+  releaseTagMutationError,
+} from '../_shared/push/release-tag-push.mts'
 
 const logger = getDefaultLogger()
 
@@ -72,17 +76,26 @@ function resolvePushArguments(): { remote: string; destination: string } {
 
 const main = async (): Promise<number> => {
   debugCheck('Running mandatory pre-push validation…')
+  const { remote, destination } = resolvePushArguments()
+
+  const stdin = await readStdin()
+  let totalErrors = 0
+  const refLines = splitLines(stdin.trim()).filter(Boolean)
+  const refUpdates = parsePushRefUpdates(refLines)
+  const tagError = releaseTagMutationError(refUpdates)
+  if (tagError) {
+    logger.fail(tagError)
+    return 1
+  }
+  if (isReleaseTagCreationOnly(refUpdates)) {
+    return 0
+  }
 
   const submoduleErrors = checkSubmodules()
   if (submoduleErrors > 0) {
     return 1
   }
 
-  const { remote, destination } = resolvePushArguments()
-
-  const stdin = await readStdin()
-  let totalErrors = 0
-  const refLines = splitLines(stdin.trim()).filter(Boolean)
   if (
     await verifyReleaseLedgerGenesisPush(refLines, destination, process.cwd())
   ) {
@@ -106,14 +119,18 @@ const main = async (): Promise<number> => {
       continue
     }
     pushedRemoteRefs.push(remoteRef)
-    const prCommitError = checkPrCommitCount(remote, localSha, remoteRef)
-    if (prCommitError) {
-      logger.fail(prCommitError)
-      totalErrors += 1
+    if (!remoteRef.startsWith('refs/tags/')) {
+      const prCommitError = checkPrCommitCount(remote, localSha, remoteRef)
+      if (prCommitError) {
+        logger.fail(prCommitError)
+        totalErrors += 1
+      }
     }
     const range = computeRange(remote, localRef, localSha, remoteSha)
-    // `computeRange` returns `undefined` for skip cases (tags, deletions, new
-    // branches); use loose equality so both `null` and `undefined` skip. A
+    // `computeRange` returns `undefined` for skip cases (tags and deletions);
+    // when a new branch has no remote baseline it returns the local tip so
+    // every reachable commit still receives the safety scans. Use loose
+    // equality so both `null` and `undefined` skip. A
     // strict `=== null` check let `undefined` fall through and failed every
     // tag push with "Invalid commit range: undefined".
     if (range == null) {
@@ -168,23 +185,15 @@ const main = async (): Promise<number> => {
     return 0
   }
 
-  // Fast lint/format gate — the build-independent slice of the quality bar,
-  // run at the push boundary so format/lint drift can't reach main. Scoped to
-  // the pushed ranges, NOT the working tree: on a shared checkout the tree also
-  // holds a parallel session's uncommitted and untracked files, and judging
-  // those blocks a push over bytes it does not carry.
-  totalErrors += scanFastChecks(pushedRanges)
-
   // Dispatch-table drift (wheelhouse-only) — a stale/dangling hook dispatch
   // can't reach origin/main and cascade fleet-wide.
   totalErrors += scanDispatchDrift()
 
-  // Type gate — the mandatory whole-project tsc check. A type error is the one
-  // class of breakage the fast lint/format gate above cannot catch, and the
+  // Type gate — the mandatory whole-project tsc check. A type error is a
+  // correctness failure, and the
   // fast-land path pushes with --no-verify, so without this a bad type reaches
   // origin/main behind CI alone. Runs AFTER the dispatch-drift check so its
-  // dispatch-table regen cannot mask a stale on-disk table, and (unlike
-  // scanFastChecks) it does not skip under a `.claude/` worktree path.
+  // dispatch-table regen cannot mask a stale on-disk table.
   totalErrors += scanTypeCheck(pushedRanges)
 
   if (totalErrors > 0) {

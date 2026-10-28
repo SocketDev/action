@@ -114,6 +114,11 @@ const { pnpmEcosystemFingerprint } = (function () {
     }
     const args = ['config', 'list', '--json']
     const windows = pnpmProcess.platform === 'win32'
+    const environment: NodeJS.ProcessEnv = {
+      ...pnpmProcess.env,
+      SOCKET_SHIM_ACTIVE_PNPM: '1',
+    }
+    delete environment['BASH_ENV']
     let config: unknown
     try {
       config = JSON.parse(
@@ -124,7 +129,7 @@ const { pnpmEcosystemFingerprint } = (function () {
             cwd: root,
             encoding: 'utf8',
             // This local query needs no sfw network-auth handshake.
-            env: { ...pnpmProcess.env, SOCKET_SHIM_ACTIVE_PNPM: '1' },
+            env: environment,
             maxBuffer: PNPM_CONFIG_MAX_BYTES,
             stdio: ['ignore', 'pipe', 'pipe'],
             timeout: PNPM_CONFIG_TIMEOUT_MS,
@@ -151,6 +156,39 @@ const { pnpmEcosystemFingerprint } = (function () {
         case 'ENOBUFS':
         case 'ETIMEDOUT':
           return error['code']
+      }
+      if (
+        typeof error['code'] === 'string' &&
+        /^ERR_PNPM_[A-Z0-9_]+$/u.test(error['code'])
+      ) {
+        return error['code']
+      }
+      for (const output of [error['stderr'], error['stdout']]) {
+        if (typeof output !== 'string' && !Buffer.isBuffer(output)) continue
+        const diagnostic = Buffer.isBuffer(output)
+          ? output.toString('utf8', 0, 65_536)
+          : output.slice(0, 65_536)
+        const pnpmErrorCode = /\b(ERR_PNPM_[A-Z0-9_]+)\b/u.exec(diagnostic)?.[1]
+        if (pnpmErrorCode) return pnpmErrorCode
+      }
+      if (
+        typeof error['status'] === 'number' &&
+        Number.isInteger(error['status'])
+      ) {
+        return `EXIT_${error['status']}`
+      }
+      if (
+        typeof error['signal'] === 'string' &&
+        [
+          'SIGABRT',
+          'SIGBUS',
+          'SIGINT',
+          'SIGKILL',
+          'SIGSEGV',
+          'SIGTERM',
+        ].includes(error['signal'])
+      ) {
+        return `SIGNAL_${error['signal']}`
       }
     }
     return error instanceof SyntaxError ? 'INVALID_JSON' : 'CONFIG_FAILED'
@@ -476,6 +514,11 @@ const bootstrapRunner = (function (
   interface ScriptMeta {
     readonly commandBoundary?: '--exec' | 'exec' | undefined
     readonly heavyJob?: 'test' | 'coverage' | 'build' | 'type' | undefined
+    /**
+     * Forward every CLI argument to the child; only standalone --describe is
+     * handled here.
+     */
+    readonly passthroughArgs?: boolean | undefined
     readonly json?: 'native' | 'result' | undefined
     readonly describe: string
     readonly help: string
@@ -882,7 +925,7 @@ export function runWorkspacePipeline(): number {
   ) as { scripts?: Record<string, unknown> }
   if (
     manifest.scripts?.['build:oxlint-bundle'] !==
-    'node scripts/fleet/build-oxlint-bundle.mts'
+    'node scripts/fleet/build/oxlint-bundle.mts'
   ) {
     log(
       'Pipeline build task is unavailable. Where: package.json scripts. Wanted the canonical build:oxlint-bundle command. Fix: synchronize the fleet package scripts.',

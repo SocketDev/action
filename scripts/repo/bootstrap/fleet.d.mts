@@ -13,6 +13,11 @@ export declare function migrateWorkspaceSettings(dest: string, yaml: string): st
 interface ScriptMeta {
   readonly commandBoundary?: '--exec' | 'exec' | undefined;
   readonly heavyJob?: 'test' | 'coverage' | 'build' | 'type' | undefined;
+  /**
+   * Forward every CLI argument to the child; only standalone --describe is
+   * handled here.
+   */
+  readonly passthroughArgs?: boolean | undefined;
   readonly json?: 'native' | 'result' | undefined;
   readonly describe: string;
   readonly help: string;
@@ -171,7 +176,7 @@ interface WorkflowFileMove {
   to: string;
   workflowJob?: WorkflowJobMigration | undefined;
 }
-type ConfigFlag = 'bundlesVendoredDeps' | 'hasCodeql' | 'hasCratesRegistry' | 'hasGhcr' | 'hasGithubRelease' | 'hasNapi' | 'hasNpmRegistry' | 'hasPrebakes' | 'hasRust' | 'isGithubAction';
+type ConfigFlag = 'bundlesVendoredDeps' | 'hasCodeql' | 'hasCratesRegistry' | 'hasGhcr' | 'hasGithubRelease' | 'hasLocalAssistWorkflow' | 'hasNapi' | 'hasNpmRegistry' | 'hasPrebakes' | 'hasRust' | 'isGithubAction';
 interface ConditionalManifestGroup {
   readonly dependency?: string | undefined;
   readonly removeWhenInactive?: boolean | undefined;
@@ -270,10 +275,12 @@ export declare function extractFleetBlockLines(target: string): string[];
  * Harness surfaces the fleet generates from tracked authority files.
  *
  * Each is a projection of a Claude-side source: `AGENTS.md` and the rule dirs
- * point at AGENTS.md, `opencode.json` / `.codex/` project `.mcp.json`, and
- * `.agents/skills/` flattens `.claude/skills/` for the hosts that discover
- * skills one level deep. Regenerating them is cheap; tracking them means every
- * member carries a copy that drifts and conflicts.
+ * point at AGENTS.md, `opencode.json` / `.codex/` project `.mcp.json`,
+ * `.agents/skills/` flattens `.claude/skills/`, and client agent definitions
+ * adapt `.claude/agents/fleet/` where the target has equivalent controls.
+ * Agent definitions carry a generated-content receipt so only unchanged fleet
+ * output is refreshed or removed. Tracking projections means every member
+ * carries a copy that drifts and conflicts.
  *
  * Thin conversion ignores and untracks these generated surfaces. AGENTS.md
  * remains tracked as the authoritative repository rules.

@@ -122,6 +122,11 @@ const bootstrapRunner = (function (
   interface ScriptMeta {
     readonly commandBoundary?: '--exec' | 'exec' | undefined
     readonly heavyJob?: 'test' | 'coverage' | 'build' | 'type' | undefined
+    /**
+     * Forward every CLI argument to the child; only standalone --describe is
+     * handled here.
+     */
+    readonly passthroughArgs?: boolean | undefined
     readonly json?: 'native' | 'result' | undefined
     readonly describe: string
     readonly help: string
