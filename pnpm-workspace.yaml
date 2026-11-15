@@ -65,7 +65,7 @@ catalog:
   'mdast-util-to-markdown': 2.2.0
   'micromark': 4.0.3
   'micromark-extension-gfm': 3.0.0
-  'minimatch': 10.2.6
+  'minimatch': 11.0.1
   'neosanitize': 0.5.0
   # nock — HTTP mocking for tests (disableNetConnect() + stubs). Pinned back
   # from the @mswjs/interceptors rewrite: npm deprecates 15.0.0 ("released
