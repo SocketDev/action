@@ -121,7 +121,7 @@ catalog:
   # Playwright MCP server — agent-driven browsing with the fleet agent-banner
   # init script (see .config/fleet/playwright/).
   '@playwright/mcp': 0.0.83
-  '@vitest/ui': 5.0.3
+  '@vitest/ui': 5.0.5
   c8: 12.0.0
   'yaml': 2.9.1
   'svgo': 4.1.0
